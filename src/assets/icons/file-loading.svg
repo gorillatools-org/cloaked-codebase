@@ -1,0 +1,15 @@
+import { createElementVNode as _createElementVNode, openBlock as _openBlock, createElementBlock as _createElementBlock, createStaticVNode as _createStaticVNode } from "vue"
+
+const _hoisted_1 = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "82",
+  height: "90",
+  fill: "none"
+}
+
+export function render(_ctx, _cache) {
+  return (_openBlock(), _createElementBlock("svg", _hoisted_1, _cache[0] || (_cache[0] = [
+    _createStaticVNode("<path fill=\"#fff\" stroke=\"#CECCFE\" stroke-width=\"2\" d=\"M81 83.25v-77a5 5 0 0 0-5-5H23.657a5 5 0 0 0-3.536 1.464l-8.828 8.829-8.829 8.828A5 5 0 0 0 1 23.907V83.25a5 5 0 0 0 5 5h70a5 5 0 0 0 5-5Z\"></path><path fill=\"#CECCFE\" d=\"m22 2.25-20 20h16a4 4 0 0 0 4-4z\"></path><circle cx=\"41\" cy=\"45\" r=\"8.5\" stroke=\"url(#spinner)\" stroke-width=\"3\" class=\"file-loading__spinner\"></circle><defs><linearGradient id=\"spinner\"><stop offset=\"20%\" stop-color=\"#7772F8\" stop-opacity=\"0\"></stop><stop offset=\"100%\" stop-color=\"#7772F8\"></stop></linearGradient></defs>", 4)
+  ])))
+}
+export default { render: render }

@@ -1,0 +1,250 @@
+export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_EMAIL_FORWARDING =
+  "user_viewed_setuponboarding_email_forwarding";
+export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_EMAIL_VERIFICATION =
+  "user_viewed_setuponboarding_email_verification";
+export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_2FA =
+  "user_viewed_setuponboarding_2fa";
+export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_TEXT_FORWARDING =
+  "user_viewed_setuponboarding_text_forwarding";
+export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_INTENT =
+  "user_viewed_setuponboarding_intent";
+
+export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_MASKED_INFO_MODAL =
+  "user_viewed_setuponboarding_masked_info_modal";
+export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_PRIVATE_ACTIVITY_MODAL =
+  "user_viewed_setuponboarding_private_activity_modal";
+export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_MIGRATE =
+  "user_viewed_setuponboarding_migrate";
+export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_SENSITIVE_DATA =
+  "user_viewed_setuponboarding_sensitive_data";
+
+export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_DOWNLOAD_APP =
+  "user_viewed_setuponboarding_download_app";
+
+export const PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_LOADING =
+  "user_viewed_data_deletion_search_loading";
+export const PH_EVENT_USER_VIEWED_DATA_DELETION_PHONE_VERIFICATION =
+  "user_viewed_data_deletion_phone_verification";
+export const PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_NAME_FORM =
+  "user_viewed_data_deletion_search_name_form";
+export const PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_AGE_FORM =
+  "user_viewed_data_deletion_search_age_form";
+export const PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_STATE_FORM =
+  "user_viewed_data_deletion_search_state_form";
+export const PH_EVENT_USER_SUBMITTED_DATA_DELETION_SEARCH_NAME_FORM =
+  "user_submitted_data_deletion_search_name_form";
+export const PH_EVENT_USER_SUBMITTED_DATA_DELETION_SEARCH_AGE_FORM =
+  "user_submitted_data_deletion_search_age_form";
+export const PH_EVENT_USER_SUBMITTED_DATA_DELETION_SEARCH_STATE_FORM =
+  "user_submitted_data_deletion_search_state_form";
+export const PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_RESULTS =
+  "user_viewed_data_deletion_search_results";
+export const PH_EVENT_USER_CLICKED_DATA_DELETION_NOT_ME_BUTTON =
+  "user_clicked_data_deletion_not_me_button";
+export const PH_EVENT_USER_VIEWED_DATA_DELETION_THREAT_LEVEL =
+  "user_viewed_data_delete_threat_level";
+export const PH_EVENT_USER_CLICKED_DATA_DELETION_SEARCH_RESULTS_CONTINUE_BUTTON =
+  "user_clicked_data_deletion_search_results_continue_button";
+export const PH_EVENT_USER_CLICKED_DATA_DELETION_SETUP_ACCOUNT_BUTTON =
+  "user_clicked_data_deletion_setup_account_button";
+export const PH_EVENT_USER_VIEWED_DATA_DELETION_SIGNUP_SUCCESS_SCREEN =
+  "user_viewed_data_deletion_signup_success_screen";
+export const PH_EVENT_USER_AGREED_TO_DATA_DELETION_AGENCY_AGREEMENT =
+  "user_agreed_to_data_deletion_agency_agreement";
+export const PH_EVENT_USER_CLICKED_DATA_DELETION_STATUS_IN_HOME_PAGE_TILE =
+  "user_clicked_data_deletion_status_in_home_page_tile";
+export const PH_EVENT_HOME_ACTION = "user_clicked_dashboardactionitem";
+export const PH_EVENT_USER_CLICKED_SIGN_UP_NO_WASM =
+  "user_clicked_sign_up_no_wasm";
+export const PH_EVENT_REFERRAL_SENT = "referral_sent";
+
+// New onboarding capture events
+export const PH_EVENT_ONBOARDING_USER_CLICKED_INTRO_FIRST_BUTTON =
+  "user_clicked_dd_onboarding_intro_1st_screen_next_button";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_INTRO_SECOND_BUTTON =
+  "user_clicked_dd_onboarding_intro_2nd_screen_next_button";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_MAIN_GEN_INFO_BUTTON =
+  "user_clicked_dd_onboarding_intro_3rd_screen_flow_generate_new_info";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_MAIN_BREACHES_BUTTON =
+  "user_clicked_dd_onboarding_intro_3rd_screen_flow_data_breaches";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_MAIN_PASSWORDS_BUTTON =
+  "user_clicked_dd_onboarding_intro_3rd_screen_flow_manage_passwords";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_EXIT_CONTINUE_BUTTON =
+  "user_clicked_dd_onboarding_flow_outro_final_screen_continue";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_PASSWORDS_INSTALL_EXT_BUTTON =
+  "user_clicked_dd_onboarding_flow_password_generator_1st_screen_install_extension_button";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_PASSWORDS_TRY_DEMO_BUTTON =
+  "user_clicked_dd_onboarding_flow_password_generator_1st_screen_try_extension_demo_button";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_PASSWORDS_SKIP_EXT_BUTTON =
+  "user_clicked_dd_onboarding_flow_password_generator_1st_screen_already_have_a_password_manager";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_PASSWORDS_EXT_CONTINUE_BUTTON =
+  "user_clicked_dd_onboarding_flow_password_generator_2nd_screen_continue_setup";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_PASSWORDS_EXT_DO_MORE_BUTTON =
+  "user_clicked_dd_onboarding_flow_password_generator_2nd_screen_more_later";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_PASSWORDS_IMPORT_CONTINUE_BUTTON =
+  "user_clicked_dd_onboarding_flow_password_generator_import_passwords_continue_setup_button";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_PASSWORDS_IMPORT_DO_MORE_BUTTON =
+  "user_clicked_dd_onboarding_flow_password_generator_import_passwords_more_later_button";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_GENERATE_NEW_INFO_1ST_SCREEN_GET_STARTED =
+  "user_clicked_dd_onboarding_flow_generate_new_info_1st_screen_get_started";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_GENERATE_NEW_INFO_2ND_SCREEN_COPIED_PHONE_NUMBER =
+  "user_clicked_dd_onboarding_flow_generate_new_info_2nd_screen_copied_phone_number";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_GENERATE_NEW_INFO_2ND_SCREEN_COPIED_EMAIL =
+  "user_clicked_dd_onboarding_flow_generate_new_info_2nd_screen_copied_email";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_GENERATE_NEW_INFO_2ND_SCREEN_CONTINUE =
+  "user_clicked_dd_onboarding_flow_generate_new_info_2nd_screen_continue";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_GENERATE_NEW_INFO_3RD_SCREEN_CONTINUE =
+  "user_clicked_dd_onboarding_flow_generate_new_info_3rd_screen_continue";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_GENERATE_NEW_INFO_4TH_SCREEN_CONTINUE_SETUP =
+  "user_clicked_dd_onboarding_flow_generate_new_info_4th_screen_continue_setup";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_GENERATE_NEW_INFO_4TH_SCREEN_DO_LATER =
+  "user_clicked_dd_onboarding_flow_generate_new_info_4th_screen_do_later";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_BACK_BUTTON =
+  "user_clicked_dd_onboarding_back_to_menu_button";
+export const PH_EVENT_ONBOARDING_USER_CLICKED_CLOSE_BUTTON =
+  "user_clicked_dd_onboarding_close_button";
+export const PH_EVENT_ONBOARDING_BREACHES_USER_CLICKED_SUBMIT_EMAIL =
+  "user_clicked_dd_onboarding_data_breaches_1st_screen_email_submitted";
+
+export const PH_EVENT_ONBOARDING_BREACHES_USER_CLICKED_BREACH_ACCOUNT =
+  "user_clicked_dd_onboarding_data_breaches_3rd_screen_exposed_account";
+export const PH_EVENT_ONBOARDING_BREACHES_USER_CLICKED_COPY_EMAIL =
+  "user_clicked_dd_onboarding_flow_data_breaches_4th_screen_account_replace_info_copy_email";
+export const PH_EVENT_ONBOARDING_BREACHES_USER_CLICKED_COPY_PASSWORD =
+  "user_clicked_dd_onboarding_flow_data_breaches_4th_screen_account_replace_info_copy_password";
+export const PH_EVENT_ONBOARDING_BREACHES_USER_CLICKED_REPLACE_CONTINUE =
+  "user_clicked_dd_onboarding_flow_data_breaches_4th_screen_account_replace_info_continue";
+export const PH_EVENT_ONBOARDING_BREACHES_USER_CLICKED_FIX_MORE =
+  "user_clicked_dd_onboarding_flow_data_breaches_4th_screen_account_replace_info_fix_other_exposures";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_ALL_COMPLETE_CONTINUE =
+  "user_clicked_dd_onboarding_flow_data_breaches_screen_all_accounts_have_new_identities_continue";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_ALL_DO_MORE_LATER =
+  "user_clicked_dd_onboarding_flow_data_breaches_screen_all_accounts_have_new_identities_more_later";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_NONE_FOUND_CONTINUE =
+  "user_clicked_dd_onboarding_flow_data_breaches_screen_no_breaches_found_continue";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_NONE_FOUND_DO_MORE_LATER =
+  "user_clicked_dd_onboarding_flow_data_breaches_screen_no_breaches_found_more_later";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_VERIFY_CODE_CLICKED =
+  "user_clicked_dd_onboarding_data_breaches_2nd_screen_verify_code_submitted";
+
+// data removal events
+export const PH_EVENT_DATA_REMOVAL_USER_CLICKED_REVIEW =
+  "user_clicked_data_removal_screen_action_required_broker_review_button";
+export const PH_EVENT_DATA_REMOVAL_USER_CLICKED_MARK_DONE =
+  "user_clicked_data_removal_screen_action_required_broker_mark_as_removed_button";
+export const PH_EVENT_DATA_REMOVAL_USER_CLICKED_MARK_DONE_CONFIRMATION =
+  "user_clicked_data_removal_screen_action_required_broker_mark_as_removed_button_confirmation";
+export const PH_EVENT_USER_UNABLE_TO_ENROLL_AGE_RESTRICTION =
+  "user_cancelled_enrollment_age_restriction";
+
+export const PH_EVENT_USER_VIEWED_DD_SUBMISSION_FORM =
+  "user_viewed_data_deletion_submission_form";
+export const PH_EVENT_USER_SUBMITTED_DD_SUBMISSION_FORM =
+  "user_submitted_data_deletion_submission_form";
+export const PH_EVENT_USER_VIEWED_DD_SECONDARY_FORM_INFO =
+  "user_viewed_data_deletion_secondary_information_form";
+export const PH_EVENT_USER_ADDED_DD_SECONDARY_FORM_INFO =
+  "user_added_data_deletion_secondary_information";
+
+// New onboarding screen events
+export const PH_SCREEN_EVENT_ONBOARDING_INTRO_FIRST_SCREEN =
+  "dd_onboarding_intro_1st_screen";
+export const PH_SCREEN_EVENT_ONBOARDING_INTRO_SECOND_SCREEN =
+  "dd_onboarding_intro_2nd_screen";
+export const PH_SCREEN_EVENT_ONBOARDING_MAIN_SCREEN =
+  "dd_onboarding_intro_3rd_screen";
+export const PH_SCREEN_EVENT_ONBOARDING_EXIT_SCREEN =
+  "dd_onboarding_flow_outro_final_screen";
+export const PH_SCREEN_EVENT_ONBOARDING_PASSWORDS_EXT_INTRO_SCREEN =
+  "dd_onboarding_flow_password_generator_1st_screen";
+export const PH_SCREEN_EVENT_ONBOARDING_PASSWORDS_EXT_OUTRO_SCREEN =
+  "dd_onboarding_flow_password_generator_2nd_screen_extension_installed";
+export const PH_SCREEN_EVENT_ONBOARDING_PASSWORDS_IMPORT_SCREEN =
+  "dd_onboarding_flow_password_generator_import_passwords_screen";
+export const PH_EVENT_ONBOARDING_FLOW_GENERATE_NEW_INFO_1ST_SCREEN =
+  "dd_onboarding_flow_generate_new_info_1st_screen";
+export const PH_EVENT_ONBOARDING_FLOW_GENERATE_NEW_INFO_2ND_SCREEN =
+  "dd_onboarding_flow_generate_new_info_2nd_screen";
+export const PH_EVENT_ONBOARDING_FLOW_GENERATE_NEW_INFO_3RD_SCREEN =
+  "dd_onboarding_flow_generate_new_info_3rd_screen";
+export const PH_EVENT_ONBOARDING_FLOW_GENERATE_NEW_INFO_4TH_SCREEN =
+  "dd_onboarding_flow_generate_new_info_4th_screen";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_1ST_SCREEN =
+  "dd_onboarding_flow_data_breaches_1st_screen_email";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_2ND_SCREEN =
+  "dd_onboarding_flow_data_breaches_2nd_screen_email_code";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_3RD_SCREEN =
+  "dd_onboarding_flow_data_breaches_3rd_screen_exposed_accounts";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_ALL_COMPLETE =
+  "dd_onboarding_flow_data_breaches_screen_all_accounts_have_new_identities";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_NONE_FOUND =
+  "dd_onboarding_flow_data_breaches_screen_no_breaches_found";
+export const PH_EVENT_ONBOARDING_FLOW_BREACHES_4TH_SCREEN =
+  "dd_onboarding_flow_data_breaches_4th_screen_account_replace_info";
+export const PH_EVENT_ONBOARDING_FLOW_INVITE_MEMBERS =
+  "dd_onboarding_flow_invite_members";
+
+/* eSims Events */
+export const PH_SCREEN_EVENT_ESIM_ONBOARDING_INTRO_SCREEN =
+  "eSim_onboarding_intro_screen";
+export const PH_SCREEN_EVENT_ESIM_ONBOARDING_COVERAGE_SCREEN =
+  "eSim_onboarding_coverage_screen";
+export const PH_SCREEN_EVENT_ESIM_ONBOARDING_COMPATIBILITY_SCREEN =
+  "eSim_onboarding_compatibility_screen";
+export const PH_SCREEN_EVENT_ESIM_ONBOARDING_INCOMPATIBILITY_SCREEN =
+  "eSim_onboarding_compatibility_screen";
+export const PH_SCREEN_EVENT_ESIM_ONBOARDING_PAYMENT_SCREEN =
+  "eSim_onboarding_payment_screen";
+export const PH_SCREEN_EVENT_ESIM_ONBOARDING_PAYMENT_SUCCESS_SCREEN =
+  "eSim_onboarding_payment_success_screen";
+export const PH_SCREEN_EVENT_ESIM_ONBOARDING_AREA_CODE_SCREEN =
+  "eSim_onboarding_area_code_screen";
+export const PH_SCREEN_EVENT_ESIM_ACTIVATING_ESIM_SCREEN =
+  "eSim_onboarding_esim_activating_screen";
+export const PH_SCREEN_EVENT_ESIM_SETUP_ESIM_SCREEN =
+  "eSim_onboarding_esim_setup_screen";
+export const PH_SCREEN_EVENT_ESIM_COMPLETE_ESIM_SCREEN =
+  "eSim_onboarding_esim_complete_screen";
+export const PH_EVENT_ESIM_USER_CHANGED_ZIP_CODE = "eSim_user_changed_zipcode";
+/* Feature flags */
+export const PH_EVENT_CLOAKED_AUTH_TOTP_MFA_ENABLED = "cloaked-auth-mfa-totp";
+export const PH_FEATURE_FLAG_DATA_DELETION_IN_APP_SEARCH = "dd_in_app_search";
+export const PH_EVENT_USER_CLICKED_LOGIN_NO_WASM = "user_clicked_login_no_wasm";
+export const PH_FEATURE_FLAG_DD_SCHEDULE_CALL = "dd_schedule_call";
+export const PH_FEATURE_FLAG_DD_ONBOARDING = "dd_onboarding_enabled";
+export const PH_FEATURE_ENABLE_BREACHES_FLOW_ENABLED =
+  "dd_onboarding_breaches_flow_enabled";
+export const PH_FEATURE_FLAG_DD_SURVEY_VS_VIDEO =
+  "post_payment_onboarding_experiments";
+export const PH_FEATURE_FLAG_GOOGLE_SEARCH_REMOVAL =
+  "test-google-search-removals";
+export const PH_FEATURE_FLAG_USER_INVITE_UPGRADE =
+  "upgrade-or-invite-bulk-plan";
+export const PH_FEATURE_FLAG_AI_OPERATOR = "operator-enabled";
+export const PH_FEATURE_FLAG_AUTO_CLOAKING = "autocloaking-operator-enabled";
+
+// posthog survey ids
+export const PH_SURVEY_DD_ONBOARDING_DEV =
+  "01912d54-c0df-0000-9895-fe8315245b7f";
+export const PH_SURVEY_DD_ONBOARDING_STG =
+  "019132d6-8ced-0000-65dd-075565e435a4";
+export const PH_SURVEY_DD_ONBOARDING_PRD =
+  "019132d4-3c34-0000-ef32-7f9d6f9bdb0b";
+
+// bulk plans
+export const PH_EVENT_BULK_PLAN_SUB_STARTED_CLICK =
+  "user_clicked_continue_subscription_started_bulk_plan";
+export const PH_EVENT_BULK_PLAN_USER_CLICKED_PLAN_TYPE =
+  "user_clicked_subscription_type_post_payment_bulk_plan";
+export const PH_EVENT_BULK_PLAN_USER_CLICKED_INVITES =
+  "user_clicked_invites_remaining_post_payment_bulk_plan";
+
+// ai data removal operator
+export const PH_EVENT_DATA_REMOVAL_USER_CLICKED_OPERATOR_START =
+  "user_clicked_operator_start_removal_button";
+export const PH_EVENT_DATA_REMOVAL_USER_CLICKED_OPERATOR_OPEN_EXTENSION =
+  "user_clicked_operator_open_extension";
+export const PH_EVENT_OPERATOR_EXTENSION_MODAL_USER_CLICKED_INSTALL_CLOAKED_EXTENSION =
+  "operator_extension_modal_user_clicked_install_cloaked_extension";
+export const PH_EVENT_OPERATOR_EXTENSION_MODAL_USER_CLICKED_VIEW_MANUAL_REMOVAL_STEPS =
+  "operator_extension_modal_user_clicked_view_manual_removal_steps";

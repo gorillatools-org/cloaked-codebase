@@ -1,0 +1,16 @@
+import { createElementVNode as _createElementVNode, openBlock as _openBlock, createElementBlock as _createElementBlock, createStaticVNode as _createStaticVNode } from "vue"
+
+const _hoisted_1 = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "40",
+  height: "40",
+  fill: "none",
+  viewBox: "0 0 40 40"
+}
+
+export function render(_ctx, _cache) {
+  return (_openBlock(), _createElementBlock("svg", _hoisted_1, _cache[0] || (_cache[0] = [
+    _createStaticVNode("<g filter=\"url(#filter0_d_85_53650)\"><circle cx=\"20\" cy=\"19\" r=\"6\" fill=\"#FF6624\"></circle></g><circle cx=\"20\" cy=\"19\" r=\"8.5\" stroke=\"#FF550C\"></circle><defs><filter id=\"filter0_d_85_53650\" width=\"40\" height=\"40\" x=\"0\" y=\"0\" color-interpolation-filters=\"sRGB\" filterUnits=\"userSpaceOnUse\"><feFlood flood-opacity=\"0\" result=\"BackgroundImageFix\"></feFlood><feColorMatrix in=\"SourceAlpha\" result=\"hardAlpha\" values=\"0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0\"></feColorMatrix><feOffset dy=\"1\"></feOffset><feGaussianBlur stdDeviation=\"7\"></feGaussianBlur><feComposite in2=\"hardAlpha\" operator=\"out\"></feComposite><feColorMatrix values=\"0 0 0 0 1 0 0 0 0 0.332084 0 0 0 0 0.0458333 0 0 0 1 0\"></feColorMatrix><feBlend in2=\"BackgroundImageFix\" result=\"effect1_dropShadow_85_53650\"></feBlend><feBlend in=\"SourceGraphic\" in2=\"effect1_dropShadow_85_53650\" result=\"shape\"></feBlend></filter></defs>", 3)
+  ])))
+}
+export default { render: render }

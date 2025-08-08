@@ -1,0 +1,30 @@
+import { createElementVNode as _createElementVNode, openBlock as _openBlock, createElementBlock as _createElementBlock } from "vue"
+
+const _hoisted_1 = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "24",
+  height: "24",
+  fill: "none"
+}
+
+export function render(_ctx, _cache) {
+  return (_openBlock(), _createElementBlock("svg", _hoisted_1, _cache[0] || (_cache[0] = [
+    _createElementVNode("g", { "clip-path": "url(#a)" }, [
+      _createElementVNode("path", {
+        fill: "#747474",
+        d: "M4.742 12.36q0 .296.242.523l5.188 5.18q.226.218.508.218a.66.66 0 0 0 .484-.195.62.62 0 0 0 .203-.477.7.7 0 0 0-.055-.265.6.6 0 0 0-.14-.227l-1.75-1.781-3.094-2.82-.164.382 2.516.157h9.883a.65.65 0 0 0 .492-.196.68.68 0 0 0 .195-.5.68.68 0 0 0-.195-.5.65.65 0 0 0-.492-.195H8.68l-2.516.156.164.39 3.094-2.827 1.75-1.781a.6.6 0 0 0 .14-.22.7.7 0 0 0 .055-.273.62.62 0 0 0-.203-.476.66.66 0 0 0-.484-.196.7.7 0 0 0-.274.055.8.8 0 0 0-.25.18l-5.172 5.164a.7.7 0 0 0-.242.523Z"
+      })
+    ], -1),
+    _createElementVNode("defs", null, [
+      _createElementVNode("clipPath", { id: "a" }, [
+        _createElementVNode("rect", {
+          width: "24",
+          height: "24",
+          fill: "#fff",
+          rx: "12"
+        })
+      ])
+    ], -1)
+  ])))
+}
+export default { render: render }

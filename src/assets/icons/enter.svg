@@ -1,0 +1,29 @@
+import { createElementVNode as _createElementVNode, openBlock as _openBlock, createElementBlock as _createElementBlock } from "vue"
+
+const _hoisted_1 = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "24",
+  height: "25",
+  fill: "none",
+  viewBox: "0 0 24 25"
+}
+
+export function render(_ctx, _cache) {
+  return (_openBlock(), _createElementBlock("svg", _hoisted_1, _cache[0] || (_cache[0] = [
+    _createElementVNode("g", { "clip-path": "url(#clip0_2159_438222)" }, [
+      _createElementVNode("path", {
+        fill: "currentColor",
+        d: "M18.453 6.273a.82.82 0 0 0-.61.235.84.84 0 0 0-.226.61q0 .225.008.468.015.241.016.57 0 1.305-.344 2.117a2.2 2.2 0 0 1-1.11 1.188q-.765.375-2.062.375h-5.07l-1.867.117 2.335-2.117 1.735-1.766a.7.7 0 0 0 .18-.265.8.8 0 0 0 .07-.336q0-.352-.242-.586a.81.81 0 0 0-.602-.235.9.9 0 0 0-.617.258l-5.149 5.149a.85.85 0 0 0-.28.64q0 .367.28.649l5.141 5.125q.29.28.625.281a.81.81 0 0 0 .602-.234.78.78 0 0 0 .242-.586.8.8 0 0 0-.07-.336.8.8 0 0 0-.18-.274l-1.735-1.765-2.328-2.102 1.86.102h5.18q2.71 0 3.921-1.29 1.22-1.297 1.219-4.054 0-.345-.016-.64a4 4 0 0 0-.062-.532 1.4 1.4 0 0 0-.133-.367.73.73 0 0 0-.273-.29.8.8 0 0 0-.438-.109"
+      })
+    ], -1),
+    _createElementVNode("defs", null, [
+      _createElementVNode("clipPath", { id: "clip0_2159_438222" }, [
+        _createElementVNode("path", {
+          fill: "#fff",
+          d: "M0 .5h24v24H0z"
+        })
+      ])
+    ], -1)
+  ])))
+}
+export default { render: render }
