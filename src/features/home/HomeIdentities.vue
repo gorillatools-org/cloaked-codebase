@@ -68,7 +68,7 @@ function createCloak(listItem) {
           :name="data.name"
           :website="data.website"
           :icon="data.icon"
-          @clickCreate="createCloak(data)"
+          @click-create="createCloak(data)"
         />
       </div>
       <div class="identity-list-wrapper">
@@ -78,7 +78,7 @@ function createCloak(listItem) {
           :name="data.name"
           :website="data.website"
           :icon="data.icon"
-          @clickCreate="createCloak(data)"
+          @click-create="createCloak(data)"
         />
       </div>
     </div>

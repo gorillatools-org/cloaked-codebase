@@ -218,7 +218,7 @@ export const usePaymentProviderStripe = (
     }
   };
 
-  const subscribeWithStripe = async () => {
+  const subscribeWithStripe = async (awaitSubscriptionChange = true) => {
     try {
       isProcessingStripePayment.value = true;
       stripeError.value = null;
@@ -246,7 +246,9 @@ export const usePaymentProviderStripe = (
         return;
       }
 
-      await store.dispatch("subscription/awaitSubscriptionChange");
+      if (awaitSubscriptionChange) {
+        await store.dispatch("subscription/awaitSubscriptionChange");
+      }
 
       onSubscribed?.(toValue(plan));
       try {

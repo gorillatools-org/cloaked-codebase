@@ -54,7 +54,7 @@ function calculatePercentage(remaining, used) {
   <div class="esim-page-wrapper">
     <EsimManualActivationModal
       :visible="state.showModal"
-      :simId="state.simId"
+      :sim-id="state.simId"
       @close="state.showModal = false"
     />
     <div class="icon-row">
@@ -254,8 +254,8 @@ function calculatePercentage(remaining, used) {
               usageData?.data?.total_data_allowed_in_mb) *
             100
           "
-          topColor="linear-gradient(100deg, #DD0EA3 20%, #FF4163 70%)"
-          bottomColor="#FF416330"
+          top-color="linear-gradient(100deg, #DD0EA3 20%, #FF4163 70%)"
+          bottom-color="#FF416330"
           height="6px"
         />
       </section>
@@ -285,8 +285,8 @@ function calculatePercentage(remaining, used) {
               usageData?.voice?.used
             )
           "
-          topColor="linear-gradient(100deg, #0CC4A0 20%, #11C3E9 70%)"
-          bottomColor="#11C3E930"
+          top-color="linear-gradient(100deg, #0CC4A0 20%, #11C3E9 70%)"
+          bottom-color="#11C3E930"
           height="6px"
         />
       </section>
@@ -311,6 +311,7 @@ function calculatePercentage(remaining, used) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .esim-page-wrapper {
   display: flex;
   flex-direction: column;

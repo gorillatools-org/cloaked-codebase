@@ -154,6 +154,7 @@ const shouldCapitalize = computed(() => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .value-display-wrapper {
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);

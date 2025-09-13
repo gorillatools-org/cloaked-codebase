@@ -1,98 +1,42 @@
 <script setup>
 import { computed } from "vue";
 import BaseButton from "@/library/BaseButton.vue";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT } from "@/scripts/posthogEvents";
+
+const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
+);
+
+const isBlueCheckout = computed(
+  () =>
+    hasLoadedFeatureFlag.value &&
+    featureFlag.value === "checkout-cta-blue-color"
+);
+
 const props = defineProps({
   type: {
     type: String,
     default: "individual",
     validator: (value) => ["individual", "couple", "family"].includes(value),
   },
-  size: {
-    type: String,
-    default: "md",
-    validator: (value) => ["sm", "md", "lg"].includes(value),
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  fullWidth: {
-    type: Boolean,
-    default: false,
-  },
 });
 
 const backgroundColor = computed(() => {
-  if (props.type === "couple") {
-    return "brand-2-gradient";
-  }
-  if (props.type === "family") {
+  if (isBlueCheckout.value === true) {
     return "brand-3-gradient";
+  } else if (props.type === "couple") {
+    return "brand-2-gradient";
+  } else if (props.type === "family") {
+    return "brand-3-gradient";
+  } else {
+    return "info-gradient";
   }
-  return "info-gradient";
 });
 </script>
 
 <template>
-  <BaseButton
-    :disabled="props.disabled"
-    :size="props.size"
-    :fullWidth="props.fullWidth"
-    :backgroundColor="backgroundColor"
-    :loading="props.loading"
-  >
+  <BaseButton :background-color="backgroundColor">
     <slot />
   </BaseButton>
 </template>
-
-<style lang="scss" scoped>
-.button-plans {
-  border-radius: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  color: $color-primary-100-light;
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-
-  @mixin background-gradient($color-start, $color-end) {
-    background: linear-gradient(46deg, $color-start 31%, $color-end 100%);
-  }
-
-  &--individual {
-    @include background-gradient($color-info, #fd9871);
-  }
-
-  &--couple {
-    @include background-gradient($color-brand-2-90-light, #dbdf00);
-  }
-
-  &--family {
-    @include background-gradient($color-brand-3-90-light, #2ab5dc);
-  }
-
-  &--sm {
-    padding: 8px 12px;
-  }
-
-  &--md {
-    padding: 16px 24px;
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-}
-</style>

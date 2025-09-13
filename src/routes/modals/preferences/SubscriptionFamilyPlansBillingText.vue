@@ -15,12 +15,15 @@ const props = defineProps({
 const planType = usePlanType(toRef(() => props.activePlan));
 
 const subscriptionEndDate = useFormattedDate(
-  toRef(() =>
-    store.getters["settings/getSubscription"]?.canceled_at
-      ? store.getters["settings/getSubscription"]?.expires_date
-      : null
-  )
+  toRef(() => store.getters["settings/getSubscription"]?.expires_date)
 );
+
+const isCancelled = computed(() => {
+  return (
+    store.getters["settings/getSubscription"]?.state === "CANCELED" ||
+    store.getters["settings/getSubscription"]?.canceled_at !== null
+  );
+});
 
 const subscriptionCancelReason = computed(() => {
   return store.getters["settings/getSubscription"]?.reason_for_cancellation;
@@ -36,6 +39,13 @@ const cancelledDisplayText = computed(() => {
     default:
       return "Your managed Cloaked plan has expired";
   }
+});
+
+const planPriceText = computed(() => {
+  if (props.activePlan?.price) {
+    return ` for $${props.activePlan?.price / 100}`;
+  }
+  return "";
 });
 </script>
 
@@ -70,17 +80,13 @@ const cancelledDisplayText = computed(() => {
     variant="body-2-semibold"
     class="family-plans-billing-text"
   >
-    <template v-if="subscriptionEndDate">
+    <template v-if="isCancelled">
       You are on a Cloaked {{ planType }} plan. Your subscription will expire on
       {{ subscriptionEndDate }}.
     </template>
     <template v-else-if="activePlan.recurring_interval">
-      You are on a Cloaked {{ planType }} plan, billed
-      {{
-        activePlan.recurring_interval === "2-yearly"
-          ? "every 2 years"
-          : activePlan.recurring_interval
-      }}.
+      You are on a Cloaked {{ planType }} plan. Your subscription is set to
+      renew on {{ subscriptionEndDate }}{{ planPriceText }}.
     </template>
     <template v-else>You are on a Cloaked {{ planType }} plan.</template>
   </BaseText>

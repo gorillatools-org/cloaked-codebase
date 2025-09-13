@@ -29,8 +29,8 @@ const recentlyUsed = computed(() => {
     </BaseText>
     <AtomIdentityMiniCards
       :identities="recentlyUsed"
-      posthogEvent="user_clicked_homepagerecentidentity"
-      :previewFields="['nickname', 'updated_at']"
+      posthog-event="user_clicked_homepagerecentidentity"
+      :preview-fields="['nickname', 'updated_at']"
     />
   </section>
 </template>

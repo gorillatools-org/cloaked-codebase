@@ -6,8 +6,13 @@ export default class CardsServices {
   static async postCreateAPaymentSource(payload) {
     return await api().post(`/api/v1/card/vendor-flow/`, payload);
   }
+
   static async postActiveKYC(values) {
     return api().post("/api/v1/kyc/", values);
+  }
+
+  static async submitVirtualCardApplication(values) {
+    return api().post("/api/v1/kyc-with-subscription/", values);
   }
 
   static async getPaymentSource() {
@@ -20,7 +25,7 @@ export default class CardsServices {
   }
 
   static async deleteFundingSource(id) {
-    return await api().delete(`/api/v1/card/${id}/?force=true/`);
+    return await api().delete(`/api/v1/card/${id}/?force=true`);
   }
 
   static async deleteCard(identityId, cardId) {
@@ -191,6 +196,12 @@ export default class CardsServices {
       });
   }
 
+  static async setOnboardingAsCompleted() {
+    return await api().post(`/api/v1/card/settings/onboarding/`, {
+      onboarding_complete: true,
+    });
+  }
+
   static async enableSettings(payload) {
     return api().post("/api/v1/card/settings/enable/", payload);
   }
@@ -275,7 +286,6 @@ export default class CardsServices {
     return api()
       .post(`/api/v1/card/`, payload)
       .then((response) => {
-        store.dispatch("addMoreFundingSources", { results: [response.data] });
         return response;
       })
       .catch((error) => {

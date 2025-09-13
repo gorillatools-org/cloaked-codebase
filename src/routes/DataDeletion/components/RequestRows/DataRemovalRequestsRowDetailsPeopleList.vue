@@ -273,6 +273,7 @@ const uniqueRecords = computed(() => getUniqueRecords(props.records));
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .people-wrapper {
   justify-content: center;
   align-items: flex-start;

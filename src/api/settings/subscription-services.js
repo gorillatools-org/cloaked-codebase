@@ -51,6 +51,15 @@ export default class SubscriptionService {
       });
   }
 
+  static async getPreviewSubscriptionChange(product_id) {
+    let endpoint = "/api/v2/subscription/stripe/preview-subscription-change/";
+    return await api()
+      .post(endpoint, { product_id })
+      .then(({ data }) => {
+        return data;
+      });
+  }
+
   static async getSubscriptionPlans(params) {
     let queryArr = [];
     if (params) {

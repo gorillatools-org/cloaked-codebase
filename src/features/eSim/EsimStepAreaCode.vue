@@ -1,8 +1,8 @@
 <script setup>
-import UiHeader from "@/features/onboarding-new/UiHeader.vue";
-import UiButton from "@/features/onboarding-new/UiButton.vue";
-import UiButtonRow from "@/features/onboarding-new/UiButtonRow.vue";
-import UiPageWrapper from "@/features/onboarding-new/UiPageWrapper.vue";
+import UiHeader from "@/features/eSim/UiHeader.vue";
+import UiButton from "@/features/eSim/UiButton.vue";
+import UiButtonRow from "@/features/eSim/UiButtonRow.vue";
+import UiPageWrapper from "@/features/eSim/UiPageWrapper.vue";
 import AtomInputInternalLabels from "@/library/AtomInputInternalLabels.vue";
 import ESimService from "@/api/actions/esim-service.js";
 import { useToast } from "@/composables/useToast.js";
@@ -66,14 +66,14 @@ async function completeESim() {
 </script>
 <template>
   <UiPageWrapper
-    showLogo
+    show-logo
     logo="cloaked-esim-logo"
-    :screenEvent="PH_SCREEN_EVENT_ESIM_ONBOARDING_AREA_CODE_SCREEN"
-    :esimStep="4"
+    :screen-event="PH_SCREEN_EVENT_ESIM_ONBOARDING_AREA_CODE_SCREEN"
+    :esim-step="4"
   >
     <UiHeader
-      leftAlign
-      maxWidth="450px"
+      left-align
+      max-width="450px"
     >
       <h2>Choose an area code for your new phone number</h2>
       <h5>
@@ -88,8 +88,8 @@ async function completeESim() {
         :disabled="state.loading"
         :pattern="/^[0-9]*$/"
         :error="state.zipError"
-        :isLoading="state.loading"
-        errorMessage="Please enter a valid zip code."
+        :is-loading="state.loading"
+        error-message="Please enter a valid zip code."
         @input="(event) => (state.zipCode = event.target.value)"
         @keydown.enter.prevent="completeESim"
         @keydown.tab.prevent="completeESim"
@@ -112,4 +112,3 @@ async function completeESim() {
     </UiButtonRow>
   </UiPageWrapper>
 </template>
-<style lang="scss" scoped></style>

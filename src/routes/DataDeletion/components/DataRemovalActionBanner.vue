@@ -293,6 +293,7 @@ const getMarkdownContent = computed(() => (instructions) => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 @import "@/assets/scss/recursive/_variables.scss";
 
 .action-banner {

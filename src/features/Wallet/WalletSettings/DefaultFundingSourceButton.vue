@@ -1,13 +1,10 @@
 <script setup>
-import { computed, ref, markRaw } from "vue";
+import { computed, ref } from "vue";
 import Button from "./WalletSettingsButton";
-import store from "@/store";
-import PatchDefaultFundingSource from "@/features/modals/Wallet/PatchDefaultFundingSource.vue";
-import router from "@/routes/router/index.js";
+import useFundingSource from "@/composables/Wallet/useFundingSource";
+import { CARD_LABEL_BY_PROVIDER_TYPE } from "@/scripts/constants.js";
 
-const fundingSources = computed(() => {
-  return store.state.cards?.fundingSources?.results;
-});
+const { openListModal, openAddModal, fundingSources } = useFundingSource();
 
 const primaryCard = computed(() => {
   return fundingSources.value?.find((source) => source.primary) || [];
@@ -26,22 +23,24 @@ const subtext = computed(() => {
   }
 });
 
+const cardType = computed(() => {
+  if (!primaryCard.value || !primaryCard.value.provider) return "Unknown";
+  return CARD_LABEL_BY_PROVIDER_TYPE[primaryCard.value.provider];
+});
+
 const loading = ref(false);
 
 const openDefaultFundingSources = () => {
-  if ((store.state.cards?.fundingSources?.results?.length ?? 0) === 0) {
-    router.push({ path: "/settings/cloaked-cards" });
+  // No funding sources, open add modal
+  if ((fundingSources.value?.length ?? 0) === 0) {
+    openAddModal(() => {
+      // UX: open list modal after confirmation of a new funding source
+      openListModal(true);
+    });
     return;
   }
 
-  store.dispatch("openModal", {
-    customTemplate: {
-      template: markRaw(PatchDefaultFundingSource),
-      props: {
-        isVisible: true,
-      },
-    },
-  });
+  openListModal(true);
 };
 </script>
 
@@ -49,8 +48,8 @@ const openDefaultFundingSources = () => {
   <Button
     :loading="loading"
     icon="bank"
-    text="Default funding source"
-    :title="primaryCard?.card_brand || 'Connect account'"
+    text="Edit funding source"
+    :title="`${primaryCard?.card_brand} (${cardType})` || 'Connect account'"
     :subtext="subtext || 'Bank account, Debit or Credit card'"
     clickable
     @click="openDefaultFundingSources"

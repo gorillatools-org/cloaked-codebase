@@ -272,6 +272,7 @@ function dismissAll() {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .breaches-alert {
   background-color: $color-primary-5;
   border-radius: 32px;

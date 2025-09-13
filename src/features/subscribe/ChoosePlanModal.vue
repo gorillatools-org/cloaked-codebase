@@ -6,10 +6,11 @@ import router from "@/routes/router";
 import ChoosePlanPicker from "@/features/subscribe/ChoosePlanPicker.vue";
 import ChoosePlanBenefits from "@/features/ChoosePlanBenefits.vue";
 import { usePlansModal } from "@/features/subscribe/composables/usePlansModal";
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { usePaymentIntent } from "@/composables/usePaymentIntent.js";
 import { useStripeIntentPrefetch } from "@/features/subscribe/composables/useStripeIntentPrefetch.js";
 import store from "@/store";
+import BaseText from "@/library/BaseText.vue";
 
 const { isPlansModalOpen, allowClose } = usePlansModal();
 
@@ -43,6 +44,12 @@ const choosePlanPaymentRef = ref(null);
 const onClickedSubscribe = async () => {
   await choosePlanPaymentRef.value?.subscribeWithStripe();
 };
+
+const isChangingPlan = computed(() => {
+  return store.getters["settings/isSubscribed"];
+});
+
+const billingCycle = ref("annually");
 </script>
 
 <template>
@@ -56,15 +63,28 @@ const onClickedSubscribe = async () => {
     >
       <div class="choose-plan-modal__picker">
         <ChoosePlanPicker
+          v-model:billing-cycle="billingCycle"
           :discount="paymentMethod === 'Card' ? promoDiscount : null"
         />
-        <ChoosePlanBenefits class="choose-plan-modal__benefits" />
+        <BaseText
+          v-if="isChangingPlan"
+          variant="body-2-semibold"
+          class="choose-plan-modal__change-plan-text"
+        >
+          You will be refunded a prorated amount for your current subscription
+          and then charged for this new subscription.
+        </BaseText>
+        <ChoosePlanBenefits
+          v-else
+          class="choose-plan-modal__benefits"
+        />
       </div>
       <ChoosePlanPayment
         ref="choosePlanPaymentRef"
         v-model:payment-method="paymentMethod"
         class="choose-plan-modal__payment"
         :user="$store.getters['authentication/user']"
+        :billing-cycle="billingCycle"
         @clicked-subscribe="onClickedSubscribe"
         @subscribed="onSubscribed"
       />
@@ -74,6 +94,7 @@ const onClickedSubscribe = async () => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .choose-plan-modal {
   width: 920px;
   display: grid;
@@ -107,6 +128,12 @@ const onClickedSubscribe = async () => {
         gap: 24px;
       }
     }
+
+    .choose-plan-picker__plans {
+      padding: 0;
+      background: none;
+      box-shadow: none;
+    }
   }
 
   &__benefits {
@@ -123,6 +150,14 @@ const onClickedSubscribe = async () => {
       padding: 0 32px;
       margin: 32px 0;
     }
+  }
+
+  &__change-plan-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    margin: 22px 9px;
   }
 }
 </style>

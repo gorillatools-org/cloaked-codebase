@@ -101,7 +101,7 @@ watch(route, () => {
 <template>
   <router-link
     v-if="props.card"
-    :to="'/wallet/card/' + card.id"
+    :to="'/virtual-cards/card/' + card.id"
     class="card"
     :class="{
       active: route.params.id === card.id,
@@ -168,7 +168,10 @@ watch(route, () => {
           <span
             v-if="!cardNumberVisibility && !card.canceled"
             @click="
-              copyToClipboard('Card number', realCardNumbers.pan_unmasked)
+              copyToClipboard(
+                'Virtual Card number',
+                realCardNumbers.pan_unmasked
+              )
             "
           >
             {{ splitPan(hiddenPan(card.pan)) }}
@@ -176,7 +179,10 @@ watch(route, () => {
           <span
             v-else
             @click="
-              copyToClipboard('Card number', realCardNumbers.pan_unmasked)
+              copyToClipboard(
+                'Virtual Card number',
+                realCardNumbers.pan_unmasked
+              )
             "
           >
             {{ splitPan(realCardNumbers.pan_unmasked) }}
@@ -201,7 +207,7 @@ watch(route, () => {
         v-if="!card.canceled"
         class="valid"
       >
-        <p>Valid thru</p>
+        <p>Exp. Date</p>
         <p
           v-if="route.params.id === card.id"
           class="hover"
@@ -209,10 +215,7 @@ watch(route, () => {
           <span
             v-if="!cardExpiryVisibility"
             @click="
-              copyToClipboard(
-                'Valid thru date',
-                formatExpiryDate(card.expires_at)
-              )
+              copyToClipboard('Exp. Date', formatExpiryDate(card.expires_at))
             "
           >
             ••/••
@@ -220,10 +223,7 @@ watch(route, () => {
           <span
             v-else
             @click="
-              copyToClipboard(
-                'Valid thru date',
-                formatExpiryDate(card.expires_at)
-              )
+              copyToClipboard('Exp. Date', formatExpiryDate(card.expires_at))
             "
           >
             {{ formatExpiryDate(card.expires_at) }}
@@ -239,13 +239,14 @@ watch(route, () => {
             />
           </span>
         </p>
+        <p v-else>••/••</p>
       </div>
 
       <div
         v-if="!card.canceled"
         class="cvv"
       >
-        <p>CVV</p>
+        <p>CVV2</p>
         <p
           v-if="realCardNumbers.security_code && route.params.id === card.id"
           class="hover"
@@ -253,7 +254,7 @@ watch(route, () => {
           <span
             v-if="!cardCvvVisibility"
             @click="
-              copyToClipboard('CVV', realCardNumbers.security_code_unmasked)
+              copyToClipboard('CVV2', realCardNumbers.security_code_unmasked)
             "
           >
             •••
@@ -261,7 +262,7 @@ watch(route, () => {
           <span
             v-else
             @click="
-              copyToClipboard('CVV', realCardNumbers.security_code_unmasked)
+              copyToClipboard('CVV2', realCardNumbers.security_code_unmasked)
             "
           >
             {{ realCardNumbers.security_code_unmasked }}
@@ -296,6 +297,7 @@ watch(route, () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .card {
   --distance: calc(222px - 95px);
 

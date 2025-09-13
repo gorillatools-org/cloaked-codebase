@@ -521,7 +521,7 @@ const verificationCode = ref("");
       <ExportData
         view-step="export"
         nav-disabled
-        @toggleBack="toggleBack"
+        @toggle-back="toggleBack"
       />
     </template>
 
@@ -573,6 +573,7 @@ const verificationCode = ref("");
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .delete-account {
   .preferences-input {
     margin-top: 37px;

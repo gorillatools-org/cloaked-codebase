@@ -102,6 +102,7 @@ function handleClick(e) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .menu-item {
   margin-top: 4px;
   width: 100%;

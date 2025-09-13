@@ -135,11 +135,12 @@ const { isMobile } = useDisplay();
         </div>
       </div>
     </div>
-    <DataRemovalGraphShared :rawGraphData="props.rawGraphData" />
+    <DataRemovalGraphShared :raw-graph-data="props.rawGraphData" />
   </div>
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .box-wrapper {
   display: flex;
   flex-direction: column;

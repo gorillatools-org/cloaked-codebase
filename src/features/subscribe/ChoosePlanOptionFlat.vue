@@ -1,6 +1,6 @@
-<script setup>
+<script setup lang="ts">
 import InlineSvg from "@/features/InlineSvg.vue";
-import { toRef } from "vue";
+import { toRef, computed } from "vue";
 import { usePlanMembers } from "@/features/subscribe/composables/usePlanMembers.js";
 import { usePlanType } from "@/features/subscribe/composables/usePlanType.js";
 import { usePlanBilling } from "@/features/subscribe/composables/usePlanBilling.js";
@@ -11,29 +11,32 @@ import { useSavings } from "@/features/subscribe/composables/useSavings.js";
 import {
   formattedPrice,
   isValidPrice,
-} from "@/features/subscribe/composables/utils.js";
+} from "@/features/subscribe/composables/utils.ts";
 import BaseText from "@/library/BaseText.vue";
+import { useBillingCycles } from "@/features/subscribe/composables/useBillingCycles.js";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { type ChoosePlanOptionProps } from "@/features/subscribe/ChoosePlanOption.vue";
+import { PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT } from "@/scripts/posthogEvents";
 
-const props = defineProps({
-  plan: {
-    type: Object,
-    required: true,
-  },
-  discount: {
-    type: Number,
-    default: null,
-  },
-  anchor: {
-    type: Number,
-    default: null,
-  },
-  compareAt: {
-    type: Number,
-    default: null,
-  },
+const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
+);
+
+const isBlueCheckout = computed(
+  () =>
+    hasLoadedFeatureFlag.value &&
+    featureFlag.value === "checkout-cta-blue-color"
+);
+
+const props = withDefaults(defineProps<ChoosePlanOptionProps>(), {
+  disabled: false,
+  active: false,
+  discount: null,
+  anchor: null,
+  compareAt: null,
 });
 
-const model = defineModel({ type: String });
+const model = defineModel<string | null>({ default: null });
 
 const plan = toRef(() => props.plan);
 const discount = toRef(() => props.discount);
@@ -49,16 +52,19 @@ const anchoredPerMemberPrice = usePriceAnchor(perMemberPrice, anchor);
 const discountedPerMemberPrice = usePriceDiscount(perMemberPrice, discount);
 
 const savings = useSavings(perMemberPrice, compareAtPerMemberPrice);
+
+const availableBillingCycles = useBillingCycles();
 </script>
 
 <template>
   <label
     class="plan-option"
     :class="[
-      `plan-option--${type.toLowerCase()}`,
+      `plan-option--${type?.toLowerCase()}`,
       {
-        'plan-option--active': $attrs.active,
-        'plan-option--disabled': $attrs.disabled,
+        'plan-option--active': active,
+        'plan-option--disabled': disabled,
+        'plan-option--uniform-blue': isBlueCheckout,
       },
     ]"
   >
@@ -77,9 +83,12 @@ const savings = useSavings(perMemberPrice, compareAtPerMemberPrice);
         variant="headline-4-bold"
         class="plan-option__title"
       >
-        <template v-if="type !== 'Individual'">
+        <span
+          v-if="type !== 'Individual'"
+          class="plan-option__title-type"
+        >
           {{ type }}
-        </template>
+        </span>
         {{ billing }}
         <BaseText
           v-if="members"
@@ -120,13 +129,17 @@ const savings = useSavings(perMemberPrice, compareAtPerMemberPrice);
         class="plan-option__after-text"
       >
         Save {{ savings }}%
-        {{
-          billing === "2-Yearly"
-            ? "billed every 2 years"
-            : billing === "Yearly"
-              ? "billed annually"
-              : null
-        }}
+        <template
+          v-if="plan.recurring_interval !== availableBillingCycles.at(-1)"
+        >
+          {{
+            billing === "2-Yearly"
+              ? "billed every 2 years"
+              : billing === "Yearly"
+                ? "billed annually"
+                : null
+          }}
+        </template>
       </BaseText>
     </span>
     <input
@@ -140,6 +153,7 @@ const savings = useSavings(perMemberPrice, compareAtPerMemberPrice);
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .plan-option {
   padding: 8px 16px;
   border-radius: 8px;
@@ -218,7 +232,17 @@ const savings = useSavings(perMemberPrice, compareAtPerMemberPrice);
       }
 
       @at-root .theme-light & {
-        color: $color-brand-3-70-dark;
+        color: $color-brand-3-90-dark;
+      }
+    }
+
+    @at-root .plan-option--uniform-blue & {
+      @at-root .theme-dark & {
+        color: $color-brand-3-90-light;
+      }
+
+      @at-root .theme-light & {
+        color: $color-brand-3-90-dark;
       }
     }
   }

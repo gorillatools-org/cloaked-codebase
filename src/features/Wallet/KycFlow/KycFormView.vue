@@ -11,6 +11,17 @@ import Step3 from "@/features/Wallet/KycFlow/Step3";
 import Step4 from "@/features/Wallet/KycFlow/Step4";
 import { StateList } from "@/scripts/countries/states";
 import { posthogCapture } from "@/scripts/posthog.js";
+import { useBasicMode } from "@/composables/useBasicMode";
+import { useRouter } from "vue-router";
+import BaseButton from "@/library/BaseButton.vue";
+
+// Refs for step components
+const step1Ref = ref(null);
+const step2Ref = ref(null);
+
+const { isBasicModeEnabled } = useBasicMode();
+
+const router = useRouter();
 
 const emit = defineEmits(["toggleVisible"]);
 
@@ -28,7 +39,7 @@ const steps = ref([
     validated: false,
   },
   {
-    title: "Agreements",
+    title: "Submit Verification",
     step: 3,
     active: false,
     validated: false,
@@ -56,6 +67,18 @@ function invalidateStep() {
 
 function nextStep() {
   const index = steps.value.findIndex((item) => item.active);
+  const stepRefs = [step1Ref, step2Ref];
+
+  // Validate current step if it has validation capability
+  if (stepRefs[index]?.value?.validateAllFields) {
+    stepRefs[index].value.validateAllFields();
+
+    // Check if validation passed
+    if (!steps.value[index].validated) {
+      return; // Don't proceed if validation failed
+    }
+  }
+
   steps.value[index].active = false;
   steps.value[index + 1].active = true;
   posthogCapture(`dashboard_pay_wallet_kyc_flow_step_${index + 2}_viewed`);
@@ -193,6 +216,27 @@ function tryAgain() {
     "dashboard_pay_wallet_kyc_flow_step_4_try_again_button_clicked"
   );
 }
+
+function backToDashboard() {
+  // Push the route in the background while keeping KYC flow visible
+  const routePromise = isBasicModeEnabled.value
+    ? router.push({ name: "ExposureStatusBrokers" })
+    : router.push({ name: "Home" });
+
+  // Wait for navigation to complete, then smoothly close KYC flow
+  routePromise
+    .then(() => {
+      setTimeout(() => {
+        emit("toggleVisible");
+      }, 100); // Small delay for smooth transition
+    })
+    .catch(() => {
+      // Fallback: close modal even if navigation fails
+      setTimeout(() => {
+        emit("toggleVisible");
+      }, 300);
+    });
+}
 </script>
 
 <template>
@@ -205,69 +249,83 @@ function tryAgain() {
       <inlineSvg name="chevron-left" />
     </div>
 
-    <div class="content">
-      <ProgressBar
-        :maxSteps="steps.length - 1"
-        :currentStep="activeStep.step"
-        :title="activeStep.title"
-      />
+    <div
+      class="content"
+      :class="{ 'content--full-width': activeStep.step === 4 }"
+    >
+      <div class="content-step">
+        <ProgressBar
+          :max-steps="steps.length - 1"
+          :current-step="activeStep.step"
+          :title="activeStep.title"
+        />
 
-      <Step1
-        v-if="activeStep.step === 1"
-        :form="formData"
-        @validateStep="validateStep()"
-        @invalidateStep="invalidateStep()"
-      />
+        <Step1
+          v-if="activeStep.step === 1"
+          ref="step1Ref"
+          :form="formData"
+          @validate-step="validateStep()"
+          @invalidate-step="invalidateStep()"
+        />
 
-      <Step2
-        v-if="activeStep.step === 2"
-        :form="formData"
-        @validateStep="validateStep()"
-        @invalidateStep="invalidateStep()"
-      />
+        <Step2
+          v-if="activeStep.step === 2"
+          ref="step2Ref"
+          :form="formData"
+          @validate-step="validateStep()"
+          @invalidate-step="invalidateStep()"
+        />
 
-      <Step3
-        v-if="activeStep.step === 3"
-        @validateStep="validateStep()"
-      />
+        <Step3
+          v-if="activeStep.step === 3"
+          @validate-step="validateStep()"
+        />
 
-      <Step4
-        v-if="activeStep.step === 4"
-        :form="formData"
-        @validateStep="validateStep()"
-        @invalidateStep="invalidateStep()"
-        @tryAgain="tryAgain"
-      />
+        <Step4
+          v-if="activeStep.step === 4"
+          :form="formData"
+          @validate-step="validateStep()"
+          @invalidate-step="invalidateStep()"
+          @try-again="tryAgain"
+          @back-to-dashboard="backToDashboard"
+        />
+      </div>
 
-      <div
+      <footer
         v-if="activeStep.step !== 4"
-        class="button"
+        class="footer"
       >
-        <button
+        <BaseButton
+          v-if="activeStep.step === 3"
+          class="submit-verification-btn"
+          icon="send"
+          size="md"
+          variant="primary"
           :disabled="!activeStep.validated"
           @click="nextStep()"
         >
-          <span v-if="activeStep.step === 3">
-            Agree &amp; submit application
-            <inlineSvg
-              :key="activeStep.step"
-              name="user-verification"
-            />
-          </span>
-          <span v-else>
-            Continue
-            <inlineSvg
-              :key="activeStep.step"
-              name="arrow-right"
-            />
-          </span>
+          Submit Verification
+        </BaseButton>
+
+        <button
+          v-else
+          class="continue-btn"
+          :disabled="!activeStep.validated"
+          @click="nextStep()"
+        >
+          Continue
+          <inlineSvg
+            :key="activeStep.step"
+            name="arrow-right"
+          />
         </button>
-      </div>
+      </footer>
     </div>
   </section>
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 section {
   position: fixed;
   top: 0;
@@ -334,21 +392,26 @@ section {
   }
 
   .content {
-    max-width: 478px;
+    max-width: 578px;
     margin: 0 auto;
-    padding: 33px 0 48px;
+    padding: 33px 0;
     min-height: 100%;
     display: flex;
     flex-direction: column;
+    height: 100%;
+    position: relative;
 
-    > div {
-      &:last-child {
-        margin-top: auto;
-      }
+    &--full-width {
+      max-width: 100%;
+      width: 100%;
     }
 
-    .button {
-      button {
+    .footer {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 24px;
+
+      .continue-btn {
         width: 100%;
         padding: 11px;
         border-radius: 30px;
@@ -365,17 +428,17 @@ section {
           background: $color-primary-10;
         }
 
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+
         svg {
           width: 15px;
           height: 15px;
           margin-left: 10px;
           display: inline-block;
-        }
-
-        &:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-          pointer-events: none;
         }
 
         span {
@@ -384,7 +447,17 @@ section {
           justify-content: center;
         }
       }
+
+      .submit-verification-btn {
+        width: 100%;
+      }
     }
+  }
+
+  .content-step {
+    flex-grow: 1;
+    min-height: 0;
+    padding-bottom: 17px;
   }
 }
 </style>

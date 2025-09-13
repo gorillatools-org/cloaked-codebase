@@ -27,13 +27,13 @@ onMounted(() => {
 <template>
   <Iframe
     v-if="props.version === 2"
-    useLegacyRoute
+    use-legacy-route
     source="auth/login"
-    :prevRoute="prevRoute"
+    :prev-route="prevRoute"
   />
   <AuthIframe
     v-else
     source="auth/login"
-    :prevRoute="prevRoute"
+    :prev-route="prevRoute"
   />
 </template>

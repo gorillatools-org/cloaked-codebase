@@ -1,24 +1,27 @@
+<script setup lang="ts">
+import BaseSheet from "@/library/BaseSheet.vue";
+</script>
+
 <template>
-  <div class="checkout-card">
+  <BaseSheet
+    class="checkout-card"
+    elevation="md"
+    spacing-x="lg"
+    spacing-y="lg"
+  >
     <slot />
-  </div>
+  </BaseSheet>
 </template>
 
 <style scoped lang="scss">
 .checkout-card {
-  padding: 24px 16px;
-  border-radius: 16px;
-  background: rgb(255 255 255 / 10%);
+  border: none;
   display: flex;
   flex-direction: column;
   row-gap: 36px;
 
-  @media all and (min-width: $screen-md) {
-    padding: 24px;
-  }
-
-  & + & {
-    margin-top: 36px;
+  @at-root .theme-dark & {
+    background: $color-base-white-10-light;
   }
 }
 </style>

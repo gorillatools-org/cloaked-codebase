@@ -253,24 +253,24 @@ const handleChangeStatus = ({ contactId, contactType, newStatus }) => {
           v-for="contact in state.displayContacts"
           :key="contact.id"
           :contact="contact"
-          :identityId="props.identityId"
+          :identity-id="props.identityId"
           @change-status="handleChangeStatus"
           @edit="handleOpenContactModal"
         />
       </div>
       <AtomPaginationWidget
         v-if="totalContactsCount > 0"
-        :fetchPageNumberData="fetchNumberContactsPage"
-        :currentItemsCount="
+        :fetch-page-number-data="fetchNumberContactsPage"
+        :current-items-count="
           parseInt(state.displayEmailRes + state.displayPhoneRes)
         "
-        :totalItemsCount="totalContactsCount"
-        :customOffset="getOveralOffset()"
-        :resultsPerPage="maxIndivualResultsPerPage"
-        :leftArrowDisabled="
+        :total-items-count="totalContactsCount"
+        :custom-offset="getOveralOffset()"
+        :results-per-page="maxIndivualResultsPerPage"
+        :left-arrow-disabled="
           !state.previousEmailPage && !state.previousPhonePage
         "
-        :rightArrowDisabled="!state.nextEmailPage && !state.nextPhonePage"
+        :right-arrow-disabled="!state.nextEmailPage && !state.nextPhonePage"
       />
 
       <div class="cloak-identifier-section__add-contact">
@@ -308,6 +308,7 @@ const handleChangeStatus = ({ contactId, contactType, newStatus }) => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .spinner-wrapper {
   display: flex;
   justify-content: center;

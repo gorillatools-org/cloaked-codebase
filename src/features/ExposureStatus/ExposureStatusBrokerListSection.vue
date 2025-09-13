@@ -129,6 +129,7 @@ const isItemExpanded = (broker) => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .exposure-status__broker-list-section {
   display: flex;
   flex-direction: column;

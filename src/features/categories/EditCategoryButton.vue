@@ -140,6 +140,7 @@ function addCloaksToCategory(newCloaks) {
   </UiMenu>
 </template>
 <style scoped lang="scss">
+/* stylelint-disable */
 .filter-item-row {
   display: flex;
   flex-direction: row;

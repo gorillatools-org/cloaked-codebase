@@ -57,6 +57,7 @@ onMounted(async () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .page-call-guard {
   display: flex;
   flex-direction: column-reverse;

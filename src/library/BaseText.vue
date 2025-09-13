@@ -33,6 +33,7 @@ const props = defineProps({
         "caption-semibold",
         "caption-bold",
         "label-medium",
+        "label-semibold",
       ].includes(value.toLowerCase()),
   },
   as: {
@@ -147,6 +148,10 @@ const props = defineProps({
 
   &--label-medium {
     @include font-style-by-type("label-medium");
+  }
+
+  &--label-semibold {
+    @include font-style-by-type("label-semibold");
   }
 
   &--underline {

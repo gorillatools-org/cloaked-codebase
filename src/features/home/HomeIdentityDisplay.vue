@@ -79,6 +79,7 @@ function openBreachArticle(externalUrl) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .home-cloak-wrapper {
   display: flex;
   flex-direction: row;

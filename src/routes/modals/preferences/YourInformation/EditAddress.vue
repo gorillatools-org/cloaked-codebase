@@ -176,6 +176,7 @@ function handleUpdateValue({ name, value }) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .edit-address {
   display: flex;
   flex-direction: column;

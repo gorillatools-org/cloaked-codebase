@@ -133,8 +133,8 @@ const onDelete = async () => {
   <div>
     <CustomFields
       v-bind="$attrs"
-      :identityId="props.identity.id"
-      :readOnly="readOnly"
+      :identity-id="props.identity.id"
+      :read-only="readOnly"
       :is-loading="isLoading"
       :is-confirm-delete-modal-shown="isConfirmDeleteModalShown"
       :is-unsaved-changes-modal-shown="isUnsavedChangesModalShown"

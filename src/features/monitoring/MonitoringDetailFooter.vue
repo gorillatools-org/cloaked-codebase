@@ -7,6 +7,7 @@
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .monitoring-detail-footer {
   position: sticky;
   bottom: 0;

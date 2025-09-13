@@ -43,11 +43,19 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
   notClickable: {
     type: Boolean,
     default: false,
   },
   copyToClipboard: {
+    type: Boolean,
+    default: false,
+  },
+  hoverEffect: {
     type: Boolean,
     default: false,
   },
@@ -69,6 +77,7 @@ const copyToClipboard = () => {
       'multi-line': props.multiLine,
       disabled: props.disabled,
       'not-clickable': props.notClickable,
+      'hover-effect': props.hoverEffect,
     }"
     @click="$emit('toggleClicked')"
   >
@@ -110,6 +119,13 @@ const copyToClipboard = () => {
     </div>
 
     <div
+      v-if="props.loading"
+      class="loading"
+    >
+      <inlineSvg name="spinner" />
+    </div>
+
+    <div
       v-if="props.copyToClipboard"
       class="copy-clipboard"
       @click.stop="copyToClipboard()"
@@ -126,6 +142,7 @@ const copyToClipboard = () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .detail-section {
   padding: 24px 76px 24px 56px;
   border-radius: 20px;
@@ -134,6 +151,13 @@ const copyToClipboard = () => {
 
   &:hover {
     cursor: pointer;
+  }
+
+  &.hover-effect:not(.not-clickable):not(.disabled) {
+    transition: border 0.15s ease-out;
+    &:hover {
+      border: 1px solid $color-primary-100;
+    }
   }
 
   &.not-clickable {
@@ -209,6 +233,23 @@ const copyToClipboard = () => {
   }
 
   .download {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: $color-primary-100;
+    text-align: center;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  }
+
+  .loading {
     position: absolute;
     right: 16px;
     top: 50%;

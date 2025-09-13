@@ -323,7 +323,7 @@ function removeIdentityFromCategory() {
       align-x="center"
       :title="tooltipText"
       position="bottom"
-      :canShow="!!phone"
+      :can-show="!!phone"
       @click.prevent.stop="clickToCopy('phone', phone)"
       @mouseleave="resetTooltipText"
     >
@@ -340,7 +340,7 @@ function removeIdentityFromCategory() {
       align-x="center"
       :title="tooltipText"
       position="bottom"
-      :canShow="!!email"
+      :can-show="!!email"
       @click.prevent.stop="clickToCopy('email', email)"
       @mouseleave="resetTooltipText"
     >
@@ -357,7 +357,7 @@ function removeIdentityFromCategory() {
       align-x="center"
       :title="tooltipText"
       position="bottom"
-      :canShow="!!username"
+      :can-show="!!username"
       @click.prevent.stop="clickToCopy('username', username)"
       @mouseleave="resetTooltipText"
     >
@@ -375,7 +375,7 @@ function removeIdentityFromCategory() {
       align-x="center"
       :title="tooltipText"
       position="bottom"
-      :canShow="!!hasPassword"
+      :can-show="!!hasPassword"
       @click.prevent.stop="clickToCopyPassword()"
       @mouseleave="resetTooltipText"
     >
@@ -438,7 +438,7 @@ function removeIdentityFromCategory() {
           width="247px"
           max-height="300px"
           placement="bottom-end"
-          hasContentClickClose
+          has-content-click-close
         >
           <UiTooltip
             align-x="center"
@@ -498,9 +498,9 @@ function removeIdentityFromCategory() {
               max-height="205px"
               placement="left-end"
               :value="state.catMenuVisible"
-              :offsetAway="10"
-              :offsetAlong="52"
-              :hasContentClickClose="true"
+              :offset-away="10"
+              :offset-along="52"
+              :has-content-click-close="true"
             >
               <UiMenuButton
                 title="Move to"
@@ -566,6 +566,7 @@ function removeIdentityFromCategory() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .list-view-item {
   padding: 10px 16px;
   width: 100%;

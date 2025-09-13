@@ -167,7 +167,7 @@ const openLink = () => {
     </div>
 
     <BaseButton
-      fullWidth
+      full-width
       icon="new-tab"
       class="identity-theft-protection-content__button"
       :size="largePadding ? 'lg' : 'md'"

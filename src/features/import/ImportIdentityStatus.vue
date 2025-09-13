@@ -105,7 +105,7 @@ const tooltip = computed(() => {
     <AppTooltip
       v-if="tooltip"
       placement="top"
-      :offsetAway="8"
+      :offset-away="8"
     >
       <span>
         {{ statusLabel }}

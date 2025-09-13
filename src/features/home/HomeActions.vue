@@ -6,7 +6,7 @@ import UserService from "@/api/actions/user-service";
 import MfaService from "@/api/actions/mfa-service";
 import { computed, onBeforeMount, reactive } from "vue";
 import router from "@/routes/router";
-import OnboardingFirstSteps from "@/features/modals/onboarding/OnboardingFirstSteps";
+
 import { PH_EVENT_HOME_ACTION } from "@/scripts/posthogEvents";
 import DataDeleteService from "@/api/actions/data-delete-service";
 import { posthogCapture } from "@/scripts/posthog.js";
@@ -20,7 +20,6 @@ const state = reactive({
   showingAll: false,
   mfaMethods: store.state.authentication.MfaMethods || [],
   loaded: false,
-  showGetStarted: false,
 });
 
 onBeforeMount(async () => {
@@ -77,10 +76,6 @@ const show2FA = computed(() => {
   return !store.getters.getFlag(userFlags.DISMISSED_2FA_ACTION);
 });
 
-const showGetStarted = computed(() => {
-  return !store.getters.getFlag(userFlags.DISMISSED_GET_STARTED_ACTION);
-});
-
 const { freeSpots } = useInvites();
 
 const showSendInvite = computed(() => {
@@ -104,7 +99,7 @@ const showDataDeletion = computed(() => {
 const allActionsObj = computed(() => {
   return {
     showSendInvite: showSendInvite.value,
-    showGetStarted: showGetStarted.value,
+
     showDataDeletion: showDataDeletion.value,
     showDownloadMobile: showDownloadMobile.value,
     showImportPasswords: showImportPasswords.value,
@@ -166,11 +161,6 @@ function onClick2FA() {
   router.push({ name: "settings.account" });
 }
 
-function onClickGetStarted() {
-  sendPosthogEvent("get_started");
-  state.showGetStarted = true;
-}
-
 function onClickSendInvite() {
   sendPosthogEvent("send_invite");
   router.push({ name: "settings.subscription" });
@@ -192,11 +182,6 @@ function sendPosthogEvent(eventName) {
     v-show="numberOfActionsAvailable > 0"
     class="recents"
   >
-    <OnboardingFirstSteps
-      v-if="state.showGetStarted"
-      @close="state.showGetStarted = false"
-    />
-
     <div class="header-row">
       <BaseText
         as="h1"
@@ -252,51 +237,6 @@ function sendPosthogEvent(eventName) {
           class="delete"
           @click.stop.prevent="
             removeRow(userFlags.DISMISSED_SEND_INVITE_ACTION)
-          "
-        >
-          <InlineSvg
-            key="homeaction-delete-1"
-            name="delete"
-          />
-        </UiTooltip>
-      </div>
-
-      <div
-        v-if="visibleActions.includes('showGetStarted')"
-        class="action-row"
-        @click="onClickGetStarted"
-      >
-        <div class="icon green reverse">
-          <InlineSvg
-            key="homeaction-play"
-            name="play-outline"
-          />
-        </div>
-
-        <div class="text-section">
-          <BaseText
-            as="div"
-            variant="headline-6-medium"
-          >
-            Cloaked's 1-minute startup guide
-          </BaseText>
-          <div class="action-subtitle">
-            <BaseText
-              variant="body-3-semibold"
-              underline
-            >
-              Easy step-by-step guide
-            </BaseText>
-            <InlineSvg
-              key="homeaction-right-1"
-              name="chevron-right"
-            />
-          </div>
-        </div>
-        <UiTooltip
-          class="delete"
-          @click.stop.prevent="
-            removeRow(userFlags.DISMISSED_GET_STARTED_ACTION)
           "
         >
           <InlineSvg
@@ -474,6 +414,7 @@ function sendPosthogEvent(eventName) {
   </section>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .header-row {
   display: flex;
   flex-direction: row;

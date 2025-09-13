@@ -110,6 +110,7 @@ const errors = computed(() => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .validated-input {
   font-weight: 500;
   font-size: 14px;

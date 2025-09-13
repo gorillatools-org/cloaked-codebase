@@ -1,7 +1,7 @@
 <script setup>
 import PersonalInfoService from "@/api/settings/personal-services";
 import moment from "moment";
-import { date } from "@/features/cloakDetails/CustomFields/CustomFieldForm/validations";
+import { useDateOfBirthValidation } from "@/composables/validation/useDateOfBirthValidation";
 
 import { onMounted, reactive } from "vue";
 import { useToast } from "@/composables/useToast.js";
@@ -28,18 +28,42 @@ const props = defineProps({
 });
 
 const state = reactive({
-  value: props.birthday ? moment(props.birthday).format("YYYY-MM-DD") : "",
+  value: props.birthday ? moment(props.birthday).format("MM-DD-YYYY") : "",
   error: false,
   errorMessage: "",
   loading: false,
 });
+
+const {
+  error: dateOfBirthError,
+  validate: validateDateOfBirth,
+  validateDebounced: validateDateOfBirthDebounced,
+} = useDateOfBirthValidation(() => state.value, {
+  isRequired: true,
+});
+
+function formatDobInput(raw) {
+  const digits = String(raw || "")
+    .replace(/\D/g, "")
+    .slice(0, 8);
+
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4)}`;
+}
+
+function onDobInput(newValue) {
+  state.value = formatDobInput(newValue);
+  validateDateOfBirthDebounced();
+}
 
 onMounted(() => {
   window.document.title = "Birthday Preferences • Cloaked";
 });
 
 async function handleSave() {
-  state.errorMessage = date(state.value)?.[0] ?? null;
+  validateDateOfBirth();
+  state.errorMessage = dateOfBirthError.value;
   state.error = !!state.errorMessage;
 
   if (state.error) {
@@ -50,7 +74,10 @@ async function handleSave() {
     state.loading = true;
 
     let payload = {
-      autofill_dob: moment(state.value).utc().format(),
+      // API expects date-only format (YYYY-MM-DD)
+      autofill_dob: moment(state.value, "MM-DD-YYYY", true).format(
+        "YYYY-MM-DD"
+      ),
     };
 
     if (props.id) {
@@ -79,12 +106,15 @@ async function handleSave() {
 
     <PreferencesTitle>Birthday</PreferencesTitle>
     <PreferencesInput
-      label="Birthday (YYYY-MM-DD)"
-      type="date"
+      label="Birthday (MM-DD-YYYY)"
       :value="state.value"
       :error="state.error"
       :error-message="state.errorMessage"
-      @input="(event) => (state.value = event)"
+      :max="10"
+      :pattern="/[0-9-]/"
+      placeholder="MM-DD-YYYY"
+      @input="onDobInput"
+      @blur="validateDateOfBirth"
       @save="handleSave"
     />
 

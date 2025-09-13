@@ -210,7 +210,7 @@ function closeModal() {
   <ModalTemplate
     ref="modal"
     :show="true"
-    fullHeight
+    full-height
     @close="closeModal"
   >
     <template #header>
@@ -278,10 +278,10 @@ function closeModal() {
             <InfiniteLoader
               v-if="state.searchResults.length > displayResults.length"
               ref="infinite"
-              :allDataFetched="
+              :all-data-fetched="
                 state.searchResults.length <= displayResults.length
               "
-              @loadMore="addSize"
+              @load-more="addSize"
             />
           </li>
         </ul>
@@ -302,6 +302,7 @@ function closeModal() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 :deep(.modal-header__title) {
   display: flex;
   align-items: center;

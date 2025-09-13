@@ -76,7 +76,7 @@ async function searchRecords() {
       :is="searchToComponent[searchStep]"
       v-else
       :value="value"
-      :isForcingNewSearch="isForcingNewSearch"
+      :is-forcing-new-search="isForcingNewSearch"
       @input="$emit('input', $event)"
       @submit="searchRecords"
     />
@@ -85,6 +85,7 @@ async function searchRecords() {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .data-delete-additional-search {
   display: flex;
   flex-direction: column;

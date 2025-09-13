@@ -1,83 +1,67 @@
-<script setup>
+<script setup lang="ts">
 import ButtonToggle from "@/features/ButtonToggle.vue";
-import ChoosePlanOption from "@/features/subscribe/ChoosePlanOption.vue";
+import ChoosePlanOption, {
+  type ChoosePlanOptionProps,
+} from "@/features/subscribe/ChoosePlanOption.vue";
 import ChoosePlanOptionSkeleton from "@/features/subscribe/ChoosePlanOptionSkeleton.vue";
 import { watch, onMounted } from "vue";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { usePlans } from "@/features/subscribe/composables/usePlans";
-import { useBillingCycle } from "@/features/subscribe/composables/useBillingCycle";
+import { useBillingOptions } from "@/features/subscribe/composables/useBillingOptions.ts";
 import { usePlanOptions } from "@/features/subscribe/composables/usePlanOptions";
 import { usePlanComparisonPrice } from "@/features/subscribe/composables/usePlanComparisonPrice.js";
 import store from "@/store/index.js";
 import BaseText from "@/library/BaseText.vue";
+import CheckoutCard from "@/features/subscribe/components/CheckoutCard.vue";
+import type { PlanBilling, PlanOption } from "@/features/subscribe/types.ts";
 
-defineProps({
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  discount: {
-    type: Number,
-    default: null,
-  },
-  anchor: {
-    type: Number,
-    default: null,
-  },
+type ChoosePlanPickerProps = {
+  disabled?: boolean;
+  discount?: number | null;
+  anchor?: number | null;
+};
+
+withDefaults(defineProps<ChoosePlanPickerProps>(), {
+  disabled: false,
+  discount: null,
+  anchor: null,
 });
+
+defineSlots<{
+  label(props: { selectedBillingCycle: PlanBilling }): any;
+  skeleton(props: { selectedBillingCycle: PlanBilling }): any;
+  option(
+    props: ChoosePlanOptionProps & {
+      key: string;
+      modelValue: PlanOption["id"] | null;
+      "onUpdate:modelValue": (value: PlanOption["id"] | null) => void;
+    }
+  ): any;
+  after(): any;
+}>();
 
 const compareAtPerMemberPrice = usePlanComparisonPrice();
 
-const { activePlan, isLoadingPlans, allPlans } = usePlans();
+const { activePlan, isLoadingPlans } = usePlans();
 
-const { selectedBillingCycle, allBillingCycles } = useBillingCycle(allPlans);
+const billingOptions = useBillingOptions();
 
-const { billingCycleOptions, selectedPlanOptionId, selectedPlanOption } =
-  usePlanOptions({
-    selectedBillingCycle,
-  });
+const billingCycle = defineModel<PlanBilling>("billingCycle", {
+  default: "annually",
+});
+
+const { billingCycleOptions, selectedPlanOptionId } = usePlanOptions({
+  selectedBillingCycle: billingCycle,
+});
 
 onMounted(() => {
   posthogCapture("user_clicked_period_toggle", {
-    billing_period: selectedBillingCycle.value,
+    billing_period: billingCycle.value,
   });
 });
 
-watch(selectedBillingCycle, (newValue) => {
+watch(billingCycle, (newValue) => {
   posthogCapture("user_clicked_period_toggle", { billing_period: newValue });
-});
-
-watch(selectedPlanOption, (newValue) => {
-  if (
-    newValue.title === "Individual" &&
-    selectedBillingCycle.value === "annually"
-  ) {
-    posthogCapture("user_clicked_individual_annual_plan");
-  }
-  if (
-    newValue.title === "Couple" &&
-    selectedBillingCycle.value === "annually"
-  ) {
-    posthogCapture("user_clicked_couple_annual_plan");
-  }
-  if (
-    newValue.title === "Family" &&
-    selectedBillingCycle.value === "annually"
-  ) {
-    posthogCapture("user_clicked_family_annual_plan");
-  }
-  if (
-    newValue.title === "Individual" &&
-    selectedBillingCycle.value === "monthly"
-  ) {
-    posthogCapture("user_clicked_individual_monthly_plan");
-  }
-  if (newValue.title === "Couple" && selectedBillingCycle.value === "monthly") {
-    posthogCapture("user_clicked_couple_monthly_plan");
-  }
-  if (newValue.title === "Family" && selectedBillingCycle.value === "monthly") {
-    posthogCapture("user_clicked_family_monthly_plan");
-  }
 });
 </script>
 
@@ -91,53 +75,48 @@ watch(selectedPlanOption, (newValue) => {
       >
         <slot
           name="label"
-          :selected-billing-cycle="selectedBillingCycle"
+          :selected-billing-cycle="billingCycle"
         >
           <template v-if="!!activePlan">Switch plans</template>
           <template v-else>Choose plan</template>
         </slot>
       </BaseText>
-      <slot
-        name="billing"
-        :options="allBillingCycles"
-        :modelValue="selectedBillingCycle"
-        :onUpdate:modelValue="(value) => (selectedBillingCycle = value)"
-      >
-        <ButtonToggle
-          v-if="allBillingCycles.length"
-          v-model="selectedBillingCycle"
-          :options="allBillingCycles"
-          class="choose-plan-picker__billing-cycle-toggle"
-        />
-        <div
-          v-else
-          class="choose-plan-picker__billing-cycle-skeleton"
-        />
-      </slot>
+      <ButtonToggle
+        v-if="billingOptions.length"
+        v-model="billingCycle"
+        :options="billingOptions"
+        class="choose-plan-picker__billing-cycle-toggle"
+      />
+      <div
+        v-else
+        class="choose-plan-picker__billing-cycle-skeleton"
+      />
     </div>
-    <fieldset
+    <CheckoutCard
       v-if="isLoadingPlans"
       class="choose-plan-picker__plans"
+      rounding="sm"
     >
       <slot
         name="skeleton"
-        :selected-billing-cycle="selectedBillingCycle"
+        :selected-billing-cycle="billingCycle"
       >
         <ChoosePlanOptionSkeleton type="individual" />
         <ChoosePlanOptionSkeleton type="couple" />
         <ChoosePlanOptionSkeleton type="family" />
       </slot>
-    </fieldset>
-    <fieldset
+    </CheckoutCard>
+    <CheckoutCard
       v-else
       class="choose-plan-picker__plans"
+      rounding="sm"
     >
       <slot
         v-for="option in billingCycleOptions"
         :key="option.id"
         name="option"
-        :modelValue="selectedPlanOptionId"
-        :onUpdate:modelValue="(value) => (selectedPlanOptionId = value)"
+        :model-value="selectedPlanOptionId"
+        :on-update:model-value="(value) => (selectedPlanOptionId = value)"
         :disabled="
           disabled ||
           (option.id === activePlan?.product_id &&
@@ -180,13 +159,12 @@ watch(selectedPlanOption, (newValue) => {
           :compare-at="compareAtPerMemberPrice"
         />
       </slot>
-    </fieldset>
+    </CheckoutCard>
     <slot name="after" />
   </div>
 </template>
 
-<!-- eslint-disable-next-line vue/enforce-style-attribute -->
-<style lang="scss">
+<style lang="scss" scoped>
 .choose-plan-picker {
   &__billing-cycle {
     display: flex;
@@ -227,12 +205,8 @@ watch(selectedPlanOption, (newValue) => {
   }
 
   &__plans {
-    border: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin: 24px 0;
+    margin: 24px 0 0;
+    row-gap: 8px;
   }
 
   &__cta {

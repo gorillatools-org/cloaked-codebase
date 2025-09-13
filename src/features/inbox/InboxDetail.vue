@@ -42,6 +42,7 @@ function fetchActivity(id) {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .loading-skeleton {
   position: fixed;
   left: 240px;

@@ -9,14 +9,42 @@ defineProps({
     type: String,
     default: "user-tick-filled",
   },
+  secureText: {
+    type: String,
+    default: "Secure Form",
+  },
+  hideIcon: {
+    type: Boolean,
+    default: false,
+  },
+  alignment: {
+    type: String,
+    default: "space-between",
+    validator: (value) =>
+      ["flex-start", "flex-end", "center", "space-between"].includes(value),
+  },
+  subheaderText: {
+    type: String,
+    default: undefined,
+  },
+  headerText: {
+    type: String,
+    default: undefined,
+  },
 });
 
 const isModalOpen = ref(false);
 </script>
 
 <template>
-  <div class="enrollment-card-header">
-    <slot name="hero-icon">
+  <div
+    class="enrollment-card-header"
+    :class="`enrollment-card-header--${alignment}`"
+  >
+    <slot
+      v-if="!hideIcon"
+      name="hero-icon"
+    >
       <BaseIcon
         :name="icon"
         class="enrollment-card-header__user"
@@ -34,23 +62,44 @@ const isModalOpen = ref(false);
           name="lock-filled"
           class="enrollment-card-header__lock"
         />
-        Secure Form
+        {{ secureText }}
         <BaseIcon
           name="info"
           class="enrollment-card-header__info"
         />
       </BaseText>
     </div>
-    <EnrollmentCardModal v-model="isModalOpen" />
+    <EnrollmentCardModal
+      v-model="isModalOpen"
+      :subheader-text="subheaderText"
+      :header-text="headerText"
+    />
   </div>
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .enrollment-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
+
+  &--flex-end {
+    justify-content: flex-end;
+  }
+
+  &--flex-start {
+    justify-content: flex-start;
+  }
+
+  &--center {
+    justify-content: center;
+  }
+
+  &--space-between {
+    justify-content: space-between;
+  }
 
   &__user {
     font-size: 46px;

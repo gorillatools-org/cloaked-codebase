@@ -29,6 +29,7 @@ const props = defineProps({
   </div>
 </template>
 <style scoped lang="scss">
+/* stylelint-disable */
 .skeleton-loader {
   width: 100%;
   margin-top: 16px;

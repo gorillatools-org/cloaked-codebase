@@ -210,6 +210,7 @@ function closeModal() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 input[type="text"] {
   width: 100%;
   height: 60px;

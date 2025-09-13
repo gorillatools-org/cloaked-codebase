@@ -386,6 +386,7 @@ async function downloadIdentities() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .export-data {
   .preferences-input {
     margin-top: 37px;

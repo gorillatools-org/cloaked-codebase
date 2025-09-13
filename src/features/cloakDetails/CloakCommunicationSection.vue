@@ -463,14 +463,14 @@ watch(
           :options="emails"
           :allowed="emailForwardingAllowed"
           :rules="state.commSettings.email"
-          :defaultValue="state.emailDefault"
+          :default-value="state.emailDefault"
           :unverified-entries="state.hasOnlyUnverifiedEmails"
           @select="(selected) => select(selected, 'email')"
           @deselect="() => deselect('email')"
-          @updateFilterRule="
+          @update-filter-rule="
             (filter_rule) => updateFilterRule(filter_rule, 'email')
           "
-          @sentToSettings="setSettings"
+          @sent-to-settings="setSettings"
         />
         <CloakForwardingSection
           v-if="props.showPhoneSection"
@@ -481,14 +481,14 @@ watch(
           :options="phones"
           :allowed="phoneForwardingAllowed"
           :rules="state.commSettings.call"
-          :defaultValue="state.phoneDefault"
+          :default-value="state.phoneDefault"
           :unverified-entries="state.hasOnlyUnverifiedPhones"
           @select="(selected) => select(selected, 'call')"
           @deselect="() => deselect('call')"
-          @updateFilterRule="
+          @update-filter-rule="
             (filter_rule) => updateFilterRule(filter_rule, 'call')
           "
-          @sentToSettings="setSettings"
+          @sent-to-settings="setSettings"
         />
         <CloakForwardingSection
           v-if="props.showPhoneSection"
@@ -499,14 +499,14 @@ watch(
           :selected="messagePhoneValue"
           :options="phones"
           :allowed="phoneForwardingAllowed"
-          :defaultValue="state.phoneDefault"
+          :default-value="state.phoneDefault"
           :unverified-entries="state.hasOnlyUnverifiedPhones"
           @select="(selected) => select(selected, 'message')"
           @deselect="() => deselect('message')"
-          @updateFilterRule="
+          @update-filter-rule="
             (filter_rule) => updateFilterRule(filter_rule, 'message')
           "
-          @sentToSettings="setSettings"
+          @sent-to-settings="setSettings"
         />
       </div>
       <div
@@ -520,6 +520,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .cloak-communication-section {
   padding: 20px 24px;
 

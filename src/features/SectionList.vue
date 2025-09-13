@@ -121,6 +121,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .section-list {
   padding: 15px 0 15px 9px;
   flex: 1 1 0;

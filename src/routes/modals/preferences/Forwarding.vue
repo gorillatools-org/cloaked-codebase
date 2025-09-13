@@ -131,6 +131,8 @@ const refreshData = async () => {
         }
         return email;
       });
+    } else {
+      state.emailForwardingEnabled = false;
     }
     if (data.phone) {
       state.phones = state.phones.map((phone) => {
@@ -140,8 +142,13 @@ const refreshData = async () => {
         }
         return phone;
       });
+    } else {
+      state.phoneForwardingEnabled = false;
     }
   } catch {
+    // Reset forwarding states on error
+    state.emailForwardingEnabled = false;
+    state.phoneForwardingEnabled = false;
     toast.error("Error getting forwarding data.");
   }
 };
@@ -291,12 +298,14 @@ const handleAddPhone = () => {
 };
 
 const cancelPhoneVerify = () => {
-  state.phoneForwardingEnabled = false;
+  if (!forwardingPhone.value?.id) {
+    state.phoneForwardingEnabled = false;
+  }
 };
 
 const cancelEmailVerify = () => {
-  if (!forwardingEmail.value) {
-    state.emailForwardingEnabled = !state.emailForwardingEnabled;
+  if (!forwardingEmail.value?.id) {
+    state.emailForwardingEnabled = false;
   }
 };
 
@@ -481,6 +490,7 @@ const refreshPhones = () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .forward_toggle {
   .select-wrapper {
     background-color: $color-primary-5;

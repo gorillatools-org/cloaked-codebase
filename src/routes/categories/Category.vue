@@ -149,7 +149,7 @@ function getCategoryData() {
 <template>
   <div>
     <div v-if="!identityList.length && allCloaksLoaded">
-      <EditCategoryButton :categoryId="categoryId" />
+      <EditCategoryButton :category-id="categoryId" />
       <NoIdentities
         identity-type="category"
         :callback="() => toggleAddCloaksModal(true)"
@@ -159,12 +159,12 @@ function getCategoryData() {
       v-else
       ref="cloaklist"
       title="Category"
-      hoverText="Add cloak to category"
+      hover-text="Add cloak to category"
       :loading="state.loading"
-      :identityList="identityList"
-      :allCloaksLoaded="allCloaksLoaded"
-      :filterOptions="availabileFilters"
-      @loadNextPage="loadNextPage"
+      :identity-list="identityList"
+      :all-cloaks-loaded="allCloaksLoaded"
+      :filter-options="availabileFilters"
+      @load-next-page="loadNextPage"
       @filter="(e) => setFilter(e)"
     />
   </div>

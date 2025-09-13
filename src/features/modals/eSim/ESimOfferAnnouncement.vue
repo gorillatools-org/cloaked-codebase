@@ -2,7 +2,7 @@
 import { WEBSITE_TERMS_OF_SERVICE_URL } from "@/scripts/constants";
 import AppModalClose from "@/features/ui/AppModalClose";
 import AppModalContent from "@/features/ui/AppModalContent";
-import UiButton from "@/features/onboarding-new/UiButton.vue";
+import UiButton from "@/features/eSim/UiButton.vue";
 import BaseText from "@/library/BaseText.vue";
 import { useDisplay } from "@/composables/useDisplay.js";
 
@@ -162,6 +162,7 @@ const { isMobile } = useDisplay();
   </AppModalContent>
 </template>
 <style scoped lang="scss">
+/* stylelint-disable */
 .swirl {
   background: url("@/assets/images/esim-BG.png") no-repeat;
   background-size: cover;

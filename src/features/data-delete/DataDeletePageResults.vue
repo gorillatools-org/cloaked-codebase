@@ -1,22 +1,49 @@
 <script setup>
+import { useRoute } from "vue-router";
 import DataDeletePageNoResults from "@/features/data-delete/DataDeletePageNoResults.vue";
 import DataDeletePagePhoneResults from "@/features/data-delete/DataDeletePagePhoneResults.vue";
 import { PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_RESULTS } from "@/scripts/posthogEvents";
-import { onMounted, useAttrs } from "vue";
+import { onMounted } from "vue";
 import DataDeleteTryAgain from "@/features/data-delete/DataDeleteTryAgain.vue";
 import UserService from "@/api/actions/user-service";
 import { DATA_DELETE_SEARCHED_EXPOSURES } from "@/scripts/userFlags";
 import { posthogCapture } from "@/scripts/posthog.js";
 import DataDeleteScanResultsTableCompact from "@/features/data-delete/DataDeleteScanResultsTableCompact.vue";
+const route = useRoute();
 
-const attrs = useAttrs();
+const props = defineProps({
+  isForcingNewSearch: {
+    type: Boolean,
+    default: false,
+  },
+  hasError: {
+    type: Boolean,
+    default: false,
+  },
+  numTotalResults: {
+    type: Number,
+    default: null,
+  },
+  phone: {
+    type: String,
+    default: null,
+  },
+  searchResults: {
+    type: Array,
+    default: () => [],
+  },
+  records: {
+    type: Array,
+    default: () => [],
+  },
+});
 
 onMounted(() => {
   posthogCapture(PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_RESULTS, {
-    results: attrs.numTotalResults ?? 0,
-    searchType: attrs.phone ? "phone" : "name",
-    isForcingNewSearch: attrs.isForcingNewSearch,
-    hasError: attrs.hasError,
+    results: props.numTotalResults ?? 0,
+    searchType: props.phone ? "phone" : "name",
+    isForcingNewSearch: props.isForcingNewSearch,
+    hasError: props.hasError,
   });
 
   UserService.setFlag({
@@ -27,13 +54,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <DataDeleteTryAgain v-if="$attrs.hasError" />
-  <div v-else-if="$attrs.searchResults[0]">
-    <DataDeletePagePhoneResults v-bind="{ ...$attrs, class: null }" />
-    <DataDeleteScanResultsTableCompact
-      v-if="$attrs.records?.length && !$attrs.isForcingNewSearch"
+  <DataDeleteTryAgain v-if="hasError" />
+  <div v-else-if="searchResults[0]">
+    <DataDeletePagePhoneResults
+      :search-results="searchResults"
+      :phone="phone ?? route.query.phone"
+      :is-forcing-new-search="isForcingNewSearch"
       v-bind="{ ...$attrs, class: null }"
+    />
+    <DataDeleteScanResultsTableCompact
+      v-if="records?.length && !isForcingNewSearch"
+      :records="records"
+      :search-results="searchResults"
+      :is-forcing-new-search="isForcingNewSearch"
       class="data-delete-results__table"
+      v-bind="{ ...$attrs, class: null }"
     />
   </div>
   <DataDeletePageNoResults

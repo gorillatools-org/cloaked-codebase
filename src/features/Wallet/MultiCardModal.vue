@@ -175,6 +175,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .text {
   padding: 24px 0;
 

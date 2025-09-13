@@ -11,9 +11,14 @@ import RightPanel from "./RightPanel";
 import ListStatements from "@/features/modals/Wallet/ListStatements.vue";
 import router from "@/routes/router";
 import { posthogCapture } from "@/scripts/posthog.js";
+import useFundingSource from "@/composables/Wallet/useFundingSource";
+import GenerateCard from "@/features/modals/Wallet/GenerateCard.vue";
 
 const route = useRoute();
 const toast = useToast();
+const { openAddModal, fundingSources } = useFundingSource();
+
+const cardsListingRef = ref(null);
 
 const collection = computed(() => {
   return store.state.authentication?.user?.card_collections;
@@ -85,19 +90,26 @@ onMounted(() => {
         currentCard.value = data;
       })
       .catch(() => {
-        router.push({ name: "Wallet" });
+        router.push({ name: "VirtualCards" });
       });
   }
 
-  watch(
-    () => currentCard.value,
-    () => {
-      getCardInformation();
-    }
-  );
-
   document.body.classList.add("wallet");
 
+  getStatementsAndCheckStatementsQuery();
+});
+
+onBeforeUnmount(() => {
+  document.body.classList.remove("wallet");
+});
+
+const type = ref("Active");
+
+function setType(payload) {
+  type.value = payload.type;
+}
+
+function getStatementsAndCheckStatementsQuery() {
   CardsServices.getStatements().then(() => {
     if (route.query?.statements === null) {
       store.dispatch("openModal", {
@@ -110,40 +122,84 @@ onMounted(() => {
       });
     }
   });
-});
-
-onBeforeUnmount(() => {
-  document.body.classList.remove("wallet");
-});
-
-const type = ref("Active");
-
-function setType(payload) {
-  type.value = payload.type;
 }
+
+function handleNewCardIssued(cardId) {
+  cardsListingRef.value?.switchToActiveAndFetchCards().then(() => {
+    // Auto-select the new card after fetching
+    router.push(`/virtual-cards/card/${cardId}`);
+  });
+}
+
+function handleAddCard() {
+  if ((fundingSources.value?.length ?? 0) === 0) {
+    openAddModal(() => {
+      openCreateModal();
+    });
+    return;
+  }
+
+  openCreateModal();
+}
+
+const openCreateModal = () => {
+  store.dispatch("openModal", {
+    customTemplate: {
+      template: markRaw(GenerateCard),
+      props: {
+        isVisible: true,
+        onNewCardIssued: (cardId) => {
+          handleNewCardIssued(cardId);
+        },
+      },
+    },
+  });
+};
+
+watch(
+  () => route.query.statements,
+  () => {
+    if (route.query.statements === null) {
+      getStatementsAndCheckStatementsQuery();
+    }
+  }
+);
+
+watch(
+  () => currentCard.value,
+  () => {
+    getCardInformation();
+  }
+);
 </script>
 
 <template>
   <section>
     <div>
-      <CardsListing @type="setType" />
+      <CardsListing
+        ref="cardsListingRef"
+        @type="setType"
+        @add-card="handleAddCard"
+      />
     </div>
 
     <main :class="{ rightPanel: rightPanelActive }">
       <div class="container">
         <WalletSettings
-          :listType="type"
-          :createCardDisabled="collectionsActive"
+          :list-type="type"
+          :create-card-disabled="collectionsActive"
+          @new-card-issued="handleNewCardIssued"
         />
-        <TransactionsListing :listType="type" />
+        <TransactionsListing :list-type="type" />
       </div>
     </main>
 
-    <RightPanel :createCardDisabled="collectionsActive" />
+    <RightPanel :create-card-disabled="collectionsActive" />
   </section>
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 section {
   width: 100%;
   display: flex;

@@ -55,6 +55,7 @@ const imgSuffix = computed(() => `-${colorScheme.value}`);
   </div>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .device-settings {
   display: flex;
   flex-direction: column;

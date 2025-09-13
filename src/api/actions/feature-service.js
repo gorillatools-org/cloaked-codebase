@@ -11,7 +11,7 @@ export async function getFeatureById(id) {
 
 export async function enableFeature(id) {
   if (!id) throw new Error("Feature ID is required");
-  return await api().post(`/api/v1/feature/${id}/enabled/`);
+  return await api().post(`/api/v1/feature/${id}/enable/`);
 }
 
 export async function disableFeature(id) {

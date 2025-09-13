@@ -77,7 +77,8 @@ const getColors = computed(() => {
     /* If we have the new field but the value isn't in our dictionary, default to Crest Blue */
     return getBrandColorHexes("crest_blue");
   }
-  return null;
+  /* Default to foam_blue when no identity is present */
+  return getBrandColorHexes("foam_blue");
 });
 
 const handleClick = (e) => {
@@ -122,13 +123,13 @@ const getMutedColors = (brandColorName) => {
   </div>
   <DefaultIdentityIcon
     v-else
-    :key="`${getColors?.color}${props.identity?.nickname}`"
+    :key="`${getColors?.color}${props.identity?.nickname || 'default'}`"
     :color="getColors?.color"
-    :secondaryColor="getColors?.secondaryColor"
+    :secondary-color="getColors?.secondaryColor"
     :height="props.override?.height"
     :width="props.override?.width"
     :style="bkgdWrapperStyle"
-    :noGradient="props.noGradient"
+    :no-gradient="props.noGradient"
   />
 </template>
 

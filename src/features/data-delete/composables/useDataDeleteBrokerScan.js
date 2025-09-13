@@ -43,7 +43,7 @@ export const useDataDeleteBrokerScan = () => {
     scan.value?.brokers.reduce((result, broker) => {
       return [
         ...result,
-        ...broker.records.map((record) => ({
+        ...(broker.records ?? []).map((record) => ({
           id: record.id,
           brokerName: broker.broker_name,
           infoTypes: broker.broker_info_types,

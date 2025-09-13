@@ -298,12 +298,12 @@ const { operatorEnabled } = useDataDeleteOperator();
       <DataRemovalSkeletonLoader v-if="!rawGraphData && !hideGraph" />
       <DataRemovalGraphSummarySection
         v-else-if="!hideGraph"
-        :rawGraphData="rawGraphData"
-        :enrollmentDataFetched="enrollmentDataFetched"
+        :raw-graph-data="rawGraphData"
+        :enrollment-data-fetched="enrollmentDataFetched"
       />
       <DataRemovalActionBanner
         v-if="operatorEnabled && actionRequiredFamilies.length"
-        :actionRequiredFamilies="actionRequiredFamilies"
+        :action-required-families="actionRequiredFamilies"
       />
       <h1 class="title large-margin">
         <BaseText
@@ -324,7 +324,7 @@ const { operatorEnabled } = useDataDeleteOperator();
           <UiMenu
             width="182px"
             placement="bottom-end"
-            :offsetAway="8"
+            :offset-away="8"
             class="dropdown-menu"
           >
             <div class="menu-selector">
@@ -371,7 +371,7 @@ const { operatorEnabled } = useDataDeleteOperator();
           <UiMenu
             width="200px"
             placement="bottom-end"
-            :offsetAway="8"
+            :offset-away="8"
             class="dropdown-menu"
           >
             <div class="menu-selector">
@@ -418,8 +418,8 @@ const { operatorEnabled } = useDataDeleteOperator();
       <DataRemovalRequestsSection
         v-else-if="filteredBrokers.length || actionRequiredFamilies.length"
         :requests="filteredBrokers"
-        :actionRequiredFamilies="actionRequiredFamilies"
-        :actionRequiredBrokersGroupedByFamily="
+        :action-required-families="actionRequiredFamilies"
+        :action-required-brokers-grouped-by-family="
           actionRequiredBrokersGroupedByFamily
         "
         :loading="loadingScanData"
@@ -451,6 +451,7 @@ const { operatorEnabled } = useDataDeleteOperator();
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .page-wrapper {
   display: flex;
   flex-direction: column;

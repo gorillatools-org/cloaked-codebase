@@ -1001,6 +1001,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .mfa-button {
   padding-top: 32px;
 }

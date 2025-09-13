@@ -92,7 +92,7 @@ function showBlockConfirmation() {
   >
     <div class="centered-flex-row small-width">
       <ContactIcon
-        :showBlockIcon="contact.status === constants.CONTACT_STATUS.BLOCKED"
+        :show-block-icon="contact.status === constants.CONTACT_STATUS.BLOCKED"
         :initials="getContactInitialsDisplay(props.contact)"
         :override="{ width: '24px', height: '24px' }"
       />
@@ -175,6 +175,7 @@ function showBlockConfirmation() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .centered-flex-row {
   display: flex;
   flex-direction: row;

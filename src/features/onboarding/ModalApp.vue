@@ -11,7 +11,7 @@ import AppModalFooter from "@/features/ui/AppModalFooter";
 import Button from "@/features/Button.vue";
 import { computed } from "vue";
 import store from "@/store";
-import { assetUrl } from "@/scripts/assets";
+import gradientQrImage from "@/assets/images/gradient-qr.png";
 
 const attrs = useAttrs();
 defineEmits(["close"]);
@@ -42,7 +42,7 @@ function close() {
         @close="close"
       />
       <AppModalImage
-        :src="assetUrl('@/assets/images/gradient-qr.png')"
+        :src="gradientQrImage"
         :alt="title"
       />
       <AppModalTitle>

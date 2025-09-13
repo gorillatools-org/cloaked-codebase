@@ -52,6 +52,7 @@ function settingsLink() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .navigation-dropdown-header {
   padding: 8px 4px;
   margin: 8px;

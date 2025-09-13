@@ -44,7 +44,10 @@ const props = defineProps({
     <div class="text">
       <p>{{ props.text }}</p>
       <h1>{{ props.title }}</h1>
-      <p v-if="props.subtext">
+      <p
+        v-if="props.subtext"
+        class="subtext"
+      >
         {{ props.subtext }}
       </p>
       <slot v-else />
@@ -53,6 +56,7 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .button {
   width: 100%;
   border-radius: 20px;
@@ -196,6 +200,10 @@ const props = defineProps({
     &:first-child {
       margin-bottom: 4px;
     }
+  }
+
+  .subtext {
+    margin-top: 6px;
   }
 
   .text {

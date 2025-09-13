@@ -1,5 +1,4 @@
 <script setup>
-import { isEqual, chunk } from "lodash-es";
 import { url } from "@/scripts/validation";
 import { standardizeUrl } from "@/scripts/format";
 import WebService from "@/api/actions/web-service";
@@ -18,48 +17,12 @@ import { useToast } from "@/composables/useToast.js";
 
 let fetchWebSearchTimeout;
 
-const staticSuggestionList = [
-  "google.com",
-  "amazon.com",
-  "linkedin.com",
-  "twitter.com",
-  "facebook.com",
-  "apple.com",
-  "instagram.com",
-  "jetblue.com",
-  "bankofamerica.com",
-  "calendly.com",
-  "cvs.com",
-  "meetup.com",
-  "coinbase.com",
-  "dropbox.com",
-  "united.com",
-  "zillow.com",
-  "americanexpress.com",
-  "hulu.com",
-  "eventbrite.com",
-  "ebay.com",
-  "walgreens.com",
-  "airbnb.com",
-  "netflix.com",
-  "adobe.com",
-  "etsy.com",
-  "tiktok.com",
-  "aa.com",
-  "epicgames.com",
-  "venmo.com",
-  "bestbuy.com",
-];
-
 const cloakNicknameRef = ref(null);
 
 const emit = defineEmits(["done"]);
 
 onMounted(() => {
   setTimeout(() => cloakNicknameRef?.value?.focus(), 300);
-  if (!suggestions.value.length) {
-    fetchBrandDataForStaticList();
-  }
 });
 
 const state = reactive({
@@ -69,10 +32,6 @@ const state = reactive({
   active: null,
 });
 
-const suggestions = computed(() => {
-  return store.state.localdb.suggestions;
-});
-
 const listItems = computed(() => {
   const stateResults = [...state.results];
   return getListItems(stateResults);
@@ -80,9 +39,7 @@ const listItems = computed(() => {
 
 function getListItems(stateResults) {
   let items = [];
-  if (!state.nickname.length) {
-    items = suggestions.value;
-  } else if (stateResults.length) {
+  if (stateResults.length) {
     items = stateResults;
   }
 
@@ -101,17 +58,12 @@ function getListItems(stateResults) {
 }
 
 const sectionTitle = computed(() => {
-  if (isEqual(listItems.value, suggestions.value)) {
-    return "Suggested websites";
-  }
-
   return "";
 });
 
 watch(
   () => state.nickname,
   (name) => {
-    store.dispatch("updateTempCloak", { nickname: name });
     if (!name.length) {
       state.active = null;
     }
@@ -120,61 +72,8 @@ watch(
   { deep: true }
 );
 
-watch(
-  () => state.active,
-  (idx) => {
-    // NOTE: delete this function if the "hover over to update temp cloak" is not wanted
-    if (idx !== null) {
-      const activeItem = { ...listItems.value[idx] };
-      store.dispatch("updateTempCloak", activeItem);
-    }
-  },
-  { deep: true }
-);
-
 function handleClosePanel() {
   store.dispatch("closeRightPanel");
-}
-
-function formatSuggestedCloak(brandData) {
-  return {
-    website_url: brandData.base_domain,
-    logo_url: brandData.icon_image_url,
-    nickname: brandData.name,
-    color: brandData.primary_color,
-    secondary_color: brandData.secondary_color,
-    cloak_brand_color: brandData.cloak_brand_color,
-  };
-}
-
-function loadIdentities(identities) {
-  const suggestedWebsites = [];
-  return new Promise((resolve) => {
-    Promise.all(
-      identities.map((baseDomain) => {
-        return WebService.getWebsite(baseDomain).then(({ data }) => {
-          suggestedWebsites.push(formatSuggestedCloak(data));
-        });
-      })
-    ).then(() => {
-      store.dispatch("updateSuggestions", suggestedWebsites);
-      resolve();
-    });
-  });
-}
-
-async function loadChunk(chunks, index) {
-  if (chunks[index]) {
-    await loadIdentities(chunks[index]);
-    loadChunk(chunks, index + 1);
-  }
-}
-
-async function fetchBrandDataForStaticList() {
-  const chunks = chunk(staticSuggestionList.sort(), 5);
-  state.searching = true;
-  await loadChunk(chunks, 0);
-  state.searching = false;
 }
 
 function handleEnter() {
@@ -283,26 +182,12 @@ function createCloak(payload) {
   }
 
   IdentityService.createIdentity(payload).then(async ({ data }) => {
-    emit("done", { ...data, replaceTempCloak: true });
+    emit("done", data);
     nextTick(reset);
     if (route.name.toLowerCase() === "category") {
-      store.dispatch(
-        "updateCloaks",
-        [data].map((c) => ({
-          ...c,
-          categories: [parseInt(route.params.id)],
-        }))
-      );
       CategoryService.addCloaksToCategory(route.params.id, [data.id])
         .then(() => {})
         .catch(() => {
-          store.dispatch(
-            "updateCloaks",
-            [data].map((c) => ({
-              ...c,
-              categories: [],
-            }))
-          );
           error("Failed to add identity to category");
         });
     }
@@ -385,7 +270,7 @@ function nav(direction, override) {
       :items="listItems"
       :active="state.active"
       @select.once="selectWebsite"
-      @setActive="(idx) => nav(idx, true)"
+      @set-active="(idx) => nav(idx, true)"
     />
   </section>
 </template>

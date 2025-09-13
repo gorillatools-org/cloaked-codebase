@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
 import EnrollmentCard from "@/features/enrollment/EnrollmentCard.vue";
@@ -9,6 +9,11 @@ import EnrollmentTags from "@/features/enrollment/EnrollmentTags.vue";
 import EnrollmentAddressInput from "@/features/enrollment/EnrollmentAddressInput.vue";
 import { useFormattedAddresses } from "@/features/enrollment/composables.js";
 import EnrollmentAddInfo from "@/features/enrollment/EnrollmentAddInfo.vue";
+import { posthogCapture } from "@/scripts/posthog.js";
+
+onMounted(() =>
+  posthogCapture("user_viewed_enrollment_form_addresses_autocomplete")
+);
 
 defineEmits(["next"]);
 

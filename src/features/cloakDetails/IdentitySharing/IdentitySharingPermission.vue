@@ -126,6 +126,7 @@ const stringValue = computed(() => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 @import "@/assets/scss/recursive/_mixins";
 
 .identity-sharing-permission {

@@ -7,6 +7,8 @@ import router from "@/routes/router";
 import store from "./store";
 import { getPosthog } from "@/scripts/posthog";
 import * as Sentry from "@sentry/vue";
+import { createPinia } from "pinia";
+import customerIOPlugin from "@/plugins/customerio";
 
 // Importing the global styles
 import "@/assets/scss/recursive/_reset.scss";
@@ -14,6 +16,9 @@ import "@/assets/scss/recursive/_fonts.scss";
 
 const app = createApp(App);
 
+const pinia = createPinia();
+
+// NOTE: Sentry replay integration dynamically added in App.vue
 Sentry.init({
   app,
   dsn: "https://24e50a7f100a8114ac6abeab571e6497@o129529.ingest.us.sentry.io/4508138378756097",
@@ -30,6 +35,8 @@ Sentry.init({
 
     return 0.01;
   },
+  replaysSessionSampleRate: 0.1, // Percent (0-1) of user's sessions to sample -- Sentry suggests 0.1 for production
+  replaysOnErrorSampleRate: 1.0, // Percent (0-1) of user's error sessions to sample -- Sentry suggests 1.0 for production
 });
 
 app.use({
@@ -41,9 +48,12 @@ app.use({
     window.$posthog = app.$posthog = $posthog;
   },
 });
+
 app.use(VueObserveVisibility);
 app.use(VueTelInput);
 
 app.use(router);
 app.use(store);
+app.use(pinia);
+app.use(customerIOPlugin);
 router.isReady().then(() => app.mount("#app"));

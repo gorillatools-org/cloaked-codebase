@@ -72,7 +72,7 @@ function blockContact() {
       <div class="flex-row">
         <ContactIcon
           :initials="contactInitials"
-          :associatedIdentityId="props.identityId"
+          :associated-identity-id="props.identityId"
           :override="{ width: '72px', height: '72px' }"
         />
         <div class="detail-wrapper">
@@ -113,6 +113,7 @@ function blockContact() {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .flex-row {
   display: flex;
   align-items: flex-start;

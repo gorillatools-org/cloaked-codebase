@@ -10,9 +10,13 @@ export default {
     subscription: null,
     limits: null,
     stripe: null,
+    permissions: {},
   },
 
   mutations: {
+    setPermissions: (state, permissions) => {
+      state.permissions = permissions;
+    },
     setPrevRouteName: (state, routeName) => {
       state.prevRouteName = routeName;
     },
@@ -131,6 +135,9 @@ export default {
     isStorePayPal(state) {
       return state.subscription?.store === SUBSCRIPTION_STORES.PAYPAL;
     },
+    getPermissions: (state) => {
+      return state.permissions;
+    },
   },
   actions: {
     savePrevRouteName({ commit }, prevRouteName) {
@@ -163,6 +170,15 @@ export default {
     },
     saveLimits({ commit }, limitData) {
       commit("setLimits", limitData);
+    },
+    savePermissions({ commit }, profileData) {
+      const permissions = {};
+      Object.keys(profileData).forEach((key) => {
+        if (key.startsWith("permission_")) {
+          permissions[key] = profileData[key];
+        }
+      });
+      commit("setPermissions", permissions);
     },
   },
 };

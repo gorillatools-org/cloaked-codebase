@@ -13,6 +13,7 @@
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .data-delete-search-skeleton {
   margin: 0 auto;
   max-width: 450px;

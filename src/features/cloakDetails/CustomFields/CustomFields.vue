@@ -96,7 +96,7 @@ const orderedItems = computed(() => {
           :value="value"
           form-type="edit"
           :field-type="value.type"
-          :isLoading="isLoading"
+          :is-loading="isLoading"
           @input="
             ($event) => {
               $emit('input', $event);
@@ -111,7 +111,7 @@ const orderedItems = computed(() => {
           :label="item.label"
           :value="item.value"
           :is-secret="item.isSecret"
-          :identityId="props.identityId"
+          :identity-id="props.identityId"
           @edit="$emit('input', JSON.parse(JSON.stringify(item)))"
           @delete="
             $emit('input', { id: item.id });
@@ -130,8 +130,8 @@ const orderedItems = computed(() => {
       :value="value"
       form-type="new"
       :field-type="value?.type"
-      :existingAddresses="existingAddresses"
-      :isLoading="isLoading"
+      :existing-addresses="existingAddresses"
+      :is-loading="isLoading"
       @input="
         ($event) => {
           $emit('input', $event);
@@ -150,7 +150,7 @@ const orderedItems = computed(() => {
     />
     <CustomFieldModalConfirmDelete
       :value="isConfirmDeleteModalShown"
-      :isLoading="isLoading"
+      :is-loading="isLoading"
       @input="$emit('set-show-confirm-delete-modal', $event)"
       @delete="$emit('delete')"
     />

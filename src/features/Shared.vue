@@ -325,11 +325,11 @@ const openHomePage = () => {
         </div>
         <Timer
           v-show="isSharedIdentityAvailable"
-          :startDate="startDate"
-          :endDate="endDate"
+          :start-date="startDate"
+          :end-date="endDate"
           class="shared__header__timer-container"
-          :isOnSharedPage="true"
-          :isOneTimeView="isOneTimeView"
+          :is-on-shared-page="true"
+          :is-one-time-view="isOneTimeView"
         />
       </div>
     </div>
@@ -405,11 +405,11 @@ const openHomePage = () => {
             :key="identityProperty.i"
           >
             <CloakInfoRow
-              :fieldLabel="identityProperty.l"
+              :field-label="identityProperty.l"
               :field="getFieldType(identityProperty.t)"
-              :initialValue="getInitialValue(identityProperty)"
-              :isOnSharedPage="true"
-              :isSensitive="identityProperty.s"
+              :initial-value="getInitialValue(identityProperty)"
+              :is-on-shared-page="true"
+              :is-sensitive="identityProperty.s"
               :copy-value="getCopyValue(identityProperty)"
             >
               <template
@@ -636,6 +636,7 @@ const openHomePage = () => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .shared {
   display: flex;
   flex-direction: column;

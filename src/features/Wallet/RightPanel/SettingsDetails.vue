@@ -82,25 +82,25 @@ function exportTransactions() {
           capitalizeFirstLetter(information?.last_name)
         "
         icon="person-circle"
-        multiLine
-        notClickable
-        copyToClipboard
+        multi-line
+        not-clickable
+        copy-to-clipboard
       />
 
       <DetailSection
         title="Billing address"
         :description="fullAddress"
         icon="home"
-        multiLine
-        copyToClipboard
-        @toggleClicked="toggleBillingAddressModal"
+        multi-line
+        copy-to-clipboard
+        @toggle-clicked="toggleBillingAddressModal"
       />
 
       <DetailSection
         title="Statements"
         icon="document"
         link
-        @toggleClicked="toggleStatementModal"
+        @toggle-clicked="toggleStatementModal"
       />
 
       <DetailSection

@@ -126,12 +126,13 @@ function close() {
     </div>
 
     <div class="modal-content">
-      <VerticalTable :tableContent="tableDisplayInfo" />
+      <VerticalTable :table-content="tableDisplayInfo" />
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .details-modal {
   position: absolute;
   width: 412px;

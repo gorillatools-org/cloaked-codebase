@@ -2,7 +2,7 @@ import { onBeforeMount } from "vue";
 import { useRoute } from "vue-router";
 import { useColorScheme } from "@/composables/useColorScheme";
 
-export const useThemeQueryParameter = () => {
+export const useThemeQueryParameter = (fallback = "dark") => {
   const route = useRoute();
   const { setColorScheme } = useColorScheme();
 
@@ -10,7 +10,7 @@ export const useThemeQueryParameter = () => {
     if (route.query.theme) {
       setColorScheme(route.query.theme);
     } else {
-      setColorScheme("dark");
+      setColorScheme(fallback);
     }
   });
 };

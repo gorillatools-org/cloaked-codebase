@@ -1,6 +1,3 @@
-import { db } from "@/store/modules/localdb";
-// import router from "@/routes/router";
-
 export default {
   state: {
     active: false,
@@ -65,12 +62,7 @@ export default {
     getPrevRoute: (state) => {
       return state.prevRoute;
     },
-    getTempCloak: (state) => {
-      return state.tempCloak;
-    },
-    getSavingTempCloak: (state) => {
-      return state.savingTempCloak;
-    },
+
     getCardPanel: (state) => {
       return state.cardPanel;
     },
@@ -83,18 +75,14 @@ export default {
     closeCardPanel({ commit }) {
       commit("closeCardPanel");
     },
-    deleteTempCloak() {
-      db.cloaks.delete(-1);
-    },
+
     openRightPanel({ commit }) {
       commit("openRightPanel");
     },
-    closeRightPanel({ commit, dispatch }) {
+    closeRightPanel({ commit }) {
       commit("setCloseRightPanel");
-      dispatch("deleteTempCloak");
     },
-    openCloakDetails({ commit, dispatch }, { cloak }) {
-      dispatch("deleteTempCloak");
+    openCloakDetails({ commit }, { cloak }) {
       commit("setOpenCloakDetails", cloak);
       // router.push({ name: "IdentityDetails", params: { id: cloak.id } });
     },

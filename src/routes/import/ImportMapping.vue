@@ -44,9 +44,9 @@ function loadMoreRecords() {
       <template #footer>
         <InfiniteLoader
           v-if="hasMoreRecords"
-          :allDataFetched="!hasMoreRecords"
+          :all-data-fetched="!hasMoreRecords"
           class="import-mapping__infinite-loader"
-          @loadMore="loadMoreRecords"
+          @load-more="loadMoreRecords"
         />
       </template>
     </MappingTable>

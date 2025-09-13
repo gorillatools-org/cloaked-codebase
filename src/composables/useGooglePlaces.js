@@ -19,7 +19,7 @@ const loadLibrary = async () => {
 const getDetail = (components, type) =>
   components.find((component) => component.types.includes(type))?.shortText;
 
-export const useGooglePlaces = () => {
+export const useGooglePlaces = (countries = ["us", "ca"]) => {
   const addresses = ref([]);
   const isFetching = ref(false);
 
@@ -35,7 +35,7 @@ export const useGooglePlaces = () => {
           input,
           sessionToken: new AutocompleteSessionToken(),
           language: "en-US",
-          includedRegionCodes: ["us", "ca"],
+          includedRegionCodes: countries,
         });
 
       const places = suggestions.map((suggestion) =>

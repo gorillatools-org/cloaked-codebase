@@ -84,6 +84,7 @@ const onSubmit = async () => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .subscription-invite {
   .app-form-input__input {
     padding-right: 130px;

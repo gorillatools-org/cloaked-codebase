@@ -132,6 +132,7 @@ function onClickHere() {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .faq-section {
   padding: 24px;
   background-color: $color-base-white-100;

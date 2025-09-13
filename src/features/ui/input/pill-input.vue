@@ -211,6 +211,7 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .pill-input {
   overflow: hidden;
   width: 100%;

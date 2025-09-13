@@ -71,6 +71,7 @@ const slots = useSlots();
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 @import "@/assets/scss/recursive/_mixins";
 
 @mixin table-scroll-bar() {
@@ -102,6 +103,8 @@ const slots = useSlots();
 .import-table {
   &.app-table {
     overflow: scroll;
+
+    @include custom-scroll-bar;
 
     @include table-scroll-bar;
   }

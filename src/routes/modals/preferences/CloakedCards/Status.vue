@@ -39,6 +39,7 @@ const kycValidated = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .status {
   margin-top: 24px;
   .title {

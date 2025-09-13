@@ -26,70 +26,55 @@ function convertToDollar(amount) {
     .replace(/\.0+$/, "");
 }
 
-const periodConversion = (period) => {
-  if (period === "daily") {
-    return "per day";
-  } else if (period === "weekly") {
-    return "per week";
-  } else if (period === "monthly") {
-    return "per month";
-  } else if (period === "yearly") {
-    return "per year";
-  } else if (
-    currentCard.value.transaction_period === "forever" &&
-    currentCard.value.transaction_period_max_transactions === 2
-  ) {
-    return "one time";
-  } else if (
-    currentCard.value.transaction_period === "forever" &&
-    currentCard.value.transaction_period_max_transactions !== 2
-  ) {
-    return "Up to";
-  } else {
-    return "unknown";
+const title = computed(() => {
+  const period = currentCard.value.transaction_period;
+
+  switch (period) {
+    case "daily":
+      return `${spendingLimit.value} per day`;
+    case "weekly":
+      return `${spendingLimit.value} per week`;
+    case "monthly":
+      return `${spendingLimit.value} per month`;
+    case "yearly":
+      return `${spendingLimit.value} per year`;
+    case "forever":
+      // One-time
+      if (currentCard.value.transaction_period_max_transactions === 1) {
+        return `${spendingLimit.value}`;
+      } else {
+        return `${currentCard.value.transaction_period_max_transactions} uses up to ${spendingLimit.value}`;
+      }
+    default:
+      return "unknown";
   }
-};
+});
 
 const spendingLimit = computed(() => {
   return convertToDollar(currentCard.value.transaction_period_limit);
 });
 
-const title = computed(() => {
-  if (
-    currentCard.value.transaction_period === "forever" &&
-    currentCard.value.transaction_period_max_transactions !== 2
-  ) {
-    return `${periodConversion(currentCard.value.transaction_period)} ${
-      spendingLimit.value
-    }`;
-  } else {
-    return `${spendingLimit.value} ${periodConversion(
-      currentCard.value.transaction_period
-    )}`;
-  }
-});
-
 const renewalDate = computed(() => {
-  if (currentCard.value.transaction_period === "daily") {
-    return "renews tomorrow";
-  } else if (currentCard.value.transaction_period === "weekly") {
-    return "renews next week";
-  } else if (currentCard.value.transaction_period === "monthly") {
-    return "renews next month";
-  } else if (currentCard.value.transaction_period === "yearly") {
-    return "renews next year";
-  } else if (
-    currentCard.value.transaction_period === "forever" &&
-    currentCard.value.transaction_period_max_transactions !== 2
-  ) {
-    return "Until card expires";
-  } else if (
-    currentCard.value.transaction_period === "forever" &&
-    currentCard.value.transaction_period_max_transactions === 2
-  ) {
-    return "Single transaction";
-  } else {
-    return "unknown";
+  const period = currentCard.value.transaction_period;
+
+  switch (period) {
+    case "daily":
+      return `Renews tomorrow`;
+    case "weekly":
+      return `Renews next week`;
+    case "monthly":
+      return `Renews next month`;
+    case "yearly":
+      return `Renews next year`;
+    case "forever":
+      // One-time
+      if (currentCard.value.transaction_period_max_transactions === 1) {
+        return `One-time`;
+      } else {
+        return `Until card expires`;
+      }
+    default:
+      return "unknown";
   }
 });
 

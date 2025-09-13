@@ -217,7 +217,7 @@ async function handlePurchase() {
     <div v-show="selectedPaymentProvider !== PAYMENT_PROVIDER.PAYPAL">
       <BaseButton
         size="lg"
-        fullWidth
+        full-width
         variant="cloaked-gradient"
         :disabled="selectedPaymentProvider !== PAYMENT_PROVIDER.STRIPE"
         :icon="isProcessingStripePayment ? 'spinner' : 'arrow-right'"

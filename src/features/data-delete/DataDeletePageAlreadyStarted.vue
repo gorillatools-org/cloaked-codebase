@@ -1,26 +1,25 @@
 <script setup>
 import { AF_SIGNUP_URL } from "@/scripts/constants";
-import OnboardingPageLogo from "@/features/onboarding/page/OnboardingPageLogo.vue";
+import CloakedLogo from "@/assets/images/CloakedLogo.svg";
 import BaseButton from "@/library/BaseButton.vue";
 import router from "@/routes/router";
-import { isMobileDevice } from "@/scripts/regex";
 import BaseText from "@/library/BaseText.vue";
-import { useDisplay } from "@/composables/useDisplay.js";
+import { useDisplay } from "@/composables/useDisplay";
+
+const { isMobile } = useDisplay();
 
 function navToApp() {
-  if (isMobileDevice) {
-    return window.open(AF_SIGNUP_URL, "_blank");
+  if (isMobile.value) {
+    return window.open(AF_SIGNUP_URL, "_blank", "noopener,noreferrer");
   }
   return router.push({ name: "login" });
 }
-
-const { isMobile } = useDisplay();
 </script>
 
 <template>
   <div class="data-delete__page flex-col">
     <header class="auth-header">
-      <OnboardingPageLogo class="auth-header__logo" />
+      <CloakedLogo class="auth-header__logo" />
     </header>
     <img
       src="@/assets/images/data-delete/account-avatar.webp"
@@ -48,7 +47,7 @@ const { isMobile } = useDisplay();
       variant="primary"
       size="lg"
       class="navto-app-button"
-      :class="{ 'is-mobile': isMobileDevice }"
+      :class="{ 'is-mobile': isMobile }"
       icon="arrow-long-right"
       @click="navToApp"
     >
@@ -77,6 +76,12 @@ const { isMobile } = useDisplay();
   top: 0;
   left: 0;
   padding: 32px;
+
+  &__logo {
+    width: 120px;
+    height: auto;
+    display: block;
+  }
 }
 
 .navto-app-button {

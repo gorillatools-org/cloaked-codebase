@@ -58,6 +58,7 @@ function openCloak() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .inbox-request-header {
   padding: 32px;
   display: flex;

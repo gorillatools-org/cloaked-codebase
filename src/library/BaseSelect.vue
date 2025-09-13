@@ -10,6 +10,10 @@ defineProps({
     type: String,
     required: true,
   },
+  requiredMark: {
+    type: Boolean,
+    default: false,
+  },
   placeholder: {
     type: String,
     required: true,
@@ -38,7 +42,15 @@ const model = defineModel({ type: String });
       variant="body-small-medium"
       class="base-select__title"
     >
-      {{ title }}
+      <span>
+        {{ title }}
+        <span
+          v-if="requiredMark"
+          class="base-select__required-mark"
+        >
+          *
+        </span>
+      </span>
     </BaseText>
     <select
       v-model="model"
@@ -61,6 +73,18 @@ const model = defineModel({ type: String });
         {{ option.label }}
       </option>
     </select>
+    <div
+      v-if="$slots.left"
+      class="base-select__addon-left"
+    >
+      <slot name="left" />
+    </div>
+    <div
+      v-if="$slots.right"
+      class="base-select__addon-right"
+    >
+      <slot name="right" />
+    </div>
     <BaseIcon
       name="chevron-down"
       class="base-select__chevron"
@@ -91,6 +115,10 @@ const model = defineModel({ type: String });
   &__title {
     grid-area: title;
     color: $color-primary-50;
+  }
+
+  &__required-mark {
+    color: $color-status-error;
   }
 
   &__select {
@@ -132,6 +160,14 @@ const model = defineModel({ type: String });
       cursor: not-allowed;
     }
 
+    &:has(.base-select__addon-left) {
+      padding-left: 34px;
+    }
+
+    &:has(.base-select__addon-right) {
+      padding-right: calc(16px + (24px + 8px) + (24px + 8px));
+    }
+
     &:has(.base-select__option:not([value=""]):checked) {
       color: $color-primary-100;
     }
@@ -162,6 +198,25 @@ const model = defineModel({ type: String });
 
   &__feedback {
     grid-column: 1/5;
+  }
+
+  &__addon-left {
+    grid-area: field;
+    place-self: center start;
+    margin-left: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  &__addon-right {
+    grid-area: field;
+    place-self: center end;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: calc(16px + 24px + 8px); // leave space for chevron
   }
 }
 </style>

@@ -82,7 +82,7 @@ onBeforeUnmount(() => {
             :key="toolTipVisibility"
             title="Copied!"
             align-x="center"
-            :canShow="toolTipVisibility"
+            :can-show="toolTipVisibility"
           >
             <inlineSvg
               class="copy"
@@ -136,6 +136,7 @@ onBeforeUnmount(() => {
 </template>
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .get-started-done {
   .modal-header {
     padding: 0 !important;

@@ -80,7 +80,7 @@ watch(
     type="dark"
     class="data-delete-card-medium"
   >
-    <DataDeleteThreatTag threatLevel="medium" />
+    <DataDeleteThreatTag threat-level="medium" />
     <div v-if="gender">
       <BaseText
         as="h3"

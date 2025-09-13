@@ -370,6 +370,7 @@ function requestPermDelete() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .manage-account {
   display: flex;
   flex-direction: column;

@@ -6,7 +6,6 @@ import UserService from "@/api/actions/user-service";
 import Loading from "@/features/ui/loading.vue";
 import DownloadApp from "@/features/onboarding/DownloadApp.vue";
 import { supportsWasm, isInAppBrowser } from "@/scripts/tools";
-import { isMobileDevice, isAndroid } from "@/scripts/regex";
 import { headers } from "@/api/api";
 import store from "@/store";
 import { PH_EVENT_USER_CLICKED_SIGN_UP_NO_WASM } from "@/scripts/posthogEvents";
@@ -17,9 +16,9 @@ import router from "@/routes/router";
 import { useToast } from "@/composables/useToast.js";
 import { useRoute } from "vue-router";
 import { useEncryptionGate } from "@/composables/useEncryptionGate";
-import { useWindowSize } from "@vueuse/core/index";
 import { posthogCapture } from "@/scripts/posthog";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { useDisplay } from "@/composables/useDisplay";
+import { isAndroid } from "@/scripts/regex";
 
 const toast = useToast();
 
@@ -63,8 +62,7 @@ const iframeDimensions = ref({
 
 const errorFromBackend = ref(null);
 
-const { width } = useWindowSize();
-const isMobile = computed(() => isMobileDevice && width.value <= 760);
+const { isMobile } = useDisplay();
 
 const urlParams = new URLSearchParams(window.location.search);
 const developmentTrigger = urlParams.get("qa");
@@ -115,8 +113,11 @@ function popstate(event) {
       });
     }
   } else {
-    const [, pathValue] = window.location.href.match(/(auth\/[^/?]+)/);
-    setHistory(pathValue);
+    const match = window.location.href?.match(/(auth\/[^/?]+)/);
+    if (match) {
+      const [, pathValue] = match;
+      setHistory(pathValue);
+    }
   }
 }
 
@@ -140,9 +141,16 @@ const extensionCodeChallengeFromQuery = ref(
 const extensionClientIdeFromQuery = ref(route.query?.cloaked_client_id);
 const extensionQueries = ref(route.query);
 
-const isOldExtensionRequest = ref(
-  !!extensionCodeChallengeFromQuery.value && !!extensionClientIdeFromQuery.value
-);
+const isExtensionAuthV4 = computed(() => {
+  return props.prevRoute.includes("extension-auth");
+});
+
+const isOldExtensionRequest = computed(() => {
+  return (
+    !!extensionCodeChallengeFromQuery.value &&
+    !!extensionClientIdeFromQuery.value
+  );
+});
 
 function onMount() {
   window.addEventListener("beforeunload", (event) => {
@@ -158,7 +166,7 @@ function onMount() {
       challenge.value = challengeValue;
       verifier.value = verifierValue;
     });
-    if (!isOldExtensionRequest.value) {
+    if (!isOldExtensionRequest.value && !isExtensionAuthV4.value) {
       // NOTE: extension is not currently using this flow
       // all extension logins are using the old flow
       generatePkceRequirements().then(([verifierValue, challengeValue]) => {
@@ -242,7 +250,7 @@ async function iframeListener(message) {
         isModalOpen.value = true;
       }
 
-      if (!isOldExtensionRequest.value) {
+      if (!isOldExtensionRequest.value && !isExtensionAuthV4.value) {
         // NOTE: extension is not currently using this flow
         // all extension logins are using the old flow
         await store.dispatch("authentication/setExtensionToken", {
@@ -264,11 +272,11 @@ async function iframeListener(message) {
         const route = Object.keys(routes).includes(message.data.data)
           ? routes[message.data.data]
           : message.data.data;
-        if (!window.location.href.match(new RegExp(route))) {
+        if (!window.location.href?.match(new RegExp(route))) {
           setHistory(route);
         }
       } else {
-        if (!window.location.href.match(new RegExp(message.data.data))) {
+        if (!window.location.href?.match(new RegExp(message.data.data))) {
           setHistory(message.data.data);
         }
       }
@@ -310,7 +318,7 @@ const src = computed(() => {
     ...queries,
   ];
 
-  if (!isOldExtensionRequest.value) {
+  if (!isOldExtensionRequest.value && !isExtensionAuthV4.value) {
     params = [
       ...params,
       `cloaked_client_id=${import.meta.env.VITE_EXTENSION_CLIENT_ID}`,
@@ -334,31 +342,22 @@ const src = computed(() => {
   if (newPath.includes("auth/register") || newPath.includes("auth/sign-up")) {
     newPath = "auth/signup";
   } else if (newPath.includes("auth/reset-recovery-key")) {
-    const recoveryPath = window.location.pathname.endsWith("/")
+    newPath = window.location.pathname.endsWith("/")
       ? window.location.pathname.slice(0, -1)
       : window.location.pathname;
-    return `${import.meta.env.VITE_API}${recoveryPath.replace(
-      "/auth",
-      "auth"
-    )}/?cloaked_redirect_uri=${encodeURIComponent(
-      import.meta.env.VITE_REDIRECT_URI
-    )}`;
   }
+
   newPath = newPath.replace("/auth", "auth");
   return `${import.meta.env.VITE_API}${newPath}/?${params.join("&")}`;
 });
-
-const { featureFlag: splitCheckoutVariant } = usePostHogFeatureFlag(
-  "split-checkout-5-28-25"
-);
 </script>
 
 <template>
   <DownloadApp
     v-if="shouldShowDownloadApp"
-    buttonLabel="Sign up"
+    button-label="Sign up"
     :action="goToSignup"
-    :posthogEvent="PH_EVENT_USER_CLICKED_SIGN_UP_NO_WASM"
+    :posthog-event="PH_EVENT_USER_CLICKED_SIGN_UP_NO_WASM"
   />
   <MountEvent
     v-else
@@ -387,11 +386,7 @@ const { featureFlag: splitCheckoutVariant } = usePostHogFeatureFlag(
           </router-link>
           <router-link
             v-else
-            :to="
-              splitCheckoutVariant === 'split-checkout'
-                ? '/subscribe-today'
-                : '/subscribe-now'
-            "
+            to="/subscribe-now"
             class="auth-header__link"
             @click="posthogCapture('auth_login_to_sign_up')"
           >
@@ -419,6 +414,7 @@ const { featureFlag: splitCheckoutVariant } = usePostHogFeatureFlag(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .layout-auth {
   height: 100vh;
   background-color: $black;

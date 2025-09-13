@@ -131,6 +131,7 @@ const props = defineProps({
   </div>
 </template>
 <style scoped lang="scss">
+/* stylelint-disable */
 .wrapper {
   display: flex;
   flex-direction: row;

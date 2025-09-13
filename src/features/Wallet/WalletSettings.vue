@@ -11,8 +11,7 @@ import CardInformationButton from "./WalletSettings/CardInformationButton.vue";
 import FundingSourceButton from "./WalletSettings/FundingSourceButton.vue";
 import IdentityIcon from "@/features/ui/IdentityIcon.vue";
 
-const route = useRoute();
-
+const emit = defineEmits(["newCardIssued"]);
 const props = defineProps({
   listType: { type: String, default: null },
   createCardDisabled: {
@@ -20,6 +19,8 @@ const props = defineProps({
     default: false,
   },
 });
+
+const route = useRoute();
 
 function identity(id) {
   return store.state.localdb.db_cloaks.find((item) => item.id === id);
@@ -56,10 +57,6 @@ function openCard(card) {
 function openSetting() {
   store.commit("openSettings");
 }
-
-function openFundingSources() {
-  store.commit("openFundingSources");
-}
 </script>
 
 <template>
@@ -68,7 +65,7 @@ function openFundingSources() {
       <div class="title">
         <router-link
           v-if="route.params.id"
-          to="/wallet"
+          to="/virtual-cards"
           class="back-button"
         >
           <inlineSvg name="chevron-left" />
@@ -81,16 +78,7 @@ function openFundingSources() {
             @click="openCard(card)"
           >
             <inlineSvg name="cog" />
-            <span>Card settings</span>
-          </div>
-
-          <div
-            v-if="!route.params.id && !card"
-            class="icon"
-            @click="openFundingSources(true)"
-          >
-            <inlineSvg name="card" />
-            <span>Funding sources</span>
+            <span>Settings</span>
           </div>
 
           <div
@@ -153,7 +141,10 @@ function openFundingSources() {
     </header>
 
     <div class="buttons">
-      <CreateCard v-if="!route.params.id && !props.createCardDisabled" />
+      <CreateCard
+        v-if="!route.params.id && !props.createCardDisabled"
+        @new-card-issued="(cardId) => emit('newCardIssued', cardId)"
+      />
       <AvailableSpendindButton
         v-if="route.params.id && props.listType !== 'Canceled'"
       />
@@ -168,6 +159,7 @@ function openFundingSources() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .settings {
   width: 100%;
   margin-bottom: 48px;
@@ -326,7 +318,7 @@ function openFundingSources() {
     margin-top: 16px;
     width: 100%;
 
-    @media (width >= 1200px) {
+    @media (width >=1200px) {
       grid-template-columns: repeat(3, 1fr);
     }
   }

@@ -579,7 +579,7 @@ const { isMobile } = useDisplay();
                       )
                 }}
                 <ArrowButton
-                  :isOpen="state.showRecipientModal === activity.id"
+                  :is-open="state.showRecipientModal === activity.id"
                   :disabled="state.showRecipientModal === activity.id"
                   @click="toggleRecipientModal(activity.id)"
                 />
@@ -591,11 +591,11 @@ const { isMobile } = useDisplay();
               </BaseText>
               <InboxSafeUGC
                 v-else
-                contentType="email_preview"
+                content-type="email_preview"
                 :content="activity?.email?.body_preview"
-                :removeNewLines="true"
+                :remove-new-lines="true"
                 :inbound="true"
-                :overrideBodyStyle="{
+                :override-body-style="{
                   overflow: 'hidden',
                   'text-overflow': 'ellipsis',
                   height: '20px',
@@ -689,7 +689,7 @@ const { isMobile } = useDisplay();
                   max-height="300px"
                   placement="left-start"
                   :value="state.showFwdMenu"
-                  :offsetAway="10"
+                  :offset-away="10"
                   class="fwd-menu"
                 >
                   <UiMenuButton
@@ -766,13 +766,13 @@ const { isMobile } = useDisplay();
           class="email-body"
         >
           <InboxSafeUGC
-            contentType="email_body"
+            content-type="email_body"
             :content="state.emailContentById[activity.id]"
             :inbound="true"
             :attachments="
               state.activityDetailsById[activity.id]?.email?.attachments
             "
-            :overrideBodyStyle="{
+            :override-body-style="{
               'word-break': 'break-word',
               width: '100%',
             }"
@@ -856,8 +856,8 @@ const { isMobile } = useDisplay();
         v-if="state.pageLoaded && !state.error"
         key="infinite-emails"
         :loading="state.fetching"
-        :allDataFetched="!state.nextUrl"
-        @loadMore="fetchThread"
+        :all-data-fetched="!state.nextUrl"
+        @load-more="fetchThread"
       />
       <div style="height: 55px" />
 
@@ -875,6 +875,7 @@ const { isMobile } = useDisplay();
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 @media (width <= calc(834px + 240px)) {
   .masked-clickable-content {
     width: 600px;

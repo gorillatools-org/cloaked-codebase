@@ -4,7 +4,7 @@
 
 <style scoped lang="scss">
 .checkout-divider {
-  border-top: 1px solid rgba($white, 0.2);
+  border-top: 1px solid $color-base-black-10;
   margin: 4px 0;
 }
 </style>

@@ -4,6 +4,8 @@ import BaseSheet from "@/library/BaseSheet.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
 import { posthogCapture } from "@/scripts/posthog.js";
+import { useRelativesApi } from "@/composables/useRelativesApi.js";
+import store from "@/store/index.js";
 
 const props = defineProps({
   broker: {
@@ -64,7 +66,7 @@ const progressClass = computed(() => {
 const subtitle = computed(() => {
   switch (status.value) {
     case "scanning":
-      return "Currently scanning for exposures";
+      return "Ensuring Broker Compliance";
     case "removal_in_progress":
       return "In progress of removing exposures";
     case "removed":
@@ -85,7 +87,7 @@ const alertClass = computed(() => {
 const alertText = computed(() => {
   switch (status.value) {
     case "scanning":
-      return `Cloaked is scanning ${props.broker.broker_name} for your information...`;
+      return `Cloaked has secured records at ${props.broker.broker_name} for removal`;
     case "removal_in_progress":
       return `Cloaked is working to remove your records from ${props.broker.broker_name}`;
     case "removed":
@@ -178,6 +180,12 @@ const totalRecordItemsRemoved = computed(() => {
   }, 0);
   return cumulativeTotal;
 });
+
+const { relatives } = useRelativesApi();
+
+const hasNotMyRelatives = computed(
+  () => store.state.authentication?.user?.flags?.["not-my-relative"]
+);
 </script>
 
 <template>
@@ -419,6 +427,24 @@ const totalRecordItemsRemoved = computed(() => {
               </template>
             </div>
           </div>
+
+          <footer
+            v-if="hasNotMyRelatives && relatives.length"
+            class="exposure-status__broker-list-item__content-footer"
+          >
+            <BaseText
+              variant="body-3-semibold"
+              as="p"
+            >
+              Are these profile details incorrect?
+              <router-link
+                :to="{ name: 'ExposureStatusRelatives' }"
+                class="exposure-status__broker-list-item__content-footer-link"
+              >
+                Click here
+              </router-link>
+            </BaseText>
+          </footer>
         </div>
       </div>
     </transition>
@@ -426,6 +452,7 @@ const totalRecordItemsRemoved = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .exposure-status__broker-list-item {
   display: flex;
   flex-direction: column;
@@ -536,7 +563,7 @@ const totalRecordItemsRemoved = computed(() => {
       text-align: center;
 
       &--scanning {
-        background-color: $color-cloaked-15;
+        background-color: $color-safe-zone-blue-30;
         color: $color-primary-100;
       }
 
@@ -661,6 +688,27 @@ const totalRecordItemsRemoved = computed(() => {
         }
       }
     }
+
+    &-footer {
+      background-color: $color-primary-5;
+      padding: 10px 16px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 24px;
+      gap: 4px;
+      margin-left: -26px;
+
+      &-link {
+        text-decoration: underline;
+
+        &:hover {
+          opacity: 0.8;
+          cursor: pointer;
+        }
+      }
+    }
   }
 
   &-transition {
@@ -730,6 +778,10 @@ const totalRecordItemsRemoved = computed(() => {
     display: none;
   }
 
+  @media (max-width: 1130px) {
+    display: none;
+  }
+
   &-bar {
     width: 110px;
     height: 6px;
@@ -750,6 +802,9 @@ const totalRecordItemsRemoved = computed(() => {
     color: $color-primary-100;
     text-align: right;
     display: inline-block;
+    @media (max-width: 1215px) {
+      display: none;
+    }
   }
 
   &--removed {

@@ -48,7 +48,7 @@ const onCancel = async () => {
       <AppModalFooter>
         <BaseButton
           variant="primary"
-          backgroundColor="danger"
+          background-color="danger"
           :icon="isCancellingSubscription ? 'spinner' : ''"
           @click="onCancel"
         >

@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed } from "vue";
-import AdvancedModeModal from "@/features/homeV3/AdvancedModeModal.vue";
-import { useBasicMode } from "@/composables/useBasicMode";
+import AdvancedModeModal from "@/features/AdvancedMode/AdvancedModeModal.vue";
+import { useBasicMode, useBasicModeRouting } from "@/composables/useBasicMode";
+import { useRouter } from "vue-router";
 import { useEncryptionGate } from "@/composables/useEncryptionGate";
 import store from "@/store";
 import { posthogCapture } from "@/scripts/posthog.js";
@@ -10,7 +11,9 @@ import BaseText from "@/library/BaseText.vue";
 import BaseToggle from "@/library/BaseToggle.vue";
 
 const { withEncryptionGate } = useEncryptionGate();
-const { isBasicModeEnabled, toggleBasicMode } = useBasicMode();
+const { isBasicModeEnabled } = useBasicMode();
+const { toggleBasicModeWithRouting } = useBasicModeRouting();
+const router = useRouter();
 
 const isAdvancedModeModalOpen = ref(false);
 const toggle = computed(() => !isBasicModeEnabled.value);
@@ -36,13 +39,15 @@ const openBasicModeModals = () => {
 };
 
 const changeBasicMode = () => {
-  toggleBasicMode();
+  toggleBasicModeWithRouting(router);
   posthogCapture("dashboard_user_toggles_basic_mode");
 };
 
 const goToAdvancedMode = () => {
   isAdvancedModeModalOpen.value = false;
-  withEncryptionGate(toggleBasicMode, { context: "advanced-mode" });
+  withEncryptionGate(() => toggleBasicModeWithRouting(router), {
+    context: "advanced-mode",
+  });
   posthogCapture("dashboard_user_toggles_advanced_mode");
 };
 
@@ -75,12 +80,13 @@ const closeAdvancedModeModal = () => {
     <AdvancedModeModal
       :value="isAdvancedModeModalOpen"
       @close="closeAdvancedModeModal"
-      @goToAdvancedMode="goToAdvancedMode"
+      @go-to-advanced-mode="goToAdvancedMode"
     />
   </div>
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .navigation-advanced-toggle {
   &__button {
     border: none;

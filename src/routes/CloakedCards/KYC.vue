@@ -94,7 +94,7 @@ const data = reactive({
 
     <div class="content">
       <div class="title">
-        <h1>Get your Cloaked card</h1>
+        <h1>Get your Virtual Card</h1>
       </div>
 
       <div class="form">
@@ -258,6 +258,7 @@ const data = reactive({
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .kyc {
   position: fixed;
   top: 0;

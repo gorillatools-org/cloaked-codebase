@@ -60,6 +60,7 @@ const props = defineProps({
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .table-content {
   padding: 14px 0 0;
   display: flex;

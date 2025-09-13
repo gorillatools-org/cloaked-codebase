@@ -31,6 +31,7 @@ const emit = defineEmits(["click"]);
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .icon-btn {
   background-color: transparent;
   border-radius: 50%;

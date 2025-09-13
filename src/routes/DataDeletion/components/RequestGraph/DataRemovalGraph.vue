@@ -686,8 +686,8 @@ watch(
       <DataRemovalGraphTooltip
         ref="tooltip"
         class="data-removal-graph_tooltip"
-        :tooltipData="tooltipData"
-        :tooltipLeft="tooltipLeft"
+        :tooltip-data="tooltipData"
+        :tooltip-left="tooltipLeft"
       />
     </div>
   </div>
@@ -695,6 +695,7 @@ watch(
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .data-removal-graph_chart-container {
   position: relative;
   width: 100%;

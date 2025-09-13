@@ -26,17 +26,17 @@ import ChoosePlanModal from "@/features/subscribe/ChoosePlanModal.vue";
 import AppLayoutDefault from "@/features/AppLayoutDefault.vue";
 import { usePlansModal } from "@/features/subscribe/composables/usePlansModal";
 import DownloadApp from "@/features/onboarding/DownloadApp.vue";
-import ModalWelcomeDefault from "@/features/onboarding/ModalWelcomeDefault.vue";
 import CreateEncryptionModal from "@/features/encryption/CreateEncryptionModal.vue";
 import { constants } from "@/scripts/constants";
-import { SCREEN, useScreen } from "@/composables/useScreen";
 import { useBasicMode } from "@/composables/useBasicMode";
 import { useEncryptionGate } from "@/composables/useEncryptionGate";
-import { isMobileDevice } from "@/scripts/regex";
+import { useDisplay } from "@/composables/useDisplay";
 import MonitoringActivateModal from "@/features/monitoring/MonitoringActivateModal.vue";
 import { useMonitoringModal } from "@/features/monitoring/useMonitoringModal.js";
+import { initializeExtensionMessaging } from "@/scripts/messaging";
 
 const route = useRoute();
+const routePath = computed(() => route.path);
 
 const {
   pause: pauseUpdateIdentitiesPolling,
@@ -250,10 +250,10 @@ watch(
   { deep: true, immediate: true }
 );
 
-const { isBasicModeEnabled, isBasicModeAccessible } = useBasicMode();
+const { isBasicModeEnabled } = useBasicMode();
 
 const basicModeEnabled = computed(() => {
-  return isBasicModeAccessible.value && isBasicModeEnabled.value;
+  return isBasicModeEnabled.value;
 });
 
 function showPayModal() {
@@ -281,7 +281,7 @@ function showPayModal() {
                 onClick: () =>
                   store.dispatch("subscription/openSubscriptionModal", {
                     promoCode: "FAM2024",
-                    callback: () => router.push({ name: "Wallet" }),
+                    callback: () => router.push({ name: "VirtualCards" }),
                   }),
               },
             });
@@ -293,7 +293,7 @@ function showPayModal() {
               header: "Congrats, you got early access to Cloaked Pay",
               button: {
                 text: "To Wallet page",
-                onClick: () => router.push({ name: "Wallet" }),
+                onClick: () => router.push({ name: "VirtualCards" }),
               },
             });
           }
@@ -381,6 +381,7 @@ onMounted(async () => {
   await initiateEncryption();
   state.bootReady = true;
   listenForCloaks();
+  initializeExtensionMessaging();
   prefetchInbox();
   DataDeleteService.getEnrollmentData();
   DataDeleteService.getEnrollmentProfile();
@@ -393,9 +394,7 @@ onMounted(async () => {
   }
 });
 
-const { screen } = useScreen();
-
-const { isPlansModalOpen } = usePlansModal();
+const { openPlansModal, isPlansModalOpen } = usePlansModal();
 const {
   isModalOpen: isEncryptionModalOpen,
   modalContext: encryptionModalContext,
@@ -403,6 +402,22 @@ const {
 } = useEncryptionGate();
 
 const { isMonitoringModalOpen } = useMonitoringModal();
+
+const { isMobile } = useDisplay();
+
+const hasNeverPaid = computed(() => {
+  return store.getters["settings/isTrial"];
+});
+
+watch(
+  [() => hasNeverPaid.value, () => routePath.value],
+  ([hasNeverPaidNew]) => {
+    if (hasNeverPaidNew) {
+      openPlansModal(false);
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -412,13 +427,12 @@ const { isMonitoringModalOpen } = useMonitoringModal();
   >
     <MigrationModalFlow
       v-if="shouldShowEncryptionMigrationModal"
-      :userEncryptionVersion="userEncryptionVersion"
+      :user-encryption-version="userEncryptionVersion"
     />
 
     <RightPanel />
     <GetStarted />
     <Modal />
-    <ModalWelcomeDefault :value="screen === SCREEN.WELCOME_MODAL" />
     <DownloadMobileModal />
     <ESimAnnouncement />
     <InboxCompose />
@@ -428,7 +442,7 @@ const { isMonitoringModalOpen } = useMonitoringModal();
     />
     <DownloadApp
       v-if="
-        isMobileDevice &&
+        isMobile &&
         !basicModeEnabled &&
         route.fullPath !== '/settings/subscription'
       "
@@ -447,6 +461,7 @@ const { isMonitoringModalOpen } = useMonitoringModal();
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 [data-lastpass-icon-root] {
   display: none !important;
 }

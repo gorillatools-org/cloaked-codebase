@@ -4,6 +4,8 @@ import BaseIcon from "@/library/BaseIcon.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseToggle from "@/library/BaseToggle.vue";
 
+const emit = defineEmits(["click"]);
+
 const props = defineProps({
   name: { type: String, required: true },
   icon: { type: String, default: "play" },
@@ -20,6 +22,10 @@ const props = defineProps({
   alert: { type: Boolean, default: false },
   toggle: { type: Boolean, default: false },
 });
+
+const handleClick = (event) => {
+  emit("click", event);
+};
 
 // Compute component type
 const componentType = computed(() => {
@@ -47,6 +53,7 @@ const componentAttributes = computed(() => {
       'navigation-dropdown-menu-item--alert': alert,
     }"
     v-bind="componentAttributes"
+    @click="handleClick"
   >
     <div class="navigation-dropdown-menu-item__icon">
       <BaseIcon :name="props.icon" />

@@ -174,7 +174,7 @@ function onLabelClicked(label) {
     border-radius: 12px;
     z-index: 1;
     overflow: auto;
-    max-height: calc(100vh - 300px);
+    max-height: calc(100vh - 440px);
 
     @at-root .theme-dark & {
       box-shadow: 0 5px 40px rgba($white, 0.16);

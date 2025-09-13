@@ -1,8 +1,8 @@
 <script setup>
-import UiHeader from "@/features/onboarding-new/UiHeader.vue";
-import UiButton from "@/features/onboarding-new/UiButton.vue";
-import UiButtonRow from "@/features/onboarding-new/UiButtonRow.vue";
-import UiPageWrapper from "@/features/onboarding-new/UiPageWrapper.vue";
+import UiHeader from "@/features/eSim/UiHeader.vue";
+import UiButton from "@/features/eSim/UiButton.vue";
+import UiButtonRow from "@/features/eSim/UiButtonRow.vue";
+import UiPageWrapper from "@/features/eSim/UiPageWrapper.vue";
 import AtomInputInternalLabels from "@/library/AtomInputInternalLabels.vue";
 import { PH_SCREEN_EVENT_ESIM_ONBOARDING_COMPATIBILITY_SCREEN } from "@/scripts/posthogEvents";
 import EsimMobileToggleWidget from "@/features/eSim/EsimMobileToggleWidget.vue";
@@ -124,33 +124,33 @@ function handleIMEIInput(event) {
 </script>
 <template>
   <UiPageWrapper
-    showLogo
+    show-logo
     logo="cloaked-esim-logo"
-    :screenEvent="PH_SCREEN_EVENT_ESIM_ONBOARDING_COMPATIBILITY_SCREEN"
-    :esimStep="4"
+    :screen-event="PH_SCREEN_EVENT_ESIM_ONBOARDING_COMPATIBILITY_SCREEN"
+    :esim-step="4"
   >
     <UiHeader
-      leftAlign
-      maxWidth="450px"
+      left-align
+      max-width="450px"
     >
       <h2 v-if="props.skipped">Register your device</h2>
       <h2 v-else>Purchase successful! Now register your device</h2>
       <h5>Please enter your device EID and IMEI numbers below.</h5>
     </UiHeader>
     <EsimMobileToggleWidget
-      :deviceType="props.deviceType"
+      :device-type="props.deviceType"
       :instructions="instructions"
-      :imgName="
+      :img-name="
         props.deviceType === 'android' ? 'android-general' : 'ios-general'
       "
-      @updateDeviceType="(deviceType) => emit('updateDeviceType', deviceType)"
+      @update-device-type="(deviceType) => emit('updateDeviceType', deviceType)"
     />
 
     <div class="input-fields">
       <AtomInputInternalLabels
         ref="eidInput"
         autofocus
-        :isLoading="state.loading"
+        :is-loading="state.loading"
         :value="state.eid"
         label="EID Number"
         type="text"
@@ -158,7 +158,7 @@ function handleIMEIInput(event) {
         :disabled="state.loading"
         :pattern="/^[0-9]*$/"
         :error="state.eidInputError"
-        errorMessage="EID Numbers must be 32 characters"
+        error-message="EID Numbers must be 32 characters"
         @input="handleEIDInput"
         @keydown.enter.prevent="nextInput"
         @keydown.tab.prevent="nextInput"
@@ -166,7 +166,7 @@ function handleIMEIInput(event) {
 
       <AtomInputInternalLabels
         ref="imeiInput"
-        :isLoading="state.loading"
+        :is-loading="state.loading"
         :value="state.imei"
         label="IMEI Number"
         type="text"
@@ -174,7 +174,7 @@ function handleIMEIInput(event) {
         :disabled="state.loading"
         :pattern="/^[0-9]*$/"
         :error="state.imeiInputError"
-        errorMessage="IMEI Numbers must be 15 characters"
+        error-message="IMEI Numbers must be 15 characters"
         @input="handleIMEIInput"
         @keydown.enter="checkDeviceValidity"
       />

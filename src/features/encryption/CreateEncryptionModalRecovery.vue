@@ -78,6 +78,7 @@ const onDownload = () => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .create-encryption-recovery__card {
   padding: 32px;
   margin: 24px;

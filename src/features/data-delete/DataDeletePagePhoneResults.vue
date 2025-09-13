@@ -3,15 +3,29 @@ import BaseButton from "@/library/BaseButton.vue";
 import DataDeletePagePhoneResultsCard from "@/features/data-delete/DataDeletePagePhoneResultsCard.vue";
 import DataDeleteSticky from "@/features/data-delete/atoms/DataDeleteSticky.vue";
 import DataDeleteThreatLevel from "@/features/data-delete/atoms/DataDeleteThreatLevel.vue";
+import DataDeleteEmailCaptureModal from "@/features/data-delete/atoms/DataDeleteEmailCaptureModal.vue";
 import {
   PH_EVENT_USER_CLICKED_DATA_DELETION_NOT_ME_BUTTON,
   PH_EVENT_USER_CLICKED_DATA_DELETION_SEARCH_RESULTS_CONTINUE_BUTTON,
   PH_EVENT_USER_VIEWED_DATA_DELETION_THREAT_LEVEL,
 } from "@/scripts/posthogEvents";
-import { computed, onMounted, ref } from "vue";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { useRelativesParsing } from "@/features/data-delete/composables/useRelativesParsing";
 import BaseText from "@/library/BaseText.vue";
+import { computed, onMounted, ref, onBeforeUnmount } from "vue";
+import { PH_FEATURE_FLAG_DD_EMAIL_CAPTURE_MODAL } from "@/scripts/posthogEvents";
+import {
+  usePostHogFeatureFlag,
+  fetchFeatureFlag,
+} from "@/composables/usePostHogFeatureFlag.js";
+
+const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
+  PH_FEATURE_FLAG_DD_EMAIL_CAPTURE_MODAL
+);
+
+const isEmailCaptureModalFlag = computed(
+  () => hasLoadedFeatureFlag.value && featureFlag.value === true
+);
 
 const props = defineProps({
   searchResults: {
@@ -28,8 +42,29 @@ const props = defineProps({
   },
 });
 
+const isEmailCaptureOpen = ref(false);
 const emit = defineEmits(["setup", "force-new-search"]);
 const bestMatch = computed(() => props.searchResults[0] ?? null);
+
+let autoOpenTimer;
+
+onMounted(async () => {
+  const { value: flag } = await fetchFeatureFlag(
+    PH_FEATURE_FLAG_DD_EMAIL_CAPTURE_MODAL
+  );
+
+  if (!flag) return;
+
+  if (bestMatch.value && props.phone) {
+    autoOpenTimer = setTimeout(() => {
+      isEmailCaptureOpen.value = true;
+    }, 4000);
+  }
+});
+
+onBeforeUnmount(() => {
+  clearTimeout(autoOpenTimer);
+});
 
 const onDelete = () => {
   emit("setup");
@@ -54,7 +89,7 @@ const onNotMe = () => {
 const threatLevel = ref("low");
 
 const { partners, relatives, others } = useRelativesParsing(
-  bestMatch.value.relatives
+  bestMatch.value?.relatives
 );
 
 // temporary tracking for measuring the threat level distribution
@@ -106,6 +141,7 @@ onMounted(() => {
           size="lg"
           icon="arrow-right"
           class="data-delete-phone-results__cta-button"
+          full-width
           @click="onDelete"
         >
           Delete your online data
@@ -114,13 +150,20 @@ onMounted(() => {
     </div>
     <div class="data-delete-results__column">
       <DataDeletePagePhoneResultsCard
+        v-model="isEmailCaptureOpen"
         :result="bestMatch"
         :phone="phone"
-        :isForcingNewSearch="isForcingNewSearch"
+        :is-forcing-new-search="isForcingNewSearch"
+        :is-email-capture-modal-flag="isEmailCaptureModalFlag"
         @threat-level="threatLevel = $event"
         @on-not-me="onNotMe"
       />
     </div>
+    <DataDeleteEmailCaptureModal
+      v-if="isEmailCaptureModalFlag"
+      v-model="isEmailCaptureOpen"
+      :phone="phone"
+    />
   </div>
 </template>
 

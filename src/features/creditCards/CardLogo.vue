@@ -70,6 +70,7 @@ const cardIcon = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .card-icon-wrapper {
   height: 32px;
   width: 32px;

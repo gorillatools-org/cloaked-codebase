@@ -49,7 +49,7 @@ const onRemoveMember = async () => {
       <AppModalFooter>
         <BaseButton
           variant="primary"
-          backgroundColor="danger"
+          background-color="danger"
           :icon="isRemovingMember ? 'spinner' : ''"
           @click="onRemoveMember"
         >

@@ -4,31 +4,42 @@ import Button from "./WalletSettingsButton";
 import { useRoute } from "vue-router";
 import store from "@/store";
 import GenerateCard from "@/features/modals/Wallet/GenerateCard.vue";
-import router from "@/routes/router/index.js";
+import useFundingSource from "@/composables/Wallet/useFundingSource";
+
+const emit = defineEmits(["newCardIssued"]);
 
 const route = useRoute();
-
+const { openAddModal, fundingSources } = useFundingSource();
 const generating = ref(false);
 
 const cardSettings = computed(() => {
   return store.state.cards?.cardSettings;
 });
 
-function createNewIdentity() {
-  if ((store.state.cards?.fundingSources?.results?.length ?? 0) === 0) {
-    router.push("settings/cloaked-cards");
+function handleButtonClick() {
+  if ((fundingSources.value?.length ?? 0) === 0) {
+    openAddModal(() => {
+      openCreateModal();
+    });
     return;
   }
 
+  openCreateModal();
+}
+
+const openCreateModal = () => {
   store.dispatch("openModal", {
     customTemplate: {
       template: markRaw(GenerateCard),
       props: {
         isVisible: true,
+        onNewCardIssued: (cardId) => {
+          emit("newCardIssued", cardId);
+        },
       },
     },
   });
-}
+};
 
 const periodConversion = (period) => {
   if (period === "daily") {
@@ -100,10 +111,10 @@ watch(cardSettings, () => {
     clickable
     :icon="generating ? 'loading-small' : 'plus'"
     text="Generate"
-    title="New card"
+    title="Virtual Card"
     :subtext="title"
     :class="{ generating: generating }"
-    @click="createNewIdentity()"
+    @click="handleButtonClick()"
   />
 </template>
 

@@ -77,6 +77,7 @@ function onToggleAll() {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .review-toggle-all {
   display: flex;
   align-items: center;

@@ -32,6 +32,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  showReplaceNameModal: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const state = reactive({
@@ -173,7 +177,7 @@ function updateWebsite(newUrl) {
 
       const name = get(data, "website.name", nickname.value);
 
-      if (name) {
+      if (name && props.showReplaceNameModal) {
         store.dispatch("openModal", {
           header: "Replace name?",
           subheader: `Would you like to update the name of the identity to "${name}"?`,
@@ -370,10 +374,10 @@ watch(
       :initial-value="state.websiteUrl"
       :loading="state.loading || state.expectsRefresh"
       :disable-enter="true"
-      :forceDelete="true"
-      :forceReset="state.forceReset"
-      :identityId="props.cloak.id"
-      :readOnly="readOnly"
+      :force-delete="true"
+      :force-reset="state.forceReset"
+      :identity-id="props.cloak.id"
+      :read-only="readOnly"
       @input="handleInput"
       @delete="deleteWebsite"
       @keydown.enter="handleEnterPress"
@@ -395,7 +399,7 @@ watch(
             <SectionList
               :items="state.results"
               :active="state.active"
-              @setActive="handleSetActive"
+              @set-active="handleSetActive"
               @select="handleSelect"
             />
           </template>
@@ -406,6 +410,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .cloak-web-section {
   padding: 2px 24px 20px;
 

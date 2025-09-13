@@ -80,7 +80,6 @@ export default {
     async cancelSubscriptionRenewal() {
       await SubscriptionService.cancelSubscription();
       await SubscriptionService.getSubscription();
-      await SubscriptionService.getSubscriptionDetails();
 
       setTimeout(() => {
         const url = "https://keepitcloaked.typeform.com/to/UwV968cM";

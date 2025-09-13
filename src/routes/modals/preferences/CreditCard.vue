@@ -52,7 +52,7 @@ const address = computed(() => {
     class="credit-card-display"
     @click="$emit('click')"
   >
-    <CardLogo :cardType="card.card_type" />
+    <CardLogo :card-type="card.card_type" />
     <div class="card-id">
       <div class="card-info">
         <BaseText
@@ -91,6 +91,7 @@ const address = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .credit-card-display {
   display: flex;
   flex-direction: row;

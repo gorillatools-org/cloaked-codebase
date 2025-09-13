@@ -1,6 +1,6 @@
 import { toValue } from "@vueuse/core/index";
 import { useStripeIntent } from "@/features/subscribe/composables/useStripeIntent.js";
-import { usePlans } from "@/features/subscribe/composables/usePlans.js";
+import { usePlans } from "@/features/subscribe/composables/usePlans";
 
 const { allPlans } = usePlans();
 const { getIntent } = useStripeIntent();

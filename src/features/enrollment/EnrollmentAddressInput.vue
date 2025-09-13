@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { debounce } from "lodash-es";
 import BaseInput from "@/library/BaseInput.vue";
@@ -9,7 +9,34 @@ import InlineSvg from "@/features/InlineSvg.vue";
 import { useGooglePlaces } from "@/composables/useGooglePlaces.js";
 import { displayAddress } from "@/features/enrollment/composables.js";
 
-const emit = defineEmits(["click-action"]);
+interface Address {
+  address1: string;
+  address2?: string | null;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+}
+
+interface Props {
+  title: string;
+  titleAfter?: string;
+  error?: string | null;
+  placeholder?: string;
+}
+
+interface Emits {
+  (event: "click-action", address: Address): void;
+  (event: "click-title-after"): void;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  titleAfter: "",
+  error: null,
+  placeholder: "",
+});
+
+const emit = defineEmits<Emits>();
 
 const model = defineModel({ type: String });
 
@@ -34,7 +61,7 @@ const awaitSearchDebounced = debounce(() => {
 }, 500);
 
 watch(model, () => {
-  if (model.value.length >= 5) {
+  if (model.value && model.value.length >= 5) {
     awaitSearchDebounced();
     fetchAddressesDebounced();
   }
@@ -61,7 +88,7 @@ const onEnter = () => {
   focusedAddress && onAdd(focusedAddress);
 };
 
-const onAdd = (address) => {
+const onAdd = (address: Address): void => {
   emit("click-action", address);
   model.value = "";
   hasCompletedSearch.value = false;
@@ -72,6 +99,9 @@ const onAdd = (address) => {
 <template>
   <BaseInput
     v-model="model"
+    :title="props.title"
+    :error="props.error"
+    :placeholder="props.placeholder"
     class="enrollment-address-input"
     @focus="isFocused = true"
     @blur="
@@ -82,9 +112,18 @@ const onAdd = (address) => {
     @keydown.up.prevent="onUp"
     @keydown.enter="onEnter"
   >
-    <template #after="{ error }">
+    <template #label-after>
+      <span
+        v-if="titleAfter"
+        class="enrollment-address-input__label-after"
+        @click="emit('click-title-after')"
+      >
+        {{ titleAfter }}
+      </span>
+    </template>
+    <template #after="{ error: slotError }">
       <div
-        v-if="error || isDropdownOpen"
+        v-if="slotError || isDropdownOpen"
         class="enrollment-address-input__after"
       >
         <div
@@ -144,6 +183,15 @@ const onAdd = (address) => {
 
 <style scoped lang="scss">
 .enrollment-address-input {
+  &__label-after {
+    cursor: pointer;
+    color: $color-primary-100;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
   &:deep(
       .base-input__input:has(
           ~ .enrollment-address-input__after .enrollment-address-input__results

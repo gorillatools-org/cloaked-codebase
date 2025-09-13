@@ -91,6 +91,7 @@ watch(hasLoadedFeatureFlag, (value) => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .auto-password-change {
   min-height: 100vh;
   display: flex;

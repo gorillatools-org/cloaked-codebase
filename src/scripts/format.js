@@ -224,83 +224,6 @@ export const formatAddress = (addressString) => {
   return newAddressParts.join(" ");
 };
 
-// NOTE: this function returns address in lowercase (except state abbreviations)
-// recommended to add style of "text-transform: capitalize" to the element
-export const formatAddressFromObject = (addressObject) => {
-  let addressParts = [];
-  if (
-    addressObject?.address1?.length &&
-    !addressObject?.address1?.toLowerCase().includes("undefined")
-  ) {
-    addressParts.push(addressObject.address1.toLowerCase());
-  }
-
-  if (
-    addressObject?.address2?.length &&
-    !addressObject?.address2?.toLowerCase().includes("undefined")
-  ) {
-    addressParts.push(addressObject.address2.toLowerCase());
-  }
-
-  if (
-    addressObject?.city?.length &&
-    !addressObject?.city?.toLowerCase().includes("undefined")
-  ) {
-    addressParts.push(addressObject.city.toLowerCase());
-  }
-
-  if (
-    (addressObject?.state?.length &&
-      !addressObject?.state?.toLowerCase()?.includes("undefined")) ||
-    (addressObject?.postal_code?.length &&
-      !addressObject?.postal_code?.toLowerCase()?.includes("undefined")) ||
-    (addressObject?.postalCode?.length &&
-      !addressObject?.postalCode?.toLowerCase()?.includes("undefined"))
-  ) {
-    let stateAndZip = "";
-    if (stateShorthands.includes(addressObject?.state?.trim()?.toUpperCase())) {
-      stateAndZip += addressObject?.state?.trim()?.toUpperCase();
-    } else if (addressObject?.state?.length) {
-      stateAndZip += addressObject?.state?.trim()?.toLowerCase();
-    }
-
-    if (
-      addressObject?.postal_code?.length ||
-      addressObject?.postalCode?.length
-    ) {
-      if (stateAndZip.length) {
-        stateAndZip += " ";
-      }
-      if (addressObject.postal_code) {
-        stateAndZip += addressObject.postal_code;
-      } else {
-        stateAndZip += addressObject.postalCode;
-      }
-    }
-
-    if (stateAndZip.length) {
-      addressParts.push(stateAndZip);
-    }
-  }
-
-  if (addressObject?.country?.length) {
-    if (addressObject.country.length === 2) {
-      addressObject.country = addressObject.country.toUpperCase();
-    } else {
-      addressParts.push(addressObject.country.toLowerCase());
-    }
-  }
-
-  return addressParts.join(", ");
-};
-
-export const formatNameFromObject = (nameObject) => {
-  const { prefix, first, middle, last, suffix } = nameObject;
-  return [prefix, first, middle, last, suffix]
-    .filter((value) => !!value)
-    .join(" ");
-};
-
 export const formatNumbersBasedonLocale = (number) => {
   return new Intl.NumberFormat().format(number);
   // ex: 3500 > '3,500' if in US English locale
@@ -345,9 +268,7 @@ export const format = {
   highlight,
   formatPhoneStringBasic,
   formatAddress,
-  formatAddressFromObject,
   formatNumbersBasedonLocale,
-  formatNameFromObject,
   formatPhone,
   formatCardNumberField,
   formatCardExpiresAtField,

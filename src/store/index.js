@@ -1,6 +1,6 @@
 import Vuex from "vuex";
 import createPersistedState from "vuex-persistedstate";
-import moment from "moment";
+
 import callGuard from "./modules/call-guard";
 
 import rightPanel from "./modules/rightPanel.js";
@@ -277,9 +277,8 @@ export default new Vuex.Store({
       return state.flags.onboarding && state.flags.onboarding[name];
     },
     getNewOnboardingFlag: (state) => (name) => {
-      return (
-        state.flags.newOnboardingFlags && state.flags.newOnboardingFlags[name]
-      );
+      // Deprecated: Now reads from general onboarding flags for better decoupling
+      return state.flags.onboarding && state.flags.onboarding[name];
     },
 
     getDefaultForwardingPhone: (state) => {
@@ -378,27 +377,10 @@ export default new Vuex.Store({
     setVerifiedPhones({ commit }, phones) {
       commit("setVerifiedPhones", phones);
     },
-    openCloakCreate({ commit, dispatch }) {
+    openCloakCreate({ commit }) {
       commit("openCloakCreate");
-      dispatch("updateCloaks", [
-        {
-          id: -1,
-          nickname: "",
-          created_at: moment().toISOString(),
-          last_used_at: moment().toISOString(),
-        },
-      ]);
     },
-    updateTempCloak({ dispatch }, cloak) {
-      dispatch("updateCloaks", [
-        {
-          ...cloak,
-          id: -1,
-          created_at: moment().toISOString(),
-          last_used_at: moment().toISOString(),
-        },
-      ]);
-    },
+
     async updateCloaks({ dispatch, state }, cloaks) {
       const formattedCloaks = await dispatch("updateCloaksAndFormat", {
         cloaks,

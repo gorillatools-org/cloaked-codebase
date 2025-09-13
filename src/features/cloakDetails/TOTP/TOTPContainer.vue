@@ -145,10 +145,10 @@ const isTotpIntroDisplayed = ref(false);
   <div>
     <TOTPInputRow
       :totp="totp"
-      :isTotpIntroDisplayed="isTotpIntroDisplayed"
-      :totpToken="totpToken"
+      :is-totp-intro-displayed="isTotpIntroDisplayed"
+      :totp-token="totpToken"
       :loading="attrs.loading"
-      :identityId="props.identity.id"
+      :identity-id="props.identity.id"
       v-bind="$attrs"
       @save="saveTotp"
       @delete="deleteTotp"

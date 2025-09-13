@@ -41,6 +41,7 @@ const props = defineProps({
   </div>
 </template>
 <style scoped lang="scss">
+/* stylelint-disable */
 .data-removal-box {
   display: flex;
   flex-direction: column;

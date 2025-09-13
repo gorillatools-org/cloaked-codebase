@@ -35,7 +35,7 @@ const attrs = useAttrs();
         </BaseButton>
         <BaseButton
           variant="primary"
-          backgroundColor="danger"
+          background-color="danger"
           :loading="isLoading"
           @click="$emit('delete')"
         >

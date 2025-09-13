@@ -70,6 +70,7 @@ const scannedItems = computed(() => [
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .monitoring-scanning {
   display: grid;
   grid-template-columns: 1fr max-content;

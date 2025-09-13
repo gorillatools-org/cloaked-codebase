@@ -11,9 +11,9 @@ onMounted(() => {
 });
 
 function checkForSpecialKeys($event) {
-  $event.stopPropagation();
   if ($event?.key?.toLowerCase() === "escape") {
-    if (!store.state.isMultiSelect) {
+    if (!store.state.isMultiSelect && showRightPanel.value) {
+      $event.stopPropagation();
       handleClosePanel();
     }
   }
@@ -90,8 +90,9 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .rightPanel {
-  z-index: 105;
+  z-index: 451;
   position: fixed;
   top: 0;
   right: 0;

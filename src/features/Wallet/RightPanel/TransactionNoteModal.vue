@@ -58,7 +58,7 @@ const notesValueChanged = computed(() => {
   <ModalTemplate
     :show="isVisible"
     :large="true"
-    :showCloseInHeader="true"
+    :show-close-in-header="true"
     @close="closeModal"
   >
     <template #header>
@@ -99,6 +99,7 @@ const notesValueChanged = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 textarea {
   width: 100%;
   padding: 10px;

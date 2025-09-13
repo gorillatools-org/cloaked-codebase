@@ -5,9 +5,13 @@ import BaseButton from "@/library/BaseButton.vue";
 import EnrollmentCard from "@/features/enrollment/EnrollmentCard.vue";
 import EnrollmentCardHeader from "@/features/enrollment/EnrollmentCardHeader.vue";
 import EnrollmentBackground from "@/features/enrollment/EnrollmentBackground.vue";
-import { useNameValidation } from "@/composables/validation/useNameValidation.js";
+import { usePersonalNameValidation } from "@/composables/validation/usePersonalNameValidation.js";
 import { useDateOfBirthValidation } from "@/composables/validation/useDateOfBirthValidation.js";
 import { getFormattedDateOfBirthValue } from "@/features/enrollment/utils.js";
+import { onMounted } from "vue";
+import { posthogCapture } from "@/scripts/posthog.js";
+
+onMounted(() => posthogCapture("user_viewed_enrollment_form_names"));
 
 defineEmits(["next"]);
 
@@ -24,19 +28,19 @@ const {
   error: firstNameError,
   validate: validateFirstName,
   validateDebounced: validateFirstNameDebounced,
-} = useNameValidation(firstName);
+} = usePersonalNameValidation(firstName);
 
 const {
   error: middleNameError,
   validate: validateMiddleName,
   validateDebounced: validateMiddleNameDebounced,
-} = useNameValidation(middleName, { isRequired: false });
+} = usePersonalNameValidation(middleName, { isRequired: false });
 
 const {
   error: lastNameError,
   validate: validateLastName,
   validateDebounced: validateLastNameDebounced,
-} = useNameValidation(lastName);
+} = usePersonalNameValidation(lastName);
 
 const {
   error: dateOfBirthError,

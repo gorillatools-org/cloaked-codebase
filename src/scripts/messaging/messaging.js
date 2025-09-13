@@ -63,21 +63,38 @@ export const createMessaging = ({
     );
   };
 
+  const postMessageHelper = (payload) => {
+    window.postMessage(
+      {
+        channelId,
+        sourceId,
+        payload,
+      },
+      targetOrigin
+    );
+  };
+
   const sendMessage = (payload) => {
     waitForHandshake.then(() => {
-      authEncrypt(JSON.stringify(payload)).then((payload) => {
-        window.postMessage(
-          {
-            channelId,
-            sourceId,
-            payload,
-          },
-          targetOrigin
-        );
-      });
+      if (payload?.unencrypted) {
+        postMessageHelper(payload);
+      } else {
+        authEncrypt(JSON.stringify(payload))
+          .then((encryptedPayload) => {
+            postMessageHelper(encryptedPayload);
+          })
+          .catch((error) => {
+            console.error("Failed to encrypt message:", error);
+          });
+      }
     });
   };
 
+  const handleMessageHelper = (payload) => {
+    messageListeners.forEach((listener) => {
+      listener(payload);
+    });
+  };
   window.addEventListener("message", ({ data, origin }) => {
     if (
       data?.channelId === channelId &&
@@ -86,12 +103,18 @@ export const createMessaging = ({
       data?.payload?.type !== HANDSHAKE_MESSAGE_TYPE
     ) {
       waitForReadyToListen.then(() => {
-        authDecrypt(data?.payload).then((payloadString) => {
-          const payload = JSON.parse(payloadString);
-          messageListeners.forEach((listener) => {
-            listener(payload);
-          });
-        });
+        if (data?.payload?.unencrypted) {
+          handleMessageHelper(data?.payload);
+        } else {
+          authDecrypt(data?.payload)
+            .then((payloadString) => {
+              const payload = JSON.parse(payloadString);
+              handleMessageHelper(payload);
+            })
+            .catch((error) => {
+              console.error("Failed to decrypt message:", error);
+            });
+        }
       });
     }
   });

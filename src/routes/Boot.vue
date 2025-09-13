@@ -44,16 +44,19 @@ onMounted(async () => {
 
   window.addEventListener("storage", (event) => {
     if (event.storageArea != localStorage) return;
-    if (event.key === "vuex") {
-      if (event.newValue) {
-        const local = store.state.authentication.auth?.access_token;
-        const newStore = JSON.parse(event.newValue);
-        const updated = newStore.authentication.auth?.access_token;
-        if (local !== updated && newStore.authentication.auth) {
-          store.dispatch("authentication/setAccessToken", {
-            oauth: newStore.authentication.auth,
-          });
+    if (event.key === "vuex" && event.newValue) {
+      try {
+        const localToken =
+          store.state.authentication?.auth?.access_token ?? null;
+        const parsed = JSON.parse(event.newValue);
+        const newAuth = parsed?.authentication ?? {};
+        const newToken = newAuth?.auth?.access_token ?? null;
+
+        if (localToken !== newToken && newAuth) {
+          store.commit("authentication/replaceState", newAuth);
         }
+      } catch (e) {
+        console.warn("Failed to parse persisted vuex state", e);
       }
     }
   });
@@ -212,7 +215,7 @@ function showPayModal() {
               onClick: () =>
                 store.dispatch("subscription/openSubscriptionModal", {
                   promoCode: "FAM2024",
-                  callback: () => router.push({ name: "Wallet" }),
+                  callback: () => router.push({ name: "VirtualCards" }),
                 }),
             },
           });
@@ -224,7 +227,7 @@ function showPayModal() {
             header: "Congrats, you got early access to Cloaked Pay",
             button: {
               text: "To Wallet page",
-              onClick: () => router.push({ name: "Wallet" }),
+              onClick: () => router.push({ name: "VirtualCards" }),
             },
           });
         }
@@ -248,9 +251,17 @@ async function checkLoaded() {
 async function authCheck() {
   await appBoot();
   await checkLoaded();
+
+  // Fetch features immediately after authentication and initialization
+  // This ensures features data is available for all components that need it
+  try {
+    await store.dispatch("fetchFeatures");
+  } catch (error) {
+    console.warn("Failed to fetch features during boot:", error);
+  }
 }
 onBeforeMount(() => {
-  UserService.getNewOnboardingFlags();
+  UserService.getFlags();
 });
 
 const { screen, isLoaded: isScreenLoaded } = useScreen();
@@ -273,14 +284,20 @@ useScreenRouting(screen);
 [data-lastpass-icon-root] {
   display: none !important;
 }
+
+/* stylelint-disable selector-max-id, selector-max-type, selector-max-class */
 #app {
   height: 100dvh;
+
   .app-div {
     height: 100%;
+
     .app-wrapper {
       height: 100%;
+
       .content-container {
         height: 100%;
+
         > div {
           height: 100%;
         }
@@ -288,6 +305,8 @@ useScreenRouting(screen);
     }
   }
 }
+/* stylelint-enable selector-max-id, selector-max-type, selector-max-class */
+
 .highlight-text {
   font-weight: 600;
   color: $color-info;

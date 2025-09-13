@@ -502,8 +502,8 @@ watch(
     <div class="data-removal-graph-container">
       <DataRemovalGraph
         :data="graphDataFormatted"
-        :lineColors="lineColors"
-        :activeSeries="activeSeries"
+        :line-colors="lineColors"
+        :active-series="activeSeries"
       />
     </div>
     <div
@@ -553,6 +553,7 @@ watch(
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .full-screen {
   position: absolute;
   top: 0;

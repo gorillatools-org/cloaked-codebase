@@ -334,20 +334,20 @@ function toggleView(newViewType) {
   <div class="page-wrapper">
     <MultiSelectToolbar
       tabindex="0"
-      :isMultiselect="isMultiselect"
-      :identityList="props.identityList"
+      :is-multiselect="isMultiselect"
+      :identity-list="props.identityList"
       :selected="state.selected"
-      :ignoreDisplay="ignoreDisplay"
-      :filterOptions="props.filterOptions"
-      :viewType="viewType"
+      :ignore-display="ignoreDisplay"
+      :filter-options="props.filterOptions"
+      :view-type="viewType"
       @select="toggleList"
       @ignore="ignoreList"
       @unignore="unignoreList"
       @delete="deleteList"
-      @transferList="transferList"
+      @transfer-list="transferList"
       @sort="(e) => emit('sort', e)"
       @filter="(e) => emit('filter', e)"
-      @toggleView="toggleView"
+      @toggle-view="toggleView"
     />
     <div class="container">
       <div
@@ -418,8 +418,8 @@ function toggleView(newViewType) {
         <InfiniteLoader
           ref="infinite"
           :loading="props.loading"
-          :allDataFetched="props.allCloaksLoaded"
-          @loadMore="emit('loadNextPage')"
+          :all-data-fetched="props.allCloaksLoaded"
+          @load-more="emit('loadNextPage')"
         />
       </div>
 
@@ -438,23 +438,23 @@ function toggleView(newViewType) {
           <CloakCard
             :aria-id="`CloakCardIdentity${identity?.id || ''}`"
             :identity="identity"
-            :idIndex="id_index"
-            :noSelect="identity.id === -1"
+            :id-index="id_index"
+            :no-select="identity.id === -1"
             :selected="isSelected(identity)"
-            :isMultiselect="isMultiselect"
+            :is-multiselect="isMultiselect"
             :count="state.selected.length"
             :with-right-click="true"
-            :identifierPriority="props.identifierPriority"
-            :ignoreDisplay="ignoreDisplay"
+            :identifier-priority="props.identifierPriority"
+            :ignore-display="ignoreDisplay"
             @refresh="refresh"
             @ignore="ignoreList"
             @unignore="unignoreList"
             @delete="deleteList"
             @select="toggleSelect(identity)"
             @move="move"
-            @unselectAll="unselectAll"
+            @unselect-all="unselectAll"
             @unselect="toggleSelect(identity, true)"
-            @selectAll="selectAll"
+            @select-all="selectAll"
             @click="selectIdentity(identity)"
           />
         </div>
@@ -462,8 +462,8 @@ function toggleView(newViewType) {
         <InfiniteLoader
           ref="infinite"
           :loading="props.loading"
-          :allDataFetched="props.allCloaksLoaded"
-          @loadMore="emit('loadNextPage')"
+          :all-data-fetched="props.allCloaksLoaded"
+          @load-more="emit('loadNextPage')"
         />
       </div>
     </div>
@@ -471,6 +471,7 @@ function toggleView(newViewType) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .page-wrapper {
   width: 100%;
 }

@@ -1,122 +1,92 @@
 <script setup>
-import { computed, ref } from "vue";
+import { ref, computed } from "vue";
 import InlineSvg from "@/features/InlineSvg.vue";
 import ChoosePlanFeaturesItem from "@/features/subscribe/ChoosePlanFeaturesItem.vue";
 import CheckoutTitle from "@/features/subscribe/components/CheckoutTitle.vue";
 import CheckoutDivider from "@/features/subscribe/components/CheckoutDivider.vue";
+import CheckoutCard from "@/features/subscribe/components/CheckoutCard.vue";
 import BaseText from "@/library/BaseText.vue";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag";
+import { PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT } from "@/scripts/posthogEvents";
+
+const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
+);
+
+const vpnCustomer = computed(
+  () =>
+    hasLoadedFeatureFlag.value && featureFlag.value === "checkout-feature-vpn"
+);
 
 const isExpanded = ref(false);
 
-const { featureFlag: hasIdentityMonitoring, hasLoadedFeatureFlag } =
-  usePostHogFeatureFlag("identity-monitoring-enabled");
+const vpnFeature = {
+  title: "Mobile VPN",
+  detail:
+    "Mask your IP address for complete privacy & safety when browsing. Connect to servers in 68 countries to access region-restricted content.",
+};
 
-const features = computed(() =>
-  hasIdentityMonitoring.value
-    ? [
-        {
-          title: "Data removal & dark web monitoring",
-          detail:
-            "Remove your personal information from 130+ data brokers + realtime dark web alerts for your sensitive info.",
-        },
-        {
-          title: "Unlimited aliases & password manager",
-          detail:
-            "Generate and manage unlimited aliases - email addresses, phone numbers, passwords and usernames to protect your personal information from exposure.",
-        },
-        {
-          title: "Call Guard instant spam protection",
-          detail: "Block scam calls and robocalls instantly.",
-        },
-        {
-          title: "$1 million identity theft insurance",
-          detail:
-            "Up to $1,000,000 in comprehensive insurance on your digital identity. (🇺🇸 only)",
-        },
-        {
-          title: "Call, text and email in one place",
-          detail:
-            "Every alias comes with a full-featured inbox that you can use inside of Cloaked or forward to your personal one.",
-        },
-        {
-          title: "Custom password manager fields",
-          detail:
-            "Encrypt more than just login details to your identities with custom fields.",
-        },
-        {
-          title: "2FA login support",
-          detail:
-            "Replace your authenticator apps with embedded time-based one time passcode support right in Cloaked. Scan with your camera or add using secret keys.",
-        },
-        {
-          title: "Identity sharing",
-          detail:
-            "Send time-based, password-protected links to identity information for easy and secure sharing.",
-        },
-        {
-          title: "One-on-one customer support",
-          detail:
-            "Cloaked support is one click away at any time ready to help you.",
-        },
-      ]
-    : [
-        {
-          title: "Data removal",
-          detail:
-            "Remove your personal information from data brokers and the dark web with 24/7 monitoring with new scans every 30 days.",
-        },
-        {
-          title: "Unlimited aliases",
-          detail:
-            "Generate unlimited email addresses, phone numbers*, passwords and usernames to protect your real information from exposure.",
-        },
-        {
-          title: "Call, text and email in one place",
-          detail:
-            "Every alias comes with a full-featured inbox that you can use inside of Cloaked or forward to your personal one.",
-        },
-        {
-          title: "Password manager",
-          detail:
-            "Store all of your logins & identities together in one place. Autofill from the web on desktop (chrome extension required) and mobile.",
-        },
-        {
-          title: "Custom password manager fields",
-          detail:
-            "Encrypt more than just login details to your identities with custom fields.",
-        },
-        {
-          title: "2FA login support",
-          detail:
-            "Replace your authenticator apps with embedded time-based one time passcode support right in Cloaked. Scan with your camera or add using secret keys.",
-        },
-        {
-          title: "Identity sharing",
-          detail:
-            "Send time-based, password-protected links to identity information for easy and secure sharing.",
-        },
-        {
-          title: "ID Theft Protection",
-          detail:
-            "Up to $1,000,000 in comprehensive insurance on your digital identity. (🇺🇸 only)",
-        },
-        {
-          title: "One-on-one customer support",
-          detail:
-            "Cloaked support is one click away at any time ready to help you.",
-        },
-      ]
-);
+const baseFeatures = [
+  {
+    title: "Data removal & dark web monitoring",
+    detail:
+      "Remove your personal information from 130+ data brokers + realtime dark web alerts for your sensitive info.",
+  },
+  {
+    title: "Unlimited aliases & password manager",
+    detail:
+      "Generate and manage unlimited aliases - email addresses, phone numbers, passwords and usernames to protect your personal information from exposure.",
+  },
+  {
+    title: "Call Guard instant spam protection",
+    detail: "Block scam calls and robocalls instantly.",
+  },
+  {
+    title: "$1 million identity theft insurance",
+    detail:
+      "Up to $1,000,000 in comprehensive insurance on your digital identity. (🇺🇸 only)",
+  },
+  {
+    title: "Call, text and email in one place",
+    detail:
+      "Every alias comes with a full-featured inbox that you can use inside of Cloaked or forward to your personal one.",
+  },
+  {
+    title: "Custom password manager fields",
+    detail:
+      "Encrypt more than just login details to your identities with custom fields.",
+  },
+  {
+    title: "2FA login support",
+    detail:
+      "Replace your authenticator apps with embedded time-based one time passcode support right in Cloaked. Scan with your camera or add using secret keys.",
+  },
+  {
+    title: "Identity sharing",
+    detail:
+      "Send time-based, password-protected links to identity information for easy and secure sharing.",
+  },
+  {
+    title: "One-on-one customer support",
+    detail: "Cloaked support is one click away at any time ready to help you.",
+  },
+];
+
+const features = computed(() => {
+  if (vpnCustomer.value) {
+    return [vpnFeature, ...baseFeatures];
+  }
+  return baseFeatures;
+});
 </script>
 
 <template>
-  <div
-    v-if="hasLoadedFeatureFlag"
-    class="choose-plan-features"
-  >
+  <div class="choose-plan-features">
     <CheckoutTitle>Features included</CheckoutTitle>
-    <div class="choose-plan-features__card">
+    <CheckoutCard
+      class="choose-plan-features__card"
+      rounding="sm"
+    >
       <ul
         class="choose-plan-features__list"
         :class="{ 'choose-plan-features__list--expanded': isExpanded }"
@@ -142,7 +112,7 @@ const features = computed(() =>
           See all features
         </BaseText>
       </template>
-    </div>
+    </CheckoutCard>
   </div>
 </template>
 
@@ -150,11 +120,7 @@ const features = computed(() =>
 .choose-plan-features {
   &__card {
     margin-top: 24px;
-    padding: 16px;
-    border-radius: 8px;
-    background: rgb(255 255 255 / 6%);
-    background-blend-mode: overlay;
-    backdrop-filter: blur(17px);
+    row-gap: 4px;
   }
 
   &__list-item {

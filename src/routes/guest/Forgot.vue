@@ -13,7 +13,7 @@ const props = defineProps({
 <template>
   <Iframe
     v-if="props.version === 2"
-    useLegacyRoute
+    use-legacy-route
     source="auth/forgot-password"
   />
   <AuthIframe

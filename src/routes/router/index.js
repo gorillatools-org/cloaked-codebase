@@ -4,11 +4,12 @@ import store from "@/store";
 import { AUTH_V3_ROUTES_ENABLED } from "@/scripts/featureFlags";
 import { logout } from "@/scripts/actions/auth";
 import { useToast } from "@/composables/useToast.js";
+import { useBasicMode } from "@/composables/useBasicMode.js";
 const toast = useToast();
 
 // general
 import HomePage from "@/features/home/HomePage.vue";
-import HomeV3Page from "@/features/homeV3/HomeV3Page.vue";
+
 import SubscribeNow from "@/features/subscribe/SubscribeNow.vue";
 import DownloadApp from "@/features/onboarding/DownloadApp.vue";
 import AutoPasswordChange from "@/routes/AutoPasswordChange.vue";
@@ -16,24 +17,12 @@ import AutoPasswordChange from "@/routes/AutoPasswordChange.vue";
 // data delete
 import DataRemovalGraphShared from "@/routes/DataDeletion/components/RequestGraph/DataRemovalGraphShared.vue";
 import DataDeletePageGuestOtp from "@/features/data-delete/DataDeletePageGuestOtp.vue";
-import DeleteFlow from "@/routes/DataDeletion/Submit/DeleteFlow.vue";
 import DataRemoval from "@/routes/DataDeletion/DataRemoval.vue";
-
-// reg onboarding
-import OnboardingPageContainer from "@/features/onboarding/page/OnboardingPageContainer.vue";
-
-// new DD onboarding
-import NewOnboardingWelcome from "@/features/onboarding-new/NewOnboardingWelcome.vue";
-import NewOnboardingGetStarted from "@/features/onboarding-new/NewOnboardingGetStarted.vue";
-import NewOnboardingHidePhoneEmailMain from "@/features/onboarding-new/NewOnboardingHidePhoneEmailMain.vue";
-import NewOnboardingBreaches from "@/features/onboarding-new/NewOnboardingBreaches.vue";
-import NewOnboardingPasswords from "@/features/onboarding-new/NewOnboardingPasswords.vue";
-import NewOnboardingExit from "@/features/onboarding-new/NewOnboardingExit.vue";
-import NewOnboardingInviteMembers from "@/features/onboarding-new/NewOnboardingInviteMembers.vue";
 
 // cloaked pay
 import Cards from "@/routes/CloakedCards/Cards.vue";
 import WalletPage from "@/routes/WalletPage.vue";
+import WalletWaitlistPage from "@/routes/WalletWaitlistPage.vue";
 import Transactions from "@/routes/CloakedCards/Transactions.vue";
 
 // identities
@@ -81,6 +70,7 @@ import SettingsSubscription from "@/routes/Settings/SettingsSubscription.vue";
 import Passphrase from "@/routes/Settings/Passphrase.vue";
 import CloakedCards from "@/routes/Settings/CloakedCards.vue";
 import SettingsEmail from "@/routes/Settings/SettingsEmail.vue";
+import SettingsPermissions from "@/routes/Settings/SettingsPermissions.vue";
 
 // activity
 import InboxList from "@/features/inbox/InboxList.vue";
@@ -106,8 +96,15 @@ import PageEnrollmentPersonal from "@/routes/enrollment/PageEnrollmentPersonal.v
 import PageEnrollmentReady from "@/routes/enrollment/PageEnrollmentReady.vue";
 import PageEnrollmentActivated from "@/routes/enrollment/PageEnrollmentActivated.vue";
 
+// enrollment v2
+import PageExposureStatusEnroll from "@/routes/enrollmentV2/PageExposureStatusEnroll.vue";
+import PageExposureStatusEnrollExposures from "@/routes/enrollmentV2/PageExposureStatusEnrollExposures.vue";
+import PageExposureStatusEnrollMonitoring from "@/routes/enrollmentV2/PageExposureStatusEnrollMonitoring.vue";
+
 // Exposure Status
 import PageExposureStatus from "@/routes/Pages/PageExposureStatus.vue";
+import PageExposureStatusBrokers from "@/routes/Pages/PageExposureStatusBrokers.vue";
+import PageExposureStatusRelatives from "@/routes/Pages/PageExposureStatusRelatives.vue";
 
 // For You
 import PageForYou from "@/routes/Pages/PageForYou.vue";
@@ -124,12 +121,16 @@ import PageMonitoringSettingsAddress from "@/routes/monitoring/PageMonitoringSet
 import PageMonitoringStatus from "@/routes/monitoring/PageMonitoringStatus.vue";
 import PageMonitoringEvent from "@/routes/monitoring/PageMonitoringEvent.vue";
 
-// subscribe
-import PageSubscribe from "@/routes/subscribe/PageSubscribe.vue";
-import PageSubscribePlan from "@/routes/subscribe/PageSubscribePlan.vue";
-import PageSubscribeCheckout from "@/routes/subscribe/PageSubscribeCheckout.vue";
+// mobile checkout
+import NativeCheckout from "@/routes/NativeCheckout.vue";
 
 import { useMonitoringModal } from "@/features/monitoring/useMonitoringModal.js";
+
+import ExtensionAuthIssue from "@/features/extension-auth/ExtensionAuthIssue.vue";
+import ExtensionAuthStatus from "@/features/extension-auth/ExtensionAuthStatus.vue";
+
+// mobile
+import RouteMobile from "@/routes/Mobile/RouteMobile.vue";
 
 const authenticated = computed(() => {
   return store.getters["authentication/isAuthenticated"];
@@ -198,24 +199,15 @@ const clearGuestToken = async (to, from, next) => {
   return next();
 };
 
-const ddOnboardingEnabled = computed(() => {
-  return store.getters["dataDelete/getDdOnboardingEnabled"];
-});
-
 const callGuardEnabled = computed(() => {
   return store.state.authentication?.user?.flags?.["spam-blocking"];
 });
 
-const allowOnlyFlaggedAndAuthenticatedUsers = (to, from, next) => {
-  if (authenticated.value) {
-    if (ddOnboardingEnabled.value) {
-      // NOTE: and check for dd onboarding feature flag
-      return next();
-    }
-    return next({ name: "Home" });
-  }
-  return next({ name: "login", query: { prevRoute: to.fullPath } });
-};
+const isCloakedPaySubscriptionEnabled = computed(() => {
+  return !!store.state.authentication?.user?.flags?.[
+    "cloaked_pay_enable_subscription"
+  ];
+});
 
 const isCallGuardEnabled = (to, from, next) => {
   if (authenticated.value && callGuardEnabled.value) {
@@ -249,12 +241,47 @@ const customEmailEnabled = (to, from, next) => {
 };
 
 const { withEncryptionGate } = useEncryptionGate();
+const { isBasicModeEnabled } = useBasicMode();
 
 const allowOnlyEncryptedUsers = (to, from, next) => {
   return withEncryptionGate(
     next,
     from?.name ? {} : { fallback: () => next({ name: "Home" }) }
   );
+};
+
+const allowOnlyAdvancedMode = (to, from, next) => {
+  if (isBasicModeEnabled.value) {
+    return next({ name: "Home" });
+  }
+  return next();
+};
+
+const allowOnlyPayEnabledUsers = (to, from, next) => {
+  if (
+    !store.state.authentication?.user?.cloaked_card_enabled &&
+    !isCloakedPaySubscriptionEnabled.value
+  ) {
+    return next({ name: "VirtualCardsWaitlist" });
+  }
+  return next();
+};
+
+const allowOnlyPayDisabledUsers = (to, from, next) => {
+  if (
+    store.state.authentication?.user?.cloaked_card_enabled ||
+    isCloakedPaySubscriptionEnabled.value
+  ) {
+    return next({ name: "VirtualCardsIndex" });
+  }
+  return next();
+};
+
+const allowOnlyAdvancedModeInSettings = (to, from, next) => {
+  if (isBasicModeEnabled.value) {
+    return next({ name: "settings.account" });
+  }
+  return next();
 };
 
 const { openMonitoringModal } = useMonitoringModal();
@@ -279,17 +306,36 @@ const routes = [
     beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
   },
   {
-    path: "/wallet",
-    name: "Wallet",
-    component: WalletPage,
-    meta: { title: "Wallet", icon: "credit-card" },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    path: "/virtual-cards",
+    name: "VirtualCards",
+    alias: ["/wallet"],
+    meta: { title: "Virtual Cards", icon: "credit-card" },
+    beforeEnter: [beforeEnterActivity],
     children: [
       {
-        path: "/wallet/card/:id",
-        name: "WalletCard",
+        path: "",
+        name: "VirtualCardsIndex",
         component: WalletPage,
-        meta: { title: "Wallet", icon: "credit-card" },
+        meta: { title: "Virtual Cards", icon: "credit-card" },
+        beforeEnter: [
+          allowOnlyPayEnabledUsers,
+          allowOnlyEncryptedUsers,
+          beforeEnterActivity,
+        ],
+      },
+      {
+        path: "/virtual-cards/waitlist",
+        name: "VirtualCardsWaitlist",
+        component: WalletWaitlistPage,
+        meta: { title: "Virtual Cards", icon: "credit-card" },
+        beforeEnter: [allowOnlyPayDisabledUsers, beforeEnterActivity],
+      },
+      {
+        path: "/virtual-cards/card/:id",
+        name: "VirtualCardsCard",
+        alias: ["/wallet/card/:id"],
+        component: WalletPage,
+        meta: { title: "Virtual Cards", icon: "credit-card" },
         beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
       },
     ],
@@ -315,7 +361,11 @@ const routes = [
     name: "Trash",
     component: Trash,
     meta: { title: "Trash", icon: "delete-trash" },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterCloseRightPanel],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      allowOnlyAdvancedMode,
+      beforeEnterCloseRightPanel,
+    ],
   },
   {
     path: "/auth/referral",
@@ -393,6 +443,20 @@ const routes = [
     beforeEnter: allowOnlyGuests,
   },
   {
+    path: "/extension-auth/issue",
+    name: "ExtensionAuthIssue",
+    component: ExtensionAuthIssue,
+    meta: { layout: "hideSidebar" },
+    beforeEnter: allowOnlyAuthenticatedUsers,
+  },
+  {
+    path: "/extension-auth-status",
+    name: "ExtensionAuthStatus",
+    component: ExtensionAuthStatus,
+    meta: { layout: "hideSidebar" },
+    beforeEnter: allowOnlyAuthenticatedUsers,
+  },
+  {
     path: "/auth/v3/signup",
     alias: ["/auth/v3/register", "/auth/v3/sign-up"],
     name: "signupv3",
@@ -434,21 +498,33 @@ const routes = [
     name: "Favorites",
     component: Favorites,
     meta: { title: "Favorites", icon: "favorite-filled" },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterCloseRightPanel],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterCloseRightPanel,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/number-reuse",
     name: "NumberReuse",
     component: NumberReuse,
     meta: { title: "Number Reuse" },
-    beforeEnter: [allowOnlyEncryptedUsers, allowOnlyEncryptedUsers],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      allowOnlyEncryptedUsers,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/ignored",
     name: "Ignored",
     component: Muted,
     meta: { title: "Ignored", icon: "user-block" },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterCloseRightPanel],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterCloseRightPanel,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/settings",
@@ -469,14 +545,14 @@ const routes = [
         name: "settings.personal-information",
         meta: { title: "Settings", icon: "cog" },
         component: PersonalInformation,
-        beforeEnter: allowOnlyEncryptedUsers,
+        beforeEnter: [allowOnlyEncryptedUsers, allowOnlyAdvancedModeInSettings],
       },
       {
         path: "forwarding",
         name: "settings.forwarding",
         meta: { title: "Settings", icon: "cog" },
         component: Forwarding,
-        beforeEnter: allowOnlyEncryptedUsers,
+        beforeEnter: [allowOnlyEncryptedUsers, allowOnlyAdvancedModeInSettings],
       },
       {
         path: "data-removal",
@@ -532,6 +608,12 @@ const routes = [
         component: SettingsEmail,
         beforeEnter: [allowOnlyEncryptedUsers, customEmailEnabled],
       },
+      {
+        path: "permissions",
+        name: "settings.permissions",
+        meta: { title: "Permissions" },
+        component: SettingsPermissions,
+      },
     ],
   },
   {
@@ -545,7 +627,11 @@ const routes = [
       icon: "inbox-filled",
       nav: "inbox",
     },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/inbox/texts",
@@ -558,7 +644,11 @@ const routes = [
       message: true,
       icon: "chat",
     },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/inbox/texts/:id",
@@ -578,7 +668,11 @@ const routes = [
       showActivityIcons: true,
       inboxDetailPage: true,
     },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/inbox/calls",
@@ -591,7 +685,11 @@ const routes = [
       message: true,
       icon: "phone-filled",
     },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/inbox/emails",
@@ -604,7 +702,11 @@ const routes = [
       message: true,
       icon: "mail",
     },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/inbox/emails/:id",
@@ -618,7 +720,11 @@ const routes = [
       showActivityIcons: true,
       inboxDetailPage: true,
     },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/inbox/requests",
@@ -631,7 +737,11 @@ const routes = [
       message: true,
       icon: "requests",
     },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      allowOnlyAdvancedMode,
+      beforeEnterActivity,
+    ],
   },
   {
     path: "/inbox/starred",
@@ -644,7 +754,11 @@ const routes = [
       message: true,
       icon: "star",
     },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/inbox/recent",
@@ -656,7 +770,11 @@ const routes = [
       message: true,
       icon: "clock",
     },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/inbox/favorites",
@@ -676,7 +794,11 @@ const routes = [
     name: "ActivityRouter",
     component: InboxDetail,
     meta: { title: "Inbox", message: true },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/cloak/:id/inbox",
@@ -688,21 +810,33 @@ const routes = [
       cloak: true,
       nav: "inbox",
     },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/category/:id/inbox",
     name: "CategoryInbox",
     component: InboxList,
     meta: { title: "Category Inbox", nav: "inbox" },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterActivity,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/category/:id",
     name: "Category",
     component: Category,
     meta: { title: "Categories", icon: "stacked-blocks" },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterCloseRightPanel],
+    beforeEnter: [
+      allowOnlyEncryptedUsers,
+      beforeEnterCloseRightPanel,
+      allowOnlyAdvancedMode,
+    ],
   },
   {
     path: "/esim/get-started",
@@ -775,7 +909,7 @@ const routes = [
     component: All,
     alias: ["/all", "/start"], // not sure what/if /start is used
     meta: { title: "All identities", icon: "blocks" },
-    beforeEnter: allowOnlyEncryptedUsers,
+    beforeEnter: [allowOnlyEncryptedUsers, allowOnlyAdvancedMode],
   },
   // NOTE: "cloak/:id" route is used by extension
   // adding the id param breaks left nav highlighting functionality
@@ -785,7 +919,7 @@ const routes = [
     name: "Cloak",
     component: All,
     meta: { title: "All identities", icon: "blocks" },
-    beforeEnter: allowOnlyEncryptedUsers,
+    beforeEnter: [allowOnlyEncryptedUsers, allowOnlyAdvancedMode],
   },
   {
     path: "/data-delete",
@@ -793,13 +927,6 @@ const routes = [
     component: DataDeletePageGuestOtp,
     meta: { title: "Delete Data" },
     beforeEnter: allowOnlyGuests,
-  },
-  {
-    path: "/delete-flow",
-    name: "DeleteFlow",
-    component: DeleteFlow,
-    meta: { title: "Delete Flow" },
-    beforeEnter: allowOnlyAuthenticatedUsers,
   },
   {
     path: "/enrollment",
@@ -878,60 +1005,17 @@ const routes = [
     ],
   },
   {
-    path: "/onboarding/user",
-    name: "OnboardingUser",
-    component: OnboardingPageContainer,
-    beforeEnter: allowOnlyAuthenticatedUsers,
-  },
-
-  {
-    path: "/onboarding/welcome",
-    name: "NewOnboardingWelcome",
-    component: NewOnboardingWelcome,
-    beforeEnter: allowOnlyFlaggedAndAuthenticatedUsers,
-  },
-  {
-    path: "/onboarding/get-started",
-    name: "NewOnboardingGetStarted",
-    component: NewOnboardingGetStarted,
-    props: true,
-    beforeEnter: allowOnlyFlaggedAndAuthenticatedUsers,
-  },
-  {
-    path: "/onboarding/phone-email",
-    name: "NewOnboardingPhoneEmail",
-    component: NewOnboardingHidePhoneEmailMain,
-    beforeEnter: allowOnlyFlaggedAndAuthenticatedUsers,
-  },
-  {
-    path: "/onboarding/breaches",
-    name: "NewOnboardingBreaches",
-    component: NewOnboardingBreaches,
-    beforeEnter: allowOnlyFlaggedAndAuthenticatedUsers,
-  },
-  {
-    path: "/onboarding/passwords",
-    name: "NewOnboardingPasswords",
-    component: NewOnboardingPasswords,
-    beforeEnter: allowOnlyFlaggedAndAuthenticatedUsers,
-  },
-  {
-    path: "/onboarding/exit",
-    name: "NewOnboardingExit",
-    component: NewOnboardingExit,
-    beforeEnter: allowOnlyFlaggedAndAuthenticatedUsers,
-  },
-  {
-    path: "/onboarding/invite",
-    name: "NewOnboardingInviteMembers",
-    component: NewOnboardingInviteMembers,
-    beforeEnter: allowOnlyFlaggedAndAuthenticatedUsers,
-  },
-  {
     path: "/data-remove",
     name: "DataRemove",
     component: DataRemoval,
     meta: { title: "Data removal", icon: "data-delete/remove-data" },
+  },
+  {
+    path: "/native-checkout",
+    name: "NativeCheckout",
+    component: NativeCheckout,
+    meta: { title: "Checkout" },
+    beforeEnter: allowOnlyGuests,
   },
   {
     path: "/subscribe-now",
@@ -941,40 +1025,10 @@ const routes = [
     beforeEnter: allowOnlyGuests,
   },
   {
-    path: "/subscribe-today",
-    name: "Subscribe",
-    component: PageSubscribe,
-    meta: { title: "Subscribe" },
-    beforeEnter: allowOnlyGuests,
-    children: [
-      {
-        path: "",
-        name: "SubscribePlan",
-        component: PageSubscribePlan,
-        meta: { title: "Select plan" },
-        beforeEnter: allowOnlyGuests,
-      },
-      {
-        path: "checkout",
-        name: "SubscribeCheckout",
-        component: PageSubscribeCheckout,
-        meta: { title: "Checkout" },
-        beforeEnter: allowOnlyGuests,
-      },
-    ],
-  },
-  {
     path: "/download-app",
     name: "DownloadApp",
     component: DownloadApp,
     meta: { title: "Download App" },
-  },
-  {
-    path: "/summary",
-    name: "SummaryBasicMode",
-    component: HomeV3Page,
-    meta: { title: "Summary", icon: "doc-search-full" },
-    beforeEnter: [clearGuestToken, allowOnlyAuthenticatedUsers],
   },
   {
     path: "/home",
@@ -996,13 +1050,67 @@ const routes = [
     component: PageExposureStatus,
     meta: { title: "Exposure Status" },
     beforeEnter: allowOnlyAuthenticatedUsers,
+    children: [
+      {
+        path: "",
+        name: "ExposureStatusBrokers",
+        component: PageExposureStatusBrokers,
+        meta: { title: "Exposure Status" },
+        beforeEnter: allowOnlyAuthenticatedUsers,
+      },
+      {
+        path: "relatives",
+        name: "ExposureStatusRelatives",
+        component: PageExposureStatusRelatives,
+        meta: { title: "Relatives" },
+        beforeEnter: allowOnlyAuthenticatedUsers,
+      },
+    ],
   },
+
+  {
+    path: "/exposures-enroll",
+    name: "ExposuresEnroll",
+    component: PageExposureStatusEnroll,
+    meta: { title: "Exposures Enrollment", hideAside: true },
+    beforeEnter: allowOnlyAuthenticatedUsers,
+    children: [
+      {
+        path: "",
+        name: "ExposureStatusEnrollExposures",
+        component: PageExposureStatusEnrollExposures,
+        meta: { title: "Exposures Enrollment", hideAside: true },
+        beforeEnter: allowOnlyAuthenticatedUsers,
+      },
+      {
+        path: "monitoring",
+        name: "ExposureStatusEnrollMonitoring",
+        component: PageExposureStatusEnrollMonitoring,
+        meta: { title: "Monitoring Enrollment", hideAside: true },
+        beforeEnter: allowOnlyAuthenticatedUsers,
+      },
+    ],
+  },
+
   {
     path: "/for-you",
     name: "ForYou",
     component: PageForYou,
     meta: { title: "For You" },
     beforeEnter: allowOnlyAuthenticatedUsers,
+    children: [
+      {
+        path: "feature/:id",
+        name: "ForYouFeature",
+        component: () => import("@/features/ForYou/ForYouFeaturePage.vue"),
+        meta: { title: "Feature Details" },
+        beforeEnter: allowOnlyAuthenticatedUsers,
+        props: (route) => ({
+          id: route.params.id,
+          key: route.params.id,
+        }),
+      },
+    ],
   },
   {
     path: "/identity-monitoring",
@@ -1080,7 +1188,13 @@ const routes = [
       requiresAuth: true,
       title: "Auto Password Change",
     },
-    beforeEnter: [allowOnlyAuthenticatedUsers],
+    beforeEnter: [allowOnlyAuthenticatedUsers, allowOnlyAdvancedMode],
+  },
+  {
+    path: "/mobile",
+    name: "Mobile",
+    component: RouteMobile,
+    meta: { title: "Mobile" },
   },
   // NOTE: this catchall should always be listed last
   {
@@ -1113,6 +1227,8 @@ router.beforeEach((to, from, next) => {
     store.commit("unclipBody");
   }
   store.commit("closeCloak");
+
+  // Check if it's the root path AND NOT an extension auth callback
   if (to.path === "/") {
     const has_enable_pay =
       !!to.query.enable_pay || (from && !!from?.query?.enable_pay);

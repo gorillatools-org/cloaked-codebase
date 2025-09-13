@@ -6,14 +6,14 @@ import AuthService from "@/api/actions/auth-service";
 import { authDecrypt, password_confirm } from "@/scripts/actions/encryption";
 import { createPDF } from "@/scripts/tools.js";
 import UserService from "@/api/actions/user-service";
-import PreferencesTitle from "@/routes/modals/preferences/PreferencesTitle.vue";
-import PreferencesParagraph from "@/routes/modals/preferences/PreferencesParagraph.vue";
-import PreferencesInput from "@/routes/modals/preferences/PreferencesInput.vue";
+import BaseText from "@/library/BaseText.vue";
+import BaseInput from "@/library/BaseInput.vue";
+import BaseButton from "@/library/BaseButton.vue";
 
 const toast = useToast();
 
 const state = reactive({
-  error: false,
+  error: null,
   fetching: false,
   downloaded: false,
   currentPassword: "",
@@ -22,7 +22,7 @@ const state = reactive({
 const disabled = computed(() =>
   shouldSkipPassword.value
     ? false
-    : state.currentPassword.length < 2 || state.fetching
+    : state.currentPassword.length < 1 || state.fetching
 );
 
 const supportEmail = computed(() => {
@@ -103,103 +103,109 @@ const downloadPassphrase = () => {
 };
 </script>
 <template>
-  <div class="recovery-container">
-    <div v-if="!state.downloaded">
-      <PreferencesTitle>Download your recovery kit</PreferencesTitle>
-      <PreferencesParagraph>
+  <div
+    v-if="!state.downloaded"
+    class="recovery-phase"
+  >
+    <div class="recovery-phase__title">
+      <BaseText
+        variant="headline-3-bold"
+        as="h2"
+      >
+        Download your recovery kit
+      </BaseText>
+      <BaseText
+        variant="body-3-regular"
+        as="p"
+      >
         This can be used to make sure it's really you signing in, reach you if
         there's suspicious activity in your account, or recover a lost password.
-      </PreferencesParagraph>
-      <div class="input-container">
-        <PreferencesInput
-          v-if="!shouldSkipPassword"
-          :value="state.currentPassword"
-          label="Master Password"
-          type="password"
-          placeholder=""
-          :error="state.error"
-          @input="(event) => (state.currentPassword = event)"
-          @save="getRecoveryKey"
-        />
-        <div>
-          <button
-            class="download-button"
-            :class="{ disabled }"
-            @click="getRecoveryKey"
-          >
-            Download recovery kit
-          </button>
-        </div>
-      </div>
+      </BaseText>
     </div>
 
-    <div
-      v-else
-      class="recovery-container"
-    >
-      <PreferencesTitle>Successfully downloaded recovery kit</PreferencesTitle>
-      <PreferencesParagraph>
+    <div class="recovery-phase__form">
+      <BaseInput
+        v-if="!shouldSkipPassword"
+        v-model="state.currentPassword"
+        title="Master Password"
+        secret
+        placeholder=""
+        :error="state.error"
+        class="recovery-phase__input"
+        @save="getRecoveryKey"
+      />
+      <BaseButton
+        :disabled="disabled"
+        :loading="state.fetching"
+        class="recovery-phase__button"
+        @click="getRecoveryKey"
+      >
+        Download recovery kit
+      </BaseButton>
+    </div>
+  </div>
+
+  <div
+    v-else
+    class="recovery-phase"
+  >
+    <div class="recovery-phase__title">
+      <BaseText
+        variant="headline-3-bold"
+        as="h2"
+      >
+        Successfully downloaded recovery kit
+      </BaseText>
+      <BaseText
+        variant="body-3-regular"
+        as="p"
+      >
         Make sure your recovery kit is safe, so write it down, or keep it in
         multiple secret spots so you never lose it.
-      </PreferencesParagraph>
-      <div class="recovery-container">
-        <div class="action-buttons">
-          <button
-            class="download-again-button"
-            :class="{ disabled }"
-            @click="getRecoveryKey"
-          >
-            Download again
-          </button>
-          <button
-            class="done-button"
-            :class="{ disabled }"
-            @click="reset"
-          >
-            Done
-          </button>
-        </div>
-      </div>
+      </BaseText>
+    </div>
+    <div class="recovery-phase__actions">
+      <BaseButton
+        class="download-again-button"
+        icon="download"
+        variant="secondary"
+        @click="getRecoveryKey"
+      >
+        Download again
+      </BaseButton>
+      <BaseButton
+        class="done-button"
+        :class="{ disabled }"
+        @click="reset"
+      >
+        Done
+      </BaseButton>
     </div>
   </div>
 </template>
 <style lang="scss" scoped>
-.recovery-container {
-  .input-container {
+.recovery-phase {
+  margin-top: 30px;
+
+  &__title {
+    margin-bottom: 30px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 15px;
-    margin: 15px 0;
-  }
-
-  .action-buttons {
-    margin: 15px 0;
-    display: flex;
     gap: 10px;
   }
 
-  .download-button,
-  .download-again-button,
-  .done-button {
-    gap: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 18px;
-    padding: 13px 26px;
-    border-radius: 32px;
-    color: $color-primary-1;
-    background: $color-primary-100;
-
-    &.disabled {
-      opacity: 0.5;
-    }
+  &__form {
+    margin-top: 15px;
   }
 
-  .download-again-button {
-    background: $color-success;
+  &__button {
+    margin-top: 15px;
+  }
+
+  &__actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
   }
 }
 </style>

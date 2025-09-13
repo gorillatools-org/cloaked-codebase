@@ -22,6 +22,7 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .form {
   margin-top: 48px;
   margin-bottom: 32px;

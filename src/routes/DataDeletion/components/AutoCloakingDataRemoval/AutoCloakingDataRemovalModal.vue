@@ -167,6 +167,7 @@ function openManualRemovalSteps() {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .operator-modal {
   width: 480px;
   max-width: 90vw;

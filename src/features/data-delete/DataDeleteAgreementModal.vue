@@ -28,10 +28,11 @@ const emit = defineEmits(["close"]);
     <AppModalContent class="data-delete-agreement-modal">
       <AppModalTitle>Cloaked Data Deletion Agency Agreement</AppModalTitle>
       <AppModalParagraph>
-        I, {{ props.name }}, hereby appoint Cloaked, Inc., (the 'Agent'), to
-        perform necessary steps to exercise, as my agent, rights under
-        applicable privacy legislation ('Privacy Laws') and submit requests for
-        exercising of those rights, including but not limited to:
+        I, {{ props.name?.length ? props.name + ", " : "" }}hereby appoint
+        Cloaked, Inc., (the 'Agent'), to perform necessary steps to exercise, as
+        my agent, rights under applicable privacy legislation ('Privacy Laws')
+        and submit requests for exercising of those rights, including but not
+        limited to:
         <ul class="data-delete-agreement-modal__list">
           <li class="data-delete-agreement-modal__list-item">
             To seek deletion of my personal data and/or identifiable
@@ -77,7 +78,7 @@ const emit = defineEmits(["close"]);
           variant="primary"
           size="lg"
           class="data-delete-agreement-modal__agree"
-          fullWidth
+          full-width
           @click="emit('close', true)"
         >
           Got it

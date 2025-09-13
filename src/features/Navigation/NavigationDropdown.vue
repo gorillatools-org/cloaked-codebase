@@ -1,27 +1,31 @@
 <script setup>
-import { computed, ref, markRaw } from "vue";
+import { computed, ref, markRaw, onMounted } from "vue";
 import store from "@/store";
 import { onClickOutside } from "@vueuse/core";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { HELP_CENTER_BASE_URL, DOWNLOAD_APP_URL } from "@/scripts/constants";
-import { isMobileDevice } from "@/scripts/regex";
 import { logout } from "@/scripts/actions/auth";
 
-import { useBasicMode } from "@/composables/useBasicMode";
+import { useBasicMode, useBasicModeRouting } from "@/composables/useBasicMode";
+import { useRouter } from "vue-router";
 import { useColorScheme } from "@/composables/useColorScheme";
 import { useEncryptionGate } from "@/composables/useEncryptionGate";
+import { useDisplay } from "@/composables/useDisplay";
 
 import NavigationDropdownHeader from "@/features/Navigation/NavigationDropdownHeader.vue";
 import NavigationDropdownMenuItem from "@/features/Navigation/NavigationDropdownMenuItem.vue";
-import AdvancedModeModal from "@/features/homeV3/AdvancedModeModal.vue";
+import AdvancedModeModal from "@/features/AdvancedMode/AdvancedModeModal.vue";
 import IdentityTheftProtectionModal from "@/features/IdentityTheftProtection/IdentityTheftProtectionModal.vue";
+import ShareFeedbackModal from "@/features/feedback/ShareFeedbackModal.vue";
 import BaseAvatar from "@/library/BaseAvatar.vue";
 import BaseText from "@/library/BaseText.vue";
 
-const { isBasicModeEnabled, toggleBasicMode, isBasicModeAccessible } =
-  useBasicMode();
+const { isBasicModeEnabled } = useBasicMode();
+const { toggleBasicModeWithRouting } = useBasicModeRouting();
+const router = useRouter();
 const { colorScheme, setColorScheme } = useColorScheme();
 const { withEncryptionGate } = useEncryptionGate();
+const { isMobile } = useDisplay();
 
 const dropdownOpen = ref(false);
 const dropdownRef = ref(null);
@@ -33,6 +37,24 @@ onClickOutside(dropdownRef, () => (dropdownOpen.value = false));
 const toggleDropdown = () => (dropdownOpen.value = !dropdownOpen.value);
 
 const identityTheftProtectionModal = ref(false);
+const shareFeedbackModal = ref(false);
+const isSentryAvailable = ref(false);
+
+const checkSentryAvailability = () => {
+  const isBrave =
+    !!(navigator.brave && navigator.brave.isBrave) ||
+    navigator.userAgent.includes("Brave");
+
+  if (isBrave) {
+    isSentryAvailable.value = false;
+  } else {
+    isSentryAvailable.value = true;
+  }
+};
+
+onMounted(() => {
+  checkSentryAvailability();
+});
 
 function toggleInsuranceModal() {
   identityTheftProtectionModal.value = !identityTheftProtectionModal.value;
@@ -58,8 +80,33 @@ function toggleInsuranceModal() {
   }
 }
 
+function toggleShareFeedbackModal() {
+  shareFeedbackModal.value = !shareFeedbackModal.value;
+  toggleDropdown();
+
+  if (shareFeedbackModal.value) {
+    store.dispatch("openModal", {
+      customTemplate: {
+        template: markRaw(ShareFeedbackModal),
+        props: {
+          show: true,
+          isReportMode: false,
+        },
+        events: {
+          close: () => {
+            shareFeedbackModal.value = false;
+            store.dispatch("closeModal");
+          },
+        },
+      },
+    });
+  } else {
+    store.dispatch("closeModal");
+  }
+}
+
 function toggleDownloadAppModal() {
-  if (isMobileDevice) {
+  if (isMobile.value) {
     window.open(DOWNLOAD_APP_URL, "_blank");
   } else {
     store.dispatch("toggleMobileAppModal", true);
@@ -87,13 +134,15 @@ function openBasicModeModals() {
 }
 
 const changeBasicMode = () => {
-  toggleBasicMode();
+  toggleBasicModeWithRouting(router);
   posthogCapture("users_switch_back_basicmode_cloakedv3");
 };
 
 const goToAdvancedMode = () => {
   isAdvancedModeModalOpen.value = false;
-  withEncryptionGate(toggleBasicMode, { context: "advanced-mode" });
+  withEncryptionGate(() => toggleBasicModeWithRouting(router), {
+    context: "advanced-mode",
+  });
 };
 
 const toggleDarkMode = () => {
@@ -139,14 +188,14 @@ const toggleDarkMode = () => {
 
       <div class="navigation-dropdown__dropdown__group">
         <NavigationDropdownMenuItem
-          :name="isMobileDevice ? 'Subscription' : 'Settings'"
+          :name="isMobile ? 'Subscription' : 'Settings'"
           type="page-link"
-          :to="isMobileDevice ? '/settings/subscription' : '/settings'"
+          :to="isMobile ? '/settings/subscription' : '/settings'"
           icon="setting"
           @click="toggleDropdown"
         />
         <NavigationDropdownMenuItem
-          v-if="!isBasicModeEnabled && !isMobileDevice"
+          v-if="!isBasicModeEnabled && !isMobile"
           name="Import passwords"
           type="page-link"
           to="/import"
@@ -170,7 +219,7 @@ const toggleDarkMode = () => {
 
       <div class="navigation-dropdown__dropdown__group">
         <NavigationDropdownMenuItem
-          v-if="!isBasicModeEnabled && !isMobileDevice"
+          v-if="!isBasicModeEnabled && !isMobile"
           name="Download extension"
           type="external-link"
           icon="monitor"
@@ -193,7 +242,7 @@ const toggleDarkMode = () => {
           @click="toggleDarkMode"
         />
         <NavigationDropdownMenuItem
-          v-if="isBasicModeAccessible && !isMobileDevice"
+          v-if="!isMobile"
           name="Advanced features"
           icon="bolt"
           type="toggle-button"
@@ -206,19 +255,28 @@ const toggleDarkMode = () => {
         class="navigation-dropdown__dropdown__group navigation-dropdown__dropdown__group--no-background"
       >
         <NavigationDropdownMenuItem
-          name="Get help or share feedback"
+          name="Get help"
           type="external-link"
           :href="HELP_CENTER_BASE_URL"
-          icon="info"
-          noBackground
-          noRightIcon
+          icon="help"
+          no-background
+          no-right-icon
+        />
+        <NavigationDropdownMenuItem
+          v-if="isSentryAvailable"
+          name="Share feedback"
+          type="page-link"
+          icon="text"
+          no-background
+          no-right-icon
+          @click="toggleShareFeedbackModal"
         />
         <NavigationDropdownMenuItem
           name="Log out"
           type="page-link"
           icon="power-off"
-          noBackground
-          noRightIcon
+          no-background
+          no-right-icon
           alert
           @click="logout()"
         />
@@ -228,15 +286,16 @@ const toggleDarkMode = () => {
     <AdvancedModeModal
       :value="isAdvancedModeModalOpen"
       @close="isAdvancedModeModalOpen = false"
-      @goToAdvancedMode="goToAdvancedMode"
+      @go-to-advanced-mode="goToAdvancedMode"
     />
   </div>
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .navigation-dropdown {
   position: relative;
-  z-index: 100;
+  z-index: 450;
   display: inline-block;
 
   &__button {
@@ -273,7 +332,7 @@ const toggleDarkMode = () => {
     background-color: $color-primary-1;
     border: 1px solid $color-primary-20;
     box-shadow: 0px 10px 24px 0px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
+    z-index: 450;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;

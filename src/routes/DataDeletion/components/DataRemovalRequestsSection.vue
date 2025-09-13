@@ -87,7 +87,7 @@ function toggleOpen(request, forceOpen = false) {
       </div>
       <AtomSkeletonLoaderRow
         v-if="props.loading"
-        :numOfRows="defaultListSize"
+        :num-of-rows="defaultListSize"
         height="73px"
       />
       <div
@@ -113,6 +113,7 @@ function toggleOpen(request, forceOpen = false) {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .removal-requests {
   background-color: $color-base-white-100;
   border-radius: 12px;

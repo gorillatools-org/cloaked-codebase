@@ -1,6 +1,6 @@
 <script setup>
-import { computed, watch } from "vue";
-import { useRouter } from "vue-router";
+import { computed, watch, ref, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 
 import ForYouDiscoverList from "@/features/ForYou/ForYouDiscoverList.vue";
 import ForYouActivatedList from "@/features/ForYou/ForYouActivatedList.vue";
@@ -10,14 +10,89 @@ import { useBasicMode } from "@/composables/useBasicMode.js";
 import { useFeatures } from "@/composables/useFeatures.js";
 
 const router = useRouter();
-const { isBasicModeAccessible, isBasicModeEnabled } = useBasicMode();
-const { hasForYou, hasIdentityMonitoring } = useFeatures();
+const route = useRoute();
+const contentRef = ref(null);
+const transitionName = ref("slide-left");
+const previousPath = ref("");
+const isTransitioning = ref(false);
+
+const { isBasicModeEnabled } = useBasicMode();
+const { hasForYou, hasIdentityMonitoring, hasVpnEnabled } = useFeatures();
+
+onMounted(() => {
+  previousPath.value = route.fullPath;
+
+  if (contentRef.value) {
+    contentRef.value.scrollTop = 0;
+  }
+});
+
+// Handle before-leave transition event
+const handleBeforeLeave = () => {
+  isTransitioning.value = true;
+};
+
+// Handle after-leave transition event
+const handleAfterLeave = () => {
+  // Scroll to top after the leave animation
+  if (contentRef.value) {
+    contentRef.value.scrollTop = 0;
+  }
+  window.scrollTo(0, 0);
+};
+
+// Handle after-enter transition event
+const handleAfterEnter = () => {
+  isTransitioning.value = false;
+
+  // Make sure content is properly positioned for scrolling
+  setTimeout(() => {
+    // Reset any absolute positioning that might affect scrolling
+    const componentWrapper = document.querySelector(".component-wrapper");
+    if (componentWrapper) {
+      componentWrapper.style.position = "relative";
+      componentWrapper.style.height = "auto";
+
+      // Make sure the content area can scroll if needed
+      if (contentRef.value) {
+        // Enable scrolling
+        contentRef.value.style.overflowY = "auto";
+      }
+    }
+  }, 50);
+};
+
+// Watch for route changes to set transition direction
+watch(
+  () => route.fullPath,
+  (newPath) => {
+    // Determine transition direction - enhanced logic for feature-to-feature navigation
+    const goingToFeature = newPath.includes("/for-you/feature/");
+    const comingFromFeature =
+      previousPath.value && previousPath.value.includes("/for-you/feature/");
+
+    if (goingToFeature && comingFromFeature) {
+      // Going from feature to feature - use vertical slide
+      transitionName.value = "slide-down";
+    } else if (goingToFeature && !comingFromFeature) {
+      // Going from list to feature
+      transitionName.value = "slide-left";
+    } else if (!goingToFeature && comingFromFeature) {
+      // Going from feature to list
+      transitionName.value = "slide-right";
+    } else {
+      // Default (other cases)
+      transitionName.value = "slide-left";
+    }
+
+    // Update previous path after direction is determined
+    previousPath.value = newPath;
+  }
+);
 
 const userLoaded = computed(() => !!store.state.authentication?.user);
 
-const basicModeEnabled = computed(
-  () => isBasicModeAccessible.value && isBasicModeEnabled.value
-);
+const basicModeEnabled = computed(() => isBasicModeEnabled.value);
 
 watch(
   [userLoaded, hasForYou, basicModeEnabled],
@@ -25,6 +100,7 @@ watch(
     if (loaded && (!hasFeature || !isBasicMode)) {
       router.push("/");
     } else {
+      // Features should already be loaded from Boot.vue, but add fallback just in case
       const featuresData = store.state.features?.features;
       const hasFeatureData =
         featuresData &&
@@ -33,6 +109,8 @@ watch(
         featuresData.results.length > 0;
 
       if (!hasFeatureData) {
+        // Fallback: fetch features if somehow they weren't loaded during boot
+        console.warn("Features not available, fetching as fallback");
         store.dispatch("fetchFeatures").then(() => {
           enableDiscoveryFeatures();
         });
@@ -109,12 +187,13 @@ const shouldEnableDiscoveryFeatures = () => {
 };
 
 const getFeatureIdsToEnable = () => {
-  const targetFeatures = ["id_monitoring", "data_deletion", "id_theft"];
+  const targetFeatures = ["id_monitoring", "data_deletion", "id_theft", "vpn"];
 
   const featureMap = {
     id_monitoring: !!hasIdentityMonitoring.value,
     data_deletion: true,
     id_theft: true,
+    vpn: !!hasVpnEnabled.value,
   };
 
   return disabledFeatures.value
@@ -165,8 +244,35 @@ const enableDiscoveryFeatures = () => {
 
 <template>
   <div class="page-for-you">
-    <div class="page-for-you__content">
-      <ForYouDiscoverList :discover-features="disabledFeatures" />
+    <div
+      ref="contentRef"
+      class="page-for-you__content"
+    >
+      <div
+        class="transition-container"
+        :class="{ 'is-transitioning': isTransitioning }"
+      >
+        <Transition
+          :name="transitionName"
+          @before-leave="handleBeforeLeave"
+          @after-leave="handleAfterLeave"
+          @after-enter="handleAfterEnter"
+        >
+          <div
+            :key="route.fullPath"
+            class="component-wrapper"
+          >
+            <!-- Show either the router view (child route) or the discover list (main route) -->
+            <template v-if="$route.name === 'ForYouFeature'">
+              <router-view />
+            </template>
+            <ForYouDiscoverList
+              v-else
+              :discover-features="disabledFeatures"
+            />
+          </div>
+        </Transition>
+      </div>
     </div>
 
     <aside
@@ -179,10 +285,11 @@ const enableDiscoveryFeatures = () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .page-for-you {
   display: flex;
   height: 100%;
-  padding: 0 8px 8px 8px;
+  padding: 0 8px 8px 0px;
   gap: 8px;
   overflow: hidden;
   position: relative;
@@ -190,7 +297,6 @@ const enableDiscoveryFeatures = () => {
   &__content {
     flex: 1;
     border-radius: 20px;
-    padding: 24px;
     overflow-y: auto;
     @include custom-scroll-bar;
     position: relative;
@@ -221,5 +327,89 @@ const enableDiscoveryFeatures = () => {
     border-radius: 12px;
     background-color: $color-primary-10;
   }
+}
+
+.transition-container {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 100%;
+  overflow: visible; /* Change from hidden to visible to allow content to be scrollable */
+
+  &.is-transitioning {
+    overflow: hidden; /* Only hide overflow during transitions */
+    pointer-events: none;
+  }
+}
+
+.component-wrapper {
+  width: 100%;
+  /* Only use absolute positioning during transitions */
+  position: relative; /* Default to relative */
+  height: auto; /* Allow height to grow with content */
+}
+
+// Transition Animations
+.slide-left-enter-active,
+.slide-right-enter-active,
+.slide-down-enter-active {
+  transition:
+    transform 0.5s ease 0.2s,
+    opacity 0.5s ease 0.4s;
+  position: absolute; /* Absolute only during animation */
+  width: 100%;
+  left: 0;
+  top: 0;
+  z-index: 2;
+}
+
+.slide-left-leave-active,
+.slide-right-leave-active,
+.slide-down-leave-active {
+  transition:
+    transform 0.4s ease,
+    opacity 0.4s ease;
+  position: absolute; /* Absolute only during animation */
+  width: 100%;
+  left: 0;
+  top: 0;
+  z-index: 1;
+}
+
+// Sliding left (forward) transition
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(100px);
+}
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-100px);
+}
+
+// Sliding right (backward) transition
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-100px);
+}
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(100px);
+}
+
+// Sliding down (feature to feature) transition
+.slide-down-enter-from {
+  opacity: 0;
+  transform: translateY(-50px);
+}
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+// After animation, return to normal flow
+.slide-left-enter-to,
+.slide-right-enter-to,
+.slide-down-enter-to {
+  position: relative;
 }
 </style>

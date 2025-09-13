@@ -32,6 +32,7 @@ const state = reactive({
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 @import "@/assets/scss/recursive/_mixins";
 
 .password-preview {

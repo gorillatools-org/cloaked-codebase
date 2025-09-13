@@ -31,7 +31,7 @@ watch(
     v-if="isCardVisible"
     type="dark"
   >
-    <DataDeleteThreatTag threatLevel="low" />
+    <DataDeleteThreatTag threat-level="low" />
     <div v-if="result.phones?.length">
       <BaseText
         as="h3"

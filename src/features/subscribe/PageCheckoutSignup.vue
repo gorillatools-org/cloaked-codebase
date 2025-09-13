@@ -4,18 +4,52 @@ import store from "@/store";
 import ChoosePlanPayment from "@/features/subscribe/ChoosePlanPayment.vue";
 import ChoosePlanDiscountBanner from "@/features/subscribe/ChoosePlanDiscountBanner.vue";
 import ChoosePlanFeatures from "@/features/subscribe/ChoosePlanFeatures.vue";
-import UserReviews from "@/features/subscribe/UserReviews.vue";
 import ChoosePlanReceipt from "@/features/subscribe/ChoosePlanReceipt.vue";
 import ChoosePlanPickerFlat from "@/features/subscribe/ChoosePlanPickerFlat.vue";
 import ChoosePlanVerify from "@/features/subscribe/ChoosePlanVerify.vue";
-import ChoosePlanSignupPasswordless from "@/features/subscribe/ChoosePlanSignupPasswordless.vue";
 import ChoosePlanTerms from "@/features/subscribe/ChoosePlanTerms.vue";
+import CheckoutCard from "@/features/subscribe/components/CheckoutCard.vue";
 import { useTimeLimitedDiscount } from "@/composables/useTimeLimitedDiscount";
 import { useSignupForm } from "@/features/subscribe/composables/useSignupForm";
 import { phone as formatPhone } from "phone";
 import { useRoute } from "vue-router";
 import { useSignupVerification } from "@/features/subscribe/composables/useSignupVerification";
 import { usePaymentIntent } from "@/composables/usePaymentIntent.js";
+import ChoosePlanSignup from "@/features/subscribe/ChoosePlanSignup.vue";
+import TrustLogos from "@/features/subscribe/TrustLogos.vue";
+import PageCheckoutFeatureVpn from "./PageCheckoutFeatureVpn.vue";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import {
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT,
+  PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE,
+} from "@/scripts/posthogEvents";
+import { posthogCapture } from "@/scripts/posthog.js";
+
+const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
+);
+
+const showFeatureVpn = computed(
+  () =>
+    hasLoadedFeatureFlag.value && featureFlag.value === "checkout-feature-vpn"
+);
+
+const showLimitedDiscountOfferBanner = computed(
+  () =>
+    hasLoadedFeatureFlag.value &&
+    featureFlag.value === "checkout-limited-time-discount-offer"
+);
+
+const {
+  featureFlag: checkoutNewBaseLine,
+  hasLoadedFeatureFlag: checkoutNewBaseLineLoaded,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE);
+
+const showTrustBadges = computed(
+  () =>
+    checkoutNewBaseLineLoaded.value &&
+    checkoutNewBaseLine.value === "new-baseline"
+);
 
 const props = defineProps({
   headlessUser: {
@@ -43,13 +77,34 @@ defineExpose({
 onMounted(() => {
   // NOTE: using custom event because of issues emitting through a slot barrier
   window.addEventListener("cloak:phone-signup-verified", onClickedSubscribe);
+  posthogCapture("user_viewed_checkout_signup_page");
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("cloak:phone-signup-verified", onClickedSubscribe);
 });
 
-const { formattedTime, timeLimitedDiscount } = useTimeLimitedDiscount();
+const billingCycle = ref("annually");
+
+const {
+  featureFlag: flagPlanPricing,
+  hasLoadedFeatureFlag: hasLoadedFlagPlanPricing,
+} = usePostHogFeatureFlag("monthly_plan_experiment");
+
+const hasDiscountedAnnualPlans = computed(
+  () =>
+    hasLoadedFlagPlanPricing.value &&
+    flagPlanPricing.value === "discounted-annual-plans"
+);
+
+const discountSize = computed(() =>
+  hasDiscountedAnnualPlans.value && billingCycle.value === "annually" ? 50 : 20
+);
+
+const { formattedTime, timeLimitedDiscount } = useTimeLimitedDiscount({
+  discountSize,
+});
+
 const { promoDiscount } = usePaymentIntent();
 const paymentMethod = ref("Card");
 
@@ -105,23 +160,32 @@ const isRealUser = computed(
     :class="{
       'page-checkout-signup--subscribed': isSubscribed,
       'page-checkout-signup--needs-verification': needsSignupVerification,
+      'page-checkout-signup--with-discount-banner':
+        showLimitedDiscountOfferBanner && !!timeLimitedDiscount,
     }"
   >
+    <PageCheckoutFeatureVpn v-if="showFeatureVpn" />
     <ChoosePlanPickerFlat
+      v-model:billing-cycle="billingCycle"
       :anchor="timeLimitedDiscount"
       :discount="paymentMethod === 'Card' ? promoDiscount : null"
       :disabled="isSubscribed"
       class="page-checkout-signup__plans"
     />
     <ChoosePlanDiscountBanner
-      v-if="!!timeLimitedDiscount"
+      v-if="!!timeLimitedDiscount && !showLimitedDiscountOfferBanner"
       :time-limited-discount="timeLimitedDiscount"
       :time="formattedTime"
+      :billing-cycle="hasDiscountedAnnualPlans ? billingCycle : null"
       class="page-checkout-signup__discount"
     />
+    <TrustLogos
+      v-if="showTrustBadges"
+      class="page-checkout-signup__trust-badges"
+    />
     <div class="page-checkout-signup__form">
-      <div class="page-checkout-signup__card">
-        <ChoosePlanSignupPasswordless
+      <CheckoutCard>
+        <ChoosePlanSignup
           ref="signup"
           v-model:type="form.type"
           v-model:phone="form.phone"
@@ -129,8 +193,8 @@ const isRealUser = computed(
           v-model:username="form.username"
           v-model:password="form.password"
           :is-loading="isRealUser || isLoading"
-          :signupError="signupError"
-          @submit="$emit('set-user', form, paymentMethod)"
+          :signup-error="signupError"
+          @submit="$emit('set-user', $event, paymentMethod)"
           @input.stop
         >
           <template
@@ -142,7 +206,7 @@ const isRealUser = computed(
               :phone="signupPhone"
             />
           </template>
-        </ChoosePlanSignupPasswordless>
+        </ChoosePlanSignup>
         <div v-show="!isSubscribed">
           <ChoosePlanPayment
             v-if="headlessUser"
@@ -153,6 +217,7 @@ const isRealUser = computed(
             variant="flat"
             :disabled="!signup?.isFormValid"
             :is-loading="isLoading"
+            :billing-cycle="billingCycle"
             @subscribed="onSubscribed"
             @clicked-subscribe="onClickedSubscribe"
           >
@@ -182,29 +247,41 @@ const isRealUser = computed(
             </template>
           </ChoosePlanPayment>
         </div>
-      </div>
+      </CheckoutCard>
       <ChoosePlanTerms
         class="page-checkout-signup__terms"
         :context="$route.name === 'DataDeleteGuest' ? 'data-delete' : 'default'"
       />
     </div>
-    <UserReviews class="page-checkout-signup__reviews" />
-    <ChoosePlanFeatures class="page-checkout-signup__features" />
+    <ChoosePlanFeatures
+      class="page-checkout-signup__features"
+      :class="showTrustBadges ? 'page-checkout-signup__features--baseline' : ''"
+    />
   </div>
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .page-checkout-signup {
   display: grid;
   grid-template-columns: 1fr;
   max-width: 928px + 2 * 25px;
   padding: 25px;
   row-gap: 24px;
+  min-height: calc(
+    100dvh - 148px
+  ); // 148 is the height of reviews banner + header
+
+  &--with-discount-banner {
+    min-height: calc(
+      100dvh - 204px
+    ); // 148 is the height of reviews banner + header
+  }
 
   @media all and (min-width: $screen-xl) {
     margin: auto;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: min-content min-content 1fr;
+    grid-template-rows: min-content min-content min-content min-content 1fr;
     align-items: start;
     gap: 36px 60px;
   }
@@ -212,23 +289,8 @@ const isRealUser = computed(
   &__form {
     @media all and (min-width: $screen-xl) {
       grid-column: 2/3;
-      grid-row: 1/4;
+      grid-row: 1/-1;
     }
-  }
-
-  &__card {
-    padding: 24px;
-    border-radius: 16px;
-    background: rgb(255 255 255 / 10%);
-    display: flex;
-    flex-direction: column;
-    row-gap: 36px;
-  }
-
-  :deep(.choose-plan-picker__plans) {
-    padding: 16px;
-    border-radius: 16px;
-    background: rgb(255 255 255 / 6%);
   }
 
   &__receipt {
@@ -237,10 +299,6 @@ const isRealUser = computed(
 
   &__verify {
     margin-top: 36px;
-
-    &--payment {
-      margin-bottom: -36px;
-    }
   }
 
   &__phone {
@@ -257,12 +315,6 @@ const isRealUser = computed(
 
     &--unverified {
       color: $color-warning;
-    }
-  }
-
-  &__reviews {
-    @media all and (min-width: $screen-xl) {
-      display: none;
     }
   }
 
@@ -288,7 +340,11 @@ const isRealUser = computed(
   }
 
   &__terms {
-    margin: 16px 0;
+    margin: 16px 0 8px;
+  }
+
+  &__trust-badges {
+    order: 4;
   }
 
   &__plans {
@@ -301,14 +357,13 @@ const isRealUser = computed(
     animation: appear-bottom-5 0.5s forwards ease-out;
   }
 
-  &__reviews {
-    opacity: 0;
-    animation: appear-bottom-5 0.5s 0.05s forwards ease-out;
-  }
-
   &__features {
     opacity: 0;
     animation: appear-bottom-5 0.5s 0.05s forwards ease-out;
+
+    &--baseline {
+      order: 5;
+    }
   }
 
   &__form {

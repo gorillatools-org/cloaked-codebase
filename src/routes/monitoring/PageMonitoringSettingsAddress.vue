@@ -6,6 +6,8 @@ import MonitoringDetailHeaderClose from "@/features/monitoring/MonitoringDetailH
 import MonitoringDetailFooter from "@/features/monitoring/MonitoringDetailFooter.vue";
 import BaseButton from "@/library/BaseButton.vue";
 import MonitoringSettingsBasicAddresses from "@/features/monitoring/MonitoringSettingsBasicAddresses.vue";
+import { useToast } from "@/composables/useToast.js";
+import { MAX_ADDRESSES_LIMIT } from "@/scripts/constants";
 
 const addresses = defineModel("addresses", { type: Array });
 
@@ -19,11 +21,20 @@ const street = ref("");
 const suite = ref("");
 
 const addressForm = ref(null);
+const toast = useToast();
 
 const onAddAddress = () => {
   const isValid = addressForm.value?.validateForm();
 
   if (isValid) {
+    // Check if we're at the limit of 25 addresses
+    if (addresses.value.length >= MAX_ADDRESSES_LIMIT) {
+      toast.error(
+        `You can only add up to ${MAX_ADDRESSES_LIMIT} addresses. Please remove an existing address before adding a new one.`
+      );
+      return;
+    }
+
     addresses.value.push({
       address1: street.value,
       address2: suite.value,

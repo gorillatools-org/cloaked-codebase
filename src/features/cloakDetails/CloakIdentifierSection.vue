@@ -606,14 +606,14 @@ watch(
       <CloakInfoRow
         field="phone"
         placeholder="Enter a phone number"
-        :initialValue="formattedPhone"
+        :initial-value="formattedPhone"
         :loading="state.updatingCloak.phone"
-        :fieldType="getFieldType('phone')"
+        :field-type="getFieldType('phone')"
         :error="!!state.errors.phone_number"
-        :readOnly="props.readOnly"
+        :read-only="props.readOnly"
         :nickname="props.cloak.nickname"
-        :phoneObject="props.cloak.cloaked_phone"
-        :identityId="props.cloak.id"
+        :phone-object="props.cloak.cloaked_phone"
+        :identity-id="props.cloak.id"
         @generate="showConfirmPhoneModal"
         @save="savePhone"
         @delete="deletePhone"
@@ -631,14 +631,14 @@ watch(
       <CloakInfoRow
         field="email"
         placeholder="Enter an email address"
-        :initialValue="email"
+        :initial-value="email"
         :loading="state.updatingCloak.email"
-        :fieldType="getFieldType('email')"
+        :field-type="getFieldType('email')"
         :error="
           !!state.errors.email || (featureFlag && email === 'email@email.com')
         "
-        :readOnly="props.readOnly"
-        :identityId="props.cloak.id"
+        :read-only="props.readOnly"
+        :identity-id="props.cloak.id"
         @generate="handleGenerateEmail"
         @save="saveEmail"
         @delete="deleteEmail"
@@ -662,12 +662,12 @@ watch(
       <CloakInfoRow
         field="username"
         placeholder="Enter a username"
-        :initialValue="username"
+        :initial-value="username"
         :loading="state.updatingCloak.username"
-        :fieldType="getFieldType('username')"
+        :field-type="getFieldType('username')"
         :error="!!state.errors.username"
-        :readOnly="props.readOnly"
-        :identityId="props.cloak.id"
+        :read-only="props.readOnly"
+        :identity-id="props.cloak.id"
         @generate="showConfirmUsernameModal"
         @save="(newVal, isAutofill) => save('username', newVal, isAutofill)"
         @delete="deleteUsername"
@@ -676,14 +676,14 @@ watch(
       <CloakInfoRow
         field="password"
         placeholder="Enter a password"
-        :initialValue="password"
+        :initial-value="password"
         :loading="state.updatingCloak.password"
-        fieldType="user_defined"
+        field-type="user_defined"
         :error="
           !!state.errors.password || (featureFlag && password === 'password123')
         "
-        :readOnly="props.readOnly"
-        :identityId="props.cloak.id"
+        :read-only="props.readOnly"
+        :identity-id="props.cloak.id"
         :breached="featureFlag && password === 'password123'"
         @input="handlePasswordInput"
         @keypress="handlePasswordTyping"
@@ -694,7 +694,7 @@ watch(
         <template #input-before>
           <CloakGeneratePasswordFlyout
             :visible="state.showFlyout === 'password'"
-            :showGenerateOptions="true"
+            :show-generate-options="true"
             @generate="generatePassword"
             @close="state.showFlyout = null"
           />
@@ -712,7 +712,7 @@ watch(
         v-if="store.getters.isV2User"
         :identity="props.cloak"
         :loading="state.updatingCloak.totp"
-        :readOnly="props.readOnly"
+        :read-only="props.readOnly"
         :errors="state.errors.totp"
         @set-loading="state.updatingCloak.totp = $event"
         @set-errors="state.errors.totp = $event"
@@ -723,6 +723,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .breached-alert {
   padding-left: 110px;
   color: $color-alert;

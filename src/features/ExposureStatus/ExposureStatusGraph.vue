@@ -460,8 +460,8 @@ watch(
 <template>
   <BaseSheet
     v-show="!hideGraph"
-    spacingX="sm"
-    spacingY="md"
+    spacing-x="sm"
+    spacing-y="md"
   >
     <BaseText
       variant="headline-4-medium"
@@ -501,8 +501,8 @@ watch(
     <div class="data-removal-graph-container">
       <DataRemovalGraph
         :data="graphDataFormatted"
-        :lineColors="lineColors"
-        :activeSeries="activeSeries"
+        :line-colors="lineColors"
+        :active-series="activeSeries"
       />
     </div>
     <div
@@ -552,6 +552,7 @@ watch(
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .data-removal-graph_title {
   margin-bottom: 24px;
 }

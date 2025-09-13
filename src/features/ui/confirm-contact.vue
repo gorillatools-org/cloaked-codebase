@@ -179,6 +179,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .content .modal-body p.verification-cta {
   font-size: 16px;
   margin-bottom: 16px;

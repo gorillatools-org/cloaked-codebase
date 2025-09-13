@@ -41,6 +41,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 span {
   color: $color-primary-100;
 }

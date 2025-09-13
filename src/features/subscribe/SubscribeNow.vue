@@ -58,7 +58,7 @@ onMounted(async () => {
 });
 
 const createUser = async (cloudflareToken) => {
-  await createHeadlessUser(cloudflareToken);
+  await createHeadlessUser({ captcha: cloudflareToken });
 
   if (createHeadlessUserError.value) {
     return;
@@ -156,9 +156,9 @@ const checkoutRef = ref(null);
     <PageCheckout
       v-if="step === FUNNEL_STEP.PAYMENT"
       ref="checkoutRef"
-      :signupError="updateHeadlessUserError"
+      :signup-error="updateHeadlessUserError"
       :is-loading="isLoading"
-      :headlessUser="headlessUser"
+      :headless-user="headlessUser"
       @set-user="setUser"
       @subscribed="onSubscribed"
     />
@@ -176,6 +176,12 @@ const checkoutRef = ref(null);
   color: $color-primary-100;
   min-height: 100dvh;
 
-  @include cloaked-gradient-background;
+  @at-root .theme-dark & {
+    @include cloaked-gradient-background;
+  }
+
+  @at-root .theme-light & {
+    background-color: $color-primary-5;
+  }
 }
 </style>

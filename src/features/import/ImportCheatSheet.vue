@@ -51,6 +51,7 @@ const isPingVisible = computed(() => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .import-cheat-sheet {
   position: relative;
   display: inline-block;

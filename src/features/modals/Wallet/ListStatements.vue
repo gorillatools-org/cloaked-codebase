@@ -2,7 +2,7 @@
 import store from "@/store";
 import router from "@/routes/router";
 import Button from "@/features/Button.vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import DetailSection from "@/features/Wallet/RightPanel/DetailSection.vue";
 import CardsServices from "@/api/actions/cards-services";
 import ModalTemplate from "@/features/ModalTemplate.vue";
@@ -14,9 +14,11 @@ const props = defineProps({
   },
 });
 
+const downloadingStatementId = ref(null);
+
 function closeModal() {
   store.dispatch("closeModal");
-  router.replace("/wallet", undefined, { shallow: true });
+  router.replace("/virtual-cards", undefined, { shallow: true });
 }
 
 const statements = computed(() => {
@@ -27,22 +29,34 @@ const statementsEmpty = computed(() => {
   return statements.value.length === 0;
 });
 
+const isDownloadingStatement = computed(() => {
+  return downloadingStatementId.value !== null;
+});
+
 function openStatement(id) {
-  CardsServices.getCardStatement(id).then((response) => {
-    const base64String = response.data;
-    const binaryString = atob(base64String);
+  if (isDownloadingStatement.value) return;
 
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
+  downloadingStatementId.value = id;
 
-    const blob = new Blob([bytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
+  CardsServices.getCardStatement(id)
+    .then((response) => {
+      const base64String = response.data;
+      const binaryString = atob(base64String);
 
-    window.open(url, "_blank");
-  });
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      window.open(url, "_blank");
+    })
+    .finally(() => {
+      downloadingStatementId.value = null;
+    });
 }
 </script>
 
@@ -64,8 +78,16 @@ function openStatement(id) {
           v-for="statement in statements"
           :key="statement.id"
           :title="statement.name"
+          :not-clickable="isDownloadingStatement"
+          :disabled="
+            isDownloadingStatement && downloadingStatementId !== statement.id
+          "
           icon="document"
-          link
+          :hover-effect="true"
+          :download="downloadingStatementId !== statement.id"
+          :loading="
+            isDownloadingStatement && downloadingStatementId === statement.id
+          "
           @click="openStatement(statement.id)"
         />
       </div>

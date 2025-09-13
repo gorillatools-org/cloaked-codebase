@@ -3,9 +3,11 @@ import { ref, computed } from "vue";
 import store from "@/store";
 import Button from "@/features/Button.vue";
 import CardsServices from "@/api/actions/cards-services";
-import inlineSvg from "@/features/InlineSvg.vue";
 import { useToast } from "@/composables/useToast.js";
 import ModalTemplate from "@/features/ModalTemplate.vue";
+import FundingSourceListItem from "@/features/Wallet/FundingSource/FundingSourceListItem.vue";
+import BaseText from "@/library/BaseText.vue";
+import BaseIcon from "@/library/BaseIcon.vue";
 
 const toast = useToast();
 
@@ -88,31 +90,46 @@ const loading = ref(false);
     :show="props.isVisible"
     @close="closeModal"
   >
-    <template #header>
-      <h1>Edit funding source</h1>
-    </template>
     <template #body>
+      <header class="fs-patch-modal__header">
+        <div class="fs-patch-modal__header-icon-container">
+          <BaseIcon
+            class="fs-patch-modal__header-icon"
+            name="money-filled"
+          />
+        </div>
+        <BaseText
+          as="h3"
+          variant="headline-3-bold"
+          class="fs-patch-modal__header-title"
+        >
+          Edit funding source
+        </BaseText>
+        <BaseText
+          as="p"
+          variant="body-3-regular"
+          class="fs-patch-modal__header-subtitle"
+        >
+          You can switch this card's funding source to another of the same type
+          (credit, debit, or bank account).
+        </BaseText>
+      </header>
       <div
         v-if="sources"
-        class="funding-sources"
+        class="fs-patch-modal__body"
       >
         <div
           v-for="source in sources"
           :key="source.id"
-          class="funding-source"
-          :class="{ selected: source.id === selectedSource }"
-          @click="selectSource(source)"
+          class="fs-patch-modal__body-item"
         >
-          <inlineSvg name="bank" />
-          <div class="information">
-            <h1>{{ source.card_brand }}</h1>
-            <p>
-              <span>**** {{ source.pan_last_four }}</span>
-              <span v-if="source.nickname">• {{ source.nickname }}</span>
-            </p>
-          </div>
-
-          <div class="selected-icon" />
+          <FundingSourceListItem
+            :is-selected="source.id === selectedSource"
+            :is-select-mode="true"
+            :funding-source="source"
+            :show-actions="false"
+            @select="selectSource(source)"
+          />
         </div>
       </div>
     </template>
@@ -135,106 +152,42 @@ const loading = ref(false);
 </template>
 
 <style lang="scss" scoped>
-.funding-sources {
-  .funding-source {
-    border: 1px solid $color-primary-10;
-    border-radius: 16px;
-    padding: 16px;
-    margin-top: 4px;
-    position: relative;
-    color: $color-primary-100;
+$component-name: "fs-patch-modal";
 
-    &:hover {
-      background-color: $color-primary-5;
-      cursor: pointer;
-    }
+.#{$component-name} {
+  &__header {
+    display: flex;
+    flex-direction: column;
 
-    &.selected {
-      .selected-icon {
-        &::after {
-          content: "";
-          display: block;
-          width: 8px;
-          height: 8px;
-          background-color: $color-primary-100;
-          border-radius: 50%;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-        }
+    &-icon {
+      font-size: 56px;
+      font-weight: 200;
+
+      &-container {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: var(--color-primary-10);
       }
     }
 
-    &:first-child {
-      margin-top: 0;
+    &-title {
+      margin-top: 24px;
     }
 
-    svg {
-      width: 24px;
-      height: 24px;
-      margin-right: 16px;
-      position: absolute;
-      top: 50%;
-      left: 16px;
-      transform: translateY(-50%);
+    &-subtitle {
+      margin-top: 8px;
     }
+  }
 
-    .information {
-      padding-left: 40px;
-      padding-right: 40px;
-
-      h1 {
-        font-size: 15px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-        color: $color-primary-100;
-        text-transform: capitalize;
-      }
-
-      p {
-        font-size: 12px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        margin-top: 4px;
-
-        span {
-          display: inline-block;
-
-          &:nth-of-type(2) {
-            margin-left: 4px;
-          }
-        }
-      }
-    }
-
-    .default-pill {
-      position: absolute;
-      top: 50%;
-      right: 56px;
-      transform: translateY(-50%);
-      background-color: $color-success;
-      color: $white;
-      font-size: 10px;
-      font-style: normal;
-      font-weight: 600;
-      line-height: normal;
-      padding: 4px 10px;
-      border-radius: 19px;
-    }
-
-    .selected-icon {
-      position: absolute;
-      top: 50%;
-      right: 24px;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 2px solid $color-primary-100;
-    }
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
   }
 }
 </style>

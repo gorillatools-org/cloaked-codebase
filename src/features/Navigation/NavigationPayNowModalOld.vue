@@ -11,7 +11,7 @@ import { useToast } from "@/composables/useToast.js";
 import store from "@/store";
 import SubscriptionService from "@/api/settings/subscription-services";
 import { usePlanPrice } from "@/features/subscribe/composables/usePlanPrice.js";
-import { formattedPrice } from "@/features/subscribe/composables/utils.js";
+import { formattedPrice } from "@/features/subscribe/composables/utils.ts";
 
 const toast = useToast();
 const emit = defineEmits(["input"]);

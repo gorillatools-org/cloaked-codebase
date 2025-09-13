@@ -123,7 +123,7 @@ const { isMobile } = useDisplay();
     width="192"
     align-x="center"
     position="top"
-    :isOnSharedPage="isOnSharedPage"
+    :is-on-shared-page="isOnSharedPage"
   >
     <div class="timer">
       <div class="timer__timer">

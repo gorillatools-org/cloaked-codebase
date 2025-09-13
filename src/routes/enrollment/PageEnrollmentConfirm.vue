@@ -10,6 +10,10 @@ import {
   useFormattedName,
   useFormattedPhones,
 } from "@/features/enrollment/composables.js";
+import { onMounted } from "vue";
+import { posthogCapture } from "@/scripts/posthog.js";
+
+onMounted(() => posthogCapture("user_viewed_enrollment_form_confirmation"));
 
 const props = defineProps({
   firstName: {

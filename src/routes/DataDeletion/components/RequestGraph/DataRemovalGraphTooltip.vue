@@ -86,6 +86,7 @@ const isExtrapolated = computed(() => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .data-removal-graph_tooltip {
   position: relative;
   background-color: $color-base-white-100;

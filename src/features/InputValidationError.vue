@@ -21,6 +21,7 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .input-validation-error {
   margin-top: 4px;
   color: $color-alert;

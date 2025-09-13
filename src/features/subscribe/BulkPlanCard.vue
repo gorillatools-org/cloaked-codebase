@@ -100,6 +100,7 @@ function planMembersClicked() {
   </div>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .bulk-plan-card-wrapper {
   display: flex;
   flex-direction: column;
@@ -110,7 +111,6 @@ function planMembersClicked() {
   border-radius: 20px;
   backdrop-filter: blur(22px);
   padding: 24px;
-  border: 1px solid rgba($color-primary-100-dark, 0.015);
   box-shadow: 0 4px 16px 0 rgb(0 0 0 / 15%);
   width: 100%;
   color: $color-primary-100;
@@ -119,6 +119,7 @@ function planMembersClicked() {
   &__title {
     width: 100%;
     text-align: left;
+    opacity: 0.7;
 
     @media all and (min-width: $screen-xl) {
       text-align: center;
@@ -153,7 +154,7 @@ function planMembersClicked() {
       gap: 10px;
       padding: 8px;
       border-radius: 9px;
-      background: rgba($white, 0.1);
+      background: $color-base-black-5;
     }
   }
 

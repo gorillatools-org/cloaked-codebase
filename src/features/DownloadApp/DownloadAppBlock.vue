@@ -2,9 +2,16 @@
 import BaseSheet from "@/library/BaseSheet.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
+import { posthogCapture } from "@/scripts/posthog.js";
+import { PH_EVENT_USER_CLICKED_DOWNLOAD_APP } from "@/scripts/posthogEvents.js";
 
 const openAppStore = () => {
   window.open("https://download.cloaked.com/", "_blank");
+
+  // Capture PostHog event
+  posthogCapture(PH_EVENT_USER_CLICKED_DOWNLOAD_APP, {
+    source: "download_app_block",
+  });
 };
 </script>
 

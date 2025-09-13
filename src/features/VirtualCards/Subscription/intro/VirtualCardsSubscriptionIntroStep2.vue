@@ -1,0 +1,138 @@
+<script setup lang="ts">
+import BaseMedallion from "@/library/BaseMedallion.vue";
+import BaseText from "@/library/BaseText.vue";
+import BaseButton from "@/library/BaseButton.vue";
+import { onMounted } from "vue";
+import { posthogCapture } from "@/scripts/posthog.js";
+import VirtualCardsStepsTimeline, {
+  type TimelineStepItem,
+} from "./VirtualCardsStepsTimeline.vue";
+
+const emit = defineEmits<{
+  (e: "continue"): void;
+}>();
+
+onMounted(() => {
+  posthogCapture("dashboard_pay_kyc_intro_application_steps_screenview");
+});
+
+const steps: TimelineStepItem[] = [
+  {
+    title: "Confirm your plan",
+    description: "You'll only be charged after verification.",
+    duration: "Approx. 10-15 sec",
+  },
+  {
+    title: "Verify your identity",
+    description: "Confirm your personal details.",
+    duration: "Approx. 1-2 mins",
+  },
+  {
+    title: "Start transacting",
+    description:
+      "If you're verified, start creating Virtual Cards and secure your payments.",
+    duration: "Approx. 1-2 mins",
+    icon: "card-pos",
+  },
+];
+
+const handleContinue = () => {
+  posthogCapture("dashboard_pay_kyc_intro_application_steps_upgrade_clicked");
+  emit("continue");
+};
+</script>
+
+<template>
+  <div class="vc-subs-intro-step-2">
+    <header class="vc-subs-intro-step-2__header">
+      <BaseMedallion
+        size="lg"
+        color="spam-protection"
+        icon="wallet-filled"
+      />
+      <BaseText
+        variant="headline-2-semibold"
+        class="vc-subs-intro-step-2__title"
+      >
+        Start your application
+      </BaseText>
+      <BaseText
+        variant="headline-5-bold"
+        class="vc-subs-intro-step-2__description"
+      >
+        Apply for Cloaked Pay in {{ steps.length }} easy steps.
+      </BaseText>
+    </header>
+
+    <div class="vc-subs-intro-step-2__content">
+      <VirtualCardsStepsTimeline :steps="steps" />
+
+      <BaseButton
+        variant="primary"
+        class="vc-subs-intro-step-2__button"
+        @click="handleContinue"
+      >
+        Upgrade to unlock
+      </BaseButton>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.vc-subs-intro-step-2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding-bottom: 40px;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__title {
+    text-align: center;
+    margin-top: 13px;
+  }
+
+  &__description {
+    text-align: center;
+    font-weight: 400;
+    margin-top: 8px;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 345px;
+  }
+
+  &__button {
+    margin-top: 24px;
+    width: 100%;
+    z-index: 2;
+    opacity: 0;
+    visibility: hidden;
+    animation: fade-in-down 0.34s ease-out forwards;
+    animation-delay: 1.8s;
+  }
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+    visibility: hidden;
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+  }
+}
+</style>

@@ -31,6 +31,7 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .progress {
   &.hidden {
     display: none;

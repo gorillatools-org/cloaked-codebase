@@ -62,7 +62,7 @@ const fullAddress = computed(() => {
   <Button
     :loading="loading"
     icon="person-circle"
-    text="Card name and address"
+    text="Cardholder details"
     :title="
       capitalizeFirstLetter(information?.first_name) +
       ' ' +

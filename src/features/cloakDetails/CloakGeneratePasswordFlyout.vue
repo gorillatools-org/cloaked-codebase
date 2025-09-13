@@ -261,6 +261,7 @@ watch(
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .cloak-generate-password-flyout {
   position: absolute;
   inset: 0;

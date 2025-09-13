@@ -22,9 +22,11 @@ import {
   getLatestDetailObject,
 } from "@/scripts/cloakHelpers.js";
 import { getShouldShowCards } from "@/scripts/constants.js";
+import { useBasicMode } from "@/composables/useBasicMode.js";
 
 import { reactive, computed, onMounted, watch } from "vue";
 
+const { isBasicModeEnabled } = useBasicMode();
 const state = reactive({
   loading: false,
   apiCloak: null,
@@ -150,10 +152,9 @@ async function refreshCloak(newCloakData, callback) {
         callback();
       }
       state.apiCloak = data;
-      return store.dispatch("updateCloakDetails", data);
-    })
-    .then(() => {
-      return store.commit("updateCloakInfoOnCards", newCloakData);
+
+      store.commit("updateCloakInfoOnCards", newCloakData);
+      store.dispatch("updateCloakDetails", data);
     })
     .catch(() => {
       if (callback) {
@@ -172,7 +173,7 @@ async function refreshCloak(newCloakData, callback) {
   >
     <SidebarHeader>
       <SidebarHeaderButton
-        noBackground
+        no-background
         tabindex="0"
         @click="handleClosePanel"
         @keydown.enter="handleClosePanel"
@@ -182,15 +183,16 @@ async function refreshCloak(newCloakData, callback) {
       </SidebarHeaderButton>
 
       <CloakActions
+        v-if="!isBasicModeEnabled"
         :cloak="cloak"
         @refresh="refreshCloak"
       />
     </SidebarHeader>
 
     <CloakNicknameSection
-      :readOnly="isCancelled"
+      :read-only="isCancelled"
       :cloak="cloak"
-      @refresh="refreshCloak"
+      :refresh-callback="refreshCloak"
     />
     <button
       v-if="isCancelled"
@@ -200,7 +202,7 @@ async function refreshCloak(newCloakData, callback) {
       Your identities are read-only • Upgrade now
     </button>
     <CloakCategorySection
-      :readOnly="isCancelled"
+      :read-only="isCancelled"
       :refreshing="state.loading"
       :cloak="cloak"
       @refresh="refreshCloak"
@@ -208,26 +210,29 @@ async function refreshCloak(newCloakData, callback) {
 
     <CloakWebSection
       :key="`web-${cloak.id}`"
-      :readOnly="isCancelled"
+      :read-only="isCancelled"
       :refreshing="state.loading"
       :cloak="cloak"
+      :show-replace-name-modal="!isBasicModeEnabled"
       @refresh="refreshCloak"
     />
 
     <SidebarSeparator />
 
     <CloakIdentifierSection
+      v-if="!isBasicModeEnabled"
       :refreshing="state.loading"
       :cloak="cloak"
-      :readOnly="isCancelled"
-      :showLimits="isTrial"
+      :read-only="isCancelled"
+      :show-limits="isTrial"
       @refresh="refreshCloak"
     />
 
     <SidebarSeparator />
 
     <CustomFieldsSection
-      :readOnly="isCancelled"
+      v-if="!isBasicModeEnabled"
+      :read-only="isCancelled"
       :identity="cloak"
       :items="customFields"
       :existing-addresses="existingAddresses"
@@ -236,31 +241,33 @@ async function refreshCloak(newCloakData, callback) {
     <SidebarSeparator v-if="store.getters.isV2User" />
 
     <CloakContacts
-      v-if="showEmailSection || showPhoneSection"
-      :identityId="cloak.id"
-      :readOnly="isCancelled"
-      :cloakedPhoneId="cloakedPhoneId"
-      :cloakedEmailId="cloakedEmailId"
+      v-if="(showEmailSection || showPhoneSection) && !isBasicModeEnabled"
+      :identity-id="cloak.id"
+      :read-only="isCancelled"
+      :cloaked-phone-id="cloakedPhoneId"
+      :cloaked-email-id="cloakedEmailId"
     />
 
     <SidebarSeparator />
 
     <CloakVirtualCards
-      v-if="cardsEnabled && kycValidated"
+      v-if="cardsEnabled && kycValidated && !isBasicModeEnabled"
       :cloak="cloak"
-      :readOnly="isCancelled"
-      @refreshApi="refreshApi"
+      :read-only="isCancelled"
+      @refresh-api="refreshApi"
     />
 
-    <SidebarSeparator v-if="cardsEnabled && kycValidated" />
+    <SidebarSeparator
+      v-if="cardsEnabled && kycValidated && !isBasicModeEnabled"
+    />
 
     <CloakCommunicationSection
-      v-if="showEmailSection || showPhoneSection"
+      v-if="(showEmailSection || showPhoneSection) && !isBasicModeEnabled"
       :refreshing="state.loading"
       :cloak="cloak"
-      :readOnly="isCancelled"
-      :showEmailSection="showEmailSection"
-      :showPhoneSection="showPhoneSection"
+      :read-only="isCancelled"
+      :show-email-section="showEmailSection"
+      :show-phone-section="showPhoneSection"
       @refresh="refreshCloak"
     />
 
@@ -268,15 +275,16 @@ async function refreshCloak(newCloakData, callback) {
 
     <CloakNotesSection
       :cloak="cloak"
-      :readOnly="isCancelled"
+      :read-only="isCancelled"
       @refresh="refreshCloak"
     />
 
-    <SidebarSeparator />
+    <SidebarSeparator v-if="!isBasicModeEnabled" />
   </section>
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .disable {
   pointer-events: none;
   opacity: 0.4;

@@ -80,7 +80,7 @@ const visualPhoneNumberParts = computed(
   &__phone {
     padding: 20px 24px;
     border-radius: 10px;
-    background-color: rgba($white, 0.1);
+    background-color: $color-base-black-10;
     display: flex;
     align-items: center;
     justify-content: center;

@@ -4,11 +4,10 @@ import AppModalContent from "@/features/ui/AppModalContent.vue";
 import AppModalTitle from "@/features/ui/AppModalTitle.vue";
 import AppModalParagraph from "@/features/ui/AppModalParagraph.vue";
 import AppModalFooter from "@/features/ui/AppModalFooter.vue";
-import Button from "@/features/Button.vue";
+import BaseButton from "@/library/BaseButton.vue";
 import store from "@/store";
 import { ref, toRef } from "vue";
 import { useToast } from "@/composables/useToast.js";
-import InlineSvg from "@/features/InlineSvg.vue";
 import { useFormattedDate } from "@/composables/useFormattedDate";
 
 defineProps({
@@ -57,22 +56,22 @@ const subscriptionEndDate = useFormattedDate(
         feedback survey that opens once you cancel your subscription.
       </AppModalParagraph>
       <AppModalFooter>
-        <Button
-          type="secondary"
+        <BaseButton
+          variant="secondary"
           @click="$emit('input', false)"
         >
           Not now
-        </Button>
-        <Button
-          type="danger"
+        </BaseButton>
+        <BaseButton
+          variant="primary"
+          background-color="danger"
+          icon="exclamation-mark-triangle"
+          :disabled="isCancellingSubscription"
+          :loading="isCancellingSubscription"
           @click="onCancel"
         >
-          <template v-if="isCancellingSubscription">
-            Cancelling
-            <InlineSvg name="spinner" />
-          </template>
-          <template v-else>Confirm</template>
-        </Button>
+          {{ isCancellingSubscription ? "Cancelling" : "Confirm" }}
+        </BaseButton>
       </AppModalFooter>
     </AppModalContent>
   </AppModal>

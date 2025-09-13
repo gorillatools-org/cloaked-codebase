@@ -262,6 +262,7 @@ async function verify() {
           ref="verifyRef"
           v-bind="attrs"
           v-model="verificationCode"
+          class="otp-input"
           @keydown.enter="verify"
         />
       </div>
@@ -315,6 +316,7 @@ async function verify() {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .add-verify-phone-modal {
   .content {
     max-width: 512px !important;
@@ -399,12 +401,14 @@ async function verify() {
     margin: 20px 0 5px;
     background-color: #f82f2810;
   }
-}
-
-.subheader {
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 21px;
-  color: $color-primary-100;
+  .subheader {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 21px;
+    color: $color-primary-100;
+    .otp-input {
+      margin-top: 12px;
+    }
+  }
 }
 </style>

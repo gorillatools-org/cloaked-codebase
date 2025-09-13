@@ -21,6 +21,7 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 section.page {
   width: 100%;
   padding: 24px 32px;

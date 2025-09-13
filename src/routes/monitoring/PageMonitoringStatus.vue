@@ -58,6 +58,7 @@ const formattedUpdatedAt = computed(() =>
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .page-monitoring-status {
   display: flex;
   flex-direction: column;

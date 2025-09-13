@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import InlineSvg from "@/features/InlineSvg.vue";
 import { useWindowSize } from "@vueuse/core";
 import { computed, toRef } from "vue";
@@ -12,29 +12,29 @@ import { useSavings } from "@/features/subscribe/composables/useSavings.js";
 import {
   formattedPrice,
   isValidPrice,
-} from "@/features/subscribe/composables/utils.js";
+} from "@/features/subscribe/composables/utils.ts";
 import BaseText from "@/library/BaseText.vue";
+import { useBillingCycles } from "@/features/subscribe/composables/useBillingCycles.js";
+import { type Plan } from "@/features/subscribe/types.js";
 
-const props = defineProps({
-  plan: {
-    type: Object,
-    required: true,
-  },
-  discount: {
-    type: Number,
-    default: null,
-  },
-  anchor: {
-    type: Number,
-    default: null,
-  },
-  compareAt: {
-    type: Number,
-    default: null,
-  },
+export type ChoosePlanOptionProps = {
+  plan: Plan;
+  disabled?: boolean;
+  active?: boolean;
+  discount?: number | null;
+  anchor?: number | null;
+  compareAt?: number | null;
+};
+
+const props = withDefaults(defineProps<ChoosePlanOptionProps>(), {
+  disabled: false,
+  active: false,
+  discount: null,
+  anchor: null,
+  compareAt: null,
 });
 
-const model = defineModel({ type: String });
+const model = defineModel<string | null>({ default: null });
 
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value <= 768);
@@ -53,16 +53,18 @@ const anchoredPerMemberPrice = usePriceAnchor(perMemberPrice, anchor);
 const discountedPerMemberPrice = usePriceDiscount(perMemberPrice, discount);
 
 const savings = useSavings(perMemberPrice, compareAtPerMemberPrice);
+
+const availableBillingCycles = useBillingCycles();
 </script>
 
 <template>
   <label
     class="choose-plan-option"
     :class="[
-      `choose-plan-option--${type.toLowerCase()}`,
+      `choose-plan-option--${type?.toLowerCase()}`,
       {
-        'choose-plan-option--active': $attrs.active,
-        'choose-plan-option--disabled': $attrs.disabled,
+        'choose-plan-option--active': active,
+        'choose-plan-option--disabled': disabled,
       },
     ]"
   >
@@ -114,13 +116,17 @@ const savings = useSavings(perMemberPrice, compareAtPerMemberPrice);
         class="choose-plan-option__after-text"
       >
         Save {{ savings }}%
-        {{
-          billing === "2-Yearly"
-            ? "billed every 2 years"
-            : billing === "Yearly"
-              ? "billed annually"
-              : null
-        }}
+        <template
+          v-if="plan.recurring_interval !== availableBillingCycles.at(-1)"
+        >
+          {{
+            billing === "2-Yearly"
+              ? "billed every 2 years"
+              : billing === "Yearly"
+                ? "billed annually"
+                : null
+          }}
+        </template>
       </BaseText>
     </span>
     <input
@@ -154,6 +160,7 @@ const savings = useSavings(perMemberPrice, compareAtPerMemberPrice);
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .choose-plan-option {
   padding: 8px 16px;
   border: 2px solid $color-primary-10;

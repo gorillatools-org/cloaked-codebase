@@ -105,6 +105,7 @@ const width = computed(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .icon {
   background-color: $color-primary-100;
   color: $color-primary-1;

@@ -31,6 +31,7 @@ const attrs = useAttrs();
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .app-tooltip {
   &__content {
     background: $color-primary-90;

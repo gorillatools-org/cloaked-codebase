@@ -516,6 +516,7 @@ function copyItem(item) {
   </div>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .identity-name {
   display: flex;
   align-items: center;

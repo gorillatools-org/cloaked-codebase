@@ -16,9 +16,10 @@ import BannerUpgrade from "@/features/banners/BannerUpgrade.vue";
 import BannerVerifyEmail from "@/features/banners/BannerVerifyEmail.vue";
 import BannerDownloadExtension from "@/features/banners/BannerDownloadExtension.vue";
 import { useBasicMode } from "@/composables/useBasicMode";
-import { isMobileDevice } from "@/scripts/regex";
+import { useDisplay } from "@/composables/useDisplay";
 
 const { isBasicModeEnabled } = useBasicMode();
+const { isMobile } = useDisplay();
 
 defineEmits(["visible"]);
 
@@ -109,13 +110,13 @@ function dismissExtBanner() {
 
     <!-- NOTE: not showing on mobile because input in modal is not styled for small screens -->
     <BannerVerifyEmail
-      v-else-if="!verifiedPrimaryEmail && !isMobileDevice"
+      v-else-if="!verifiedPrimaryEmail && !isMobile"
       :email="firstUnverifiedEmail"
     />
 
     <!-- NOTE: not showing on mobile because extension is for desktop use -->
     <BannerDownloadExtension
-      v-else-if="showExtensionBanner && !isBasicModeEnabled && !isMobileDevice"
+      v-else-if="showExtensionBanner && !isBasicModeEnabled && !isMobile"
       @dismiss="dismissExtBanner"
     />
   </div>

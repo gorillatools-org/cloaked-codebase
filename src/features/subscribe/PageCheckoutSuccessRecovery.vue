@@ -1,7 +1,6 @@
 <script setup>
 import PageCheckoutSuccess from "@/features/subscribe/PageCheckoutSuccess.vue";
 import RecoveryKeyCard from "@/features/subscribe/RecoveryKeyCard.vue";
-import UserReviews from "@/features/subscribe/UserReviews.vue";
 import ConcentricWave from "@/features/subscribe/ConcentricWave.vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
@@ -43,9 +42,6 @@ const { isMobile } = useDisplay();
         class="page-checkout-success-recovery__wave"
       />
     </template>
-    <template #header-nav>
-      <UserReviews />
-    </template>
     <template #header>
       <BaseText
         as="h1"
@@ -76,7 +72,7 @@ const { isMobile } = useDisplay();
     </template>
     <template #right-column>
       <BulkPlanCard
-        neverCenter
+        never-center
         class="page-checkout-success-recovery__card"
       />
     </template>
@@ -88,6 +84,7 @@ const { isMobile } = useDisplay();
           class="recovery-key-card__cta"
           :disabled="!account.recovery"
           icon="download"
+          :full-width="isMobile"
           @click="onDownload"
         >
           Download recovery key
@@ -97,6 +94,7 @@ const { isMobile } = useDisplay();
           size="lg"
           icon="arrow-right"
           class="recovery-key-card__cta"
+          :full-width="isMobile"
           @click="onContinue"
         >
           Continue
@@ -121,6 +119,7 @@ const { isMobile } = useDisplay();
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .flex-row {
   display: flex;
   flex-direction: row;
@@ -128,6 +127,8 @@ const { isMobile } = useDisplay();
   justify-content: center;
   align-items: center;
   padding: 0 25px;
+  opacity: 0;
+  animation: appear-bottom-5 0.5s 0.15s forwards ease-out;
 
   .recovery-key-card__cta {
     &:first-of-type {

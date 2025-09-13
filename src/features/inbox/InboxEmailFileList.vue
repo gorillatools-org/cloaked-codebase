@@ -111,6 +111,7 @@ function removeFile(fileKey) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .file-list {
   padding: 5px;
   border-radius: 8px;

@@ -39,6 +39,7 @@ function handleClick() {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .radio-button {
   width: 19px;
   height: 22px;

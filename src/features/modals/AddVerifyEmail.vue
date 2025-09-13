@@ -265,13 +265,17 @@ async function verify() {
           @keydown.enter="saveEmail"
         />
       </div>
-      <div v-else>
+      <div
+        v-else
+        class="subheader"
+      >
         Enter the 6-digit code sent to
         <strong>{{ state.email }}</strong>
         <br />
         <BaseInputOtp
           ref="verifyRef"
           v-model="verificationCode"
+          class="otp-input"
           @keydown.enter="verify"
         />
       </div>
@@ -336,6 +340,7 @@ async function verify() {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .add-verify-email-mail {
   color: $color-primary-100;
 
@@ -362,11 +367,13 @@ async function verify() {
     margin: 20px 0 5px;
     background-color: #f82f2810;
   }
-}
-
-.subheader {
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 21px;
+  .subheader {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 21px;
+    .otp-input {
+      margin-top: 12px;
+    }
+  }
 }
 </style>

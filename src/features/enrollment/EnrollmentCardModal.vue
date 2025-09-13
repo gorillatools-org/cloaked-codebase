@@ -15,6 +15,18 @@ const { isMobile } = useDisplay();
 
 const onOpenPrivacyPolicy = () =>
   window.open(WEBSITE_PRIVACY_POLICY_URL, "_blank");
+
+const props = defineProps({
+  subheaderText: {
+    type: String,
+    default:
+      "We protect your account and personal data with advanced security measures.",
+  },
+  headerText: {
+    type: String,
+    default: "Your security and privacy matter to us",
+  },
+});
 </script>
 
 <template>
@@ -33,21 +45,21 @@ const onOpenPrivacyPolicy = () =>
         :size="isMobile ? 'md' : 'lg'"
         icon="shield-tick"
         class="enrollment-card-modal__medallion"
+        color="spam-protection"
       />
       <BaseText
         :variant="isMobile ? 'headline-3-bold' : 'headline-2-semibold'"
         as="h2"
         class="enrollment-card-modal__title"
       >
-        Your security and privacy matter to us
+        {{ props.headerText }}
       </BaseText>
       <BaseText
         variant="headline-6-medium"
         as="p"
         class="enrollment-card-modal__text"
       >
-        We protect your account and personal data with advanced security
-        measures.
+        {{ props.subheaderText }}
       </BaseText>
       <BaseSheet
         elevation="md"
@@ -108,6 +120,7 @@ const onOpenPrivacyPolicy = () =>
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .enrollment-card-modal {
   padding: 24px;
   text-align: center;
@@ -140,14 +153,6 @@ const onOpenPrivacyPolicy = () =>
 
   &__medallion {
     margin: 0 auto;
-
-    :deep(.base-medallion__button) {
-      background-color: $color-spam-protection-15;
-    }
-
-    :deep(.base-medallion__button-icon) {
-      background-color: $color-spam-protection;
-    }
   }
 
   &__title {

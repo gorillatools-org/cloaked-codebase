@@ -89,14 +89,14 @@ onUnmounted(() => {
   <Iframe
     v-if="props.version === 2"
     id="cloak-iframe"
-    useLegacyRoute
+    use-legacy-route
     source="auth/signup"
-    :prevRoute="prevRoute"
+    :prev-route="prevRoute"
   />
   <AuthIframe
     v-else
     id="cloak-iframe"
     source="auth/signup"
-    :prevRoute="prevRoute"
+    :prev-route="prevRoute"
   />
 </template>

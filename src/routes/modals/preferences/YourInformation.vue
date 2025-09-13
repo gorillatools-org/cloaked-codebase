@@ -63,7 +63,7 @@ const address = computed(() => {
 });
 
 const addressFormatted = computed(() => {
-  // NOTE: address level1 = state, level2=city
+  // UI shows: Street, Apt, City (level2), State/Province (level1), Country, Postal Code
   const {
     autofill_street_address,
     autofill_unit,
@@ -73,21 +73,16 @@ const addressFormatted = computed(() => {
     autofill_postal_code,
   } = address.value;
 
-  let line = "";
-
   const existingParts = [
     autofill_street_address,
     autofill_unit,
-    autofill_address_level1,
-    autofill_address_level2,
+    autofill_address_level2, // city
+    autofill_address_level1, // state/province
     autofill_country,
     autofill_postal_code,
   ].filter((part) => part);
 
-  if (existingParts.length > 0) {
-    line = existingParts.join(", ");
-  }
-  return line;
+  return existingParts.length > 0 ? existingParts.join(", ") : "";
 });
 
 const rightSideDisplay = computed(() => {
@@ -174,8 +169,10 @@ function setAutofillData() {
     state.autofill_street_address = result.street_address;
     state.autofill_unit = result.unit;
     state.autofill_country = result.country;
-    state.autofill_address_level1 = result.address_level1;
-    state.autofill_address_level2 = result.address_level2;
+    // Backend stores address_level1/2 opposite of our UI: level1=city, level2=state.
+    // Normalize here so UI uses level1=state, level2=city.
+    state.autofill_address_level1 = result.address_level2; // state/province
+    state.autofill_address_level2 = result.address_level1; // city
     state.autofill_postal_code = result.postal_code;
   }
 }
@@ -244,30 +241,30 @@ function setAutofillData() {
     <Name
       v-if="rightSideDisplay === 'infoName'"
       :id="state.infoId"
-      :firstName="state.firstName"
-      :lastName="state.lastName"
-      @toggleBack="toggleBack"
+      :first-name="state.firstName"
+      :last-name="state.lastName"
+      @toggle-back="toggleBack"
     />
 
     <Birthday
       v-if="rightSideDisplay === 'birthday'"
       :id="state.infoId"
       :birthday="state.birthday"
-      @toggleBack="toggleBack"
+      @toggle-back="toggleBack"
     />
 
     <Gender
       v-if="rightSideDisplay === 'gender'"
       :id="state.infoId"
       :gender="state.gender"
-      @toggleBack="toggleBack"
+      @toggle-back="toggleBack"
     />
 
     <Address
       v-if="rightSideDisplay === 'address'"
       :id="state.infoId"
       :current="address"
-      @toggleBack="toggleBack"
+      @toggle-back="toggleBack"
       @update="handleUpdateValue"
     />
 
@@ -279,9 +276,9 @@ function setAutofillData() {
         v-if="rightSideDisplay === 'payment'"
         :id="state.infoId"
         :current="address"
-        :selectedCard="state.selectedCard"
-        :creditCards="state.creditCards"
-        @toggleBack="toggleBack"
+        :selected-card="state.selectedCard"
+        :credit-cards="state.creditCards"
+        @toggle-back="toggleBack"
         @update="handleUpdateValue"
         @refresh="refreshCards"
         @back="back"

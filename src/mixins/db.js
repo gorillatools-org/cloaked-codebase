@@ -37,17 +37,8 @@ export const dbMixin = {
     cloaks() {
       return store.state.localdb.db_cloaks;
     },
-    suggestions() {
-      return store.state.localdb.suggestions;
-    },
   },
   methods: {
-    async checkAndDeleteTempCloak() {
-      const tempCloak = await db.cloaks.get(-1);
-      if (tempCloak) {
-        store.dispatch("deleteTempCloak");
-      }
-    },
     async frontLoadCloaks(bootup, url) {
       const page_size = 5000;
       if (url) {
@@ -55,7 +46,6 @@ export const dbMixin = {
           return this.formatAndSaveCloaks(data.results, bootup);
         });
       } else {
-        this.checkAndDeleteTempCloak();
         return IdentityService.frontloadIdentities(
           `/api/v1/search/identity/?page_size=${page_size}`
         )

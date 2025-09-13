@@ -9,6 +9,10 @@ import EnrollmentBackground from "@/features/enrollment/EnrollmentBackground.vue
 import InlineSvg from "@/features/InlineSvg.vue";
 import { getFormattedSsnValue } from "@/features/enrollment/utils.js";
 import { useSsnValidation } from "@/composables/validation/useSsnValidation.js";
+import { onMounted } from "vue";
+import { posthogCapture } from "@/scripts/posthog.js";
+
+onMounted(() => posthogCapture("user_viewed_enrollment_form_ssn"));
 
 defineProps({
   isSubmitting: {
@@ -66,7 +70,7 @@ defineExpose({ validateForm });
         title="Social Security Number*"
         placeholder="123-45-6789"
         inputmode="numeric"
-        maxlength="11"
+        :maxlength="11"
         autocomplete="off"
         secret
         @blur="validateSsn"
@@ -107,6 +111,7 @@ defineExpose({ validateForm });
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .page-enrollment-personal {
   &__shield {
     font-size: 40px;

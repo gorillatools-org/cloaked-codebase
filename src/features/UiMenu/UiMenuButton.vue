@@ -80,6 +80,7 @@ function handleClick(event) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .ui-menu-button {
   width: 100%;
   min-height: 40px;

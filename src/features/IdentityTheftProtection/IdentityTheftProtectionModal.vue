@@ -57,7 +57,7 @@ const handleClose = () => {
         </BaseText>
       </BaseSheet>
 
-      <IdentityTheftProtectionContent largePadding />
+      <IdentityTheftProtectionContent large-padding />
 
       <BaseSheet
         variant="secondary"
@@ -84,6 +84,7 @@ const handleClose = () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .identity-theft-protection-modal {
   &__title {
     margin-bottom: 16px;

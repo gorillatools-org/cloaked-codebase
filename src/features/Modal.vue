@@ -124,7 +124,7 @@ function renameEvents(customTemplate) {
         :show-close-in-header="modal.showCloseInHeader"
         :show="visibleModals[modal.id]"
         :width="modal.width"
-        :preventClose="modal.preventClose"
+        :prevent-close="modal.preventClose"
         @close="() => handleCloseModal(modal)"
       >
         <template #header>
@@ -194,6 +194,7 @@ function renameEvents(customTemplate) {
             aria-id="CancelButton"
             variant="secondary"
             :disabled="state.loadingOnClick"
+            :icon="modal.cancelIcon || 'close'"
             @click="() => handleCloseModal(modal)"
           >
             {{ modal.cancelText || "Cancel" }}
@@ -205,6 +206,7 @@ function renameEvents(customTemplate) {
             :variant="modal.button.danger ? 'danger' : 'primary'"
             :disabled="isPrimaryBtnDisabled(modal)"
             :loading="state.loadingOnClick"
+            :icon="modal.button.icon"
             @click="handleClickAction($event, modal)"
           >
             {{ modal.button.text }}

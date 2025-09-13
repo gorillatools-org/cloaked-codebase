@@ -249,7 +249,6 @@ const onUpdate = async () => {
       public_key: sharing.value.public_key,
     });
 
-    // eslint-disable-next-line no-unused-vars
     const { decryptedPassword, ...previousSharingPayload } = sharing.value;
 
     await IdentityService.patchSharing(props.identity.id, {
@@ -301,7 +300,6 @@ const onGenerateNewLink = async () => {
       public_key: publicKey,
     });
 
-    // eslint-disable-next-line no-unused-vars
     const { decryptedPassword, ...previousSharingPayload } = sharing.value;
 
     await IdentityService.patchSharing(props.identity.id, {
@@ -338,7 +336,6 @@ const onGenerateNewPassword = async () => {
       public_key: publicKey,
     });
 
-    // eslint-disable-next-line no-unused-vars
     const { decryptedPassword, ...previousSharingPayload } = sharing.value;
 
     await IdentityService.patchSharing(props.identity.id, {
@@ -390,13 +387,13 @@ function handleSetActiveModal(event) {
   <IdentitySharing
     :identity="identity"
     :permissions="permissions"
-    :isShared="isShared"
+    :is-shared="isShared"
     :active-modal="activeModal"
-    :isLoading="isLoading"
-    :isGeneratingLink="isGeneratingLink"
-    :isGeneratingPassword="isGeneratingPassword"
-    :isTooltipOpen="isTooltipOpen"
-    :hasAnnouncementTooltip="hasAnnouncementTooltip"
+    :is-loading="isLoading"
+    :is-generating-link="isGeneratingLink"
+    :is-generating-password="isGeneratingPassword"
+    :is-tooltip-open="isTooltipOpen"
+    :has-announcement-tooltip="hasAnnouncementTooltip"
     :sharing="sharing"
     :value="isModalOpen"
     @input="

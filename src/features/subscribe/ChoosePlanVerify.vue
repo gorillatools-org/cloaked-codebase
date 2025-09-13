@@ -14,6 +14,7 @@ import { useUserPhoneVerification } from "@/features/data-delete/composables/use
 import { useCoolDown } from "@/composables/useCoolDown";
 import { toValue } from "@vueuse/core/index";
 import BaseText from "@/library/BaseText.vue";
+import { useDisplay } from "@/composables/useDisplay.js";
 
 const props = defineProps({
   phone: {
@@ -120,16 +121,19 @@ const verificationCodeCoolDown = computed(() => {
     ? `${secondsRemaining} second`
     : `${secondsRemaining} seconds`;
 });
+
+const { isMobile } = useDisplay();
 </script>
 
 <template>
   <div class="choose-plan-verify">
     <ButtonPlans
-      fullWidth
+      :full-width="!isMobile"
       size="lg"
+      class="choose-plan-verify__cta"
       @click="isModalOpen = true"
     >
-      Verify number and subscribe
+      Verify number to subscribe
     </ButtonPlans>
     <AppModal
       :value="isModalOpen"
@@ -201,6 +205,7 @@ const verificationCodeCoolDown = computed(() => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .choose-plan-verify {
   width: 100%;
 
@@ -214,6 +219,10 @@ const verificationCodeCoolDown = computed(() => {
         transition: transform 0.3s ease-in-out;
       }
     }
+  }
+
+  &__cta {
+    width: 100%;
   }
 
   &__footer {

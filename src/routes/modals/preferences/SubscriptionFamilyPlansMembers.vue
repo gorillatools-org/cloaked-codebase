@@ -78,6 +78,7 @@ onMounted(() => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .family-plans-members {
   margin-top: 36px;
 

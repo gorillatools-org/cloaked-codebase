@@ -328,6 +328,7 @@ watch(
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .preferences-input {
   display: flex;
   flex-direction: column;

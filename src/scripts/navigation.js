@@ -15,12 +15,6 @@ export const createNavigationItems = ({
     title: "",
     items: [
       {
-        url: "/summary",
-        icon: "exposures",
-        text: "Summary",
-        active: !hasExposureStatus,
-      },
-      {
         url: "/data-remove",
         icon: "name-card",
         text: "Data removal",
@@ -39,8 +33,14 @@ export const createNavigationItems = ({
         active: hasIdentityMonitoring,
       },
       {
+        url: "/virtual-cards",
+        icon: "wallet",
+        text: "Virtual Cards",
+        active: payEnabled,
+      },
+      {
         url: "/for-you",
-        icon: "bolt",
+        icon: "search",
         text: "For You",
         active: hasForYou && basicModeEnabled,
       },
@@ -92,9 +92,9 @@ export const createNavigationItems = ({
         active: hasEsimsWithNumbers,
       },
       {
-        url: "/wallet",
+        url: "/virtual-cards",
         icon: "wallet",
-        text: "Cloaked Pay",
+        text: "Virtual Cards",
         active: payEnabled,
       },
     ],

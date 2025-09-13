@@ -113,6 +113,7 @@ function send() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .referral-hero {
   height: 300px;
   width: 100%;

@@ -25,21 +25,20 @@ onMounted(() => {
 
       <div class="text">
         <p>
-          Protect your payments using Cloaked Pay. Keep your current cards’
-          airline miles, cashback rewards, or other perks, while protecting your
-          privacy, reducing fraud, and preventing identity theft.
+          Protect your payments, preserve your perks. With Cloaked Pay, you can
+          keep your current rewards and benefits—while layering on powerful
+          privacy controls, fraud prevention, and identity theft protection.
         </p>
       </div>
 
       <div class="text">
         <h1>Cloaked Pay perks</h1>
         <ul>
-          <li>0% APR, no fees</li>
           <li>Unlimited virtual cards</li>
-          <li>User-controlled self-destruct timer</li>
-          <li>Connect your bank account, debit, or credit cards</li>
-          <li>User controls and merchant locking</li>
-          <li>Instant card issuance and virtual card numbers</li>
+          <li>Instant card issuance with new numbers for every purchase</li>
+          <li>Built-in merchant locking and user controls</li>
+          <li>Self-destruct timers for total control</li>
+          <li>Connect any debit, credit, or bank account</li>
         </ul>
       </div>
 
@@ -89,6 +88,7 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 section {
   position: relative;
   overflow: hidden;

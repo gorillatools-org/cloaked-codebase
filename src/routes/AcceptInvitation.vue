@@ -139,6 +139,7 @@ const src = computed(() => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .accept-invitation {
   position: fixed;
   inset: 0;

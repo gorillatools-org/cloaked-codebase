@@ -24,7 +24,7 @@ const props = defineProps({
   },
 });
 
-// NOTE: address level1 = state, level2=city
+// Internally we keep level1 = state/province, level2 = city for UI bindings
 const state = reactive({
   autofill_street_address:
     props.current && props.current.autofill_street_address,
@@ -38,13 +38,27 @@ const state = reactive({
   loading: false,
 });
 
-const values = computed(() => {
+// Values used for form display (unswapped)
+const displayValues = computed(() => {
   return {
     autofill_street_address: state.autofill_street_address,
     autofill_unit: state.autofill_unit,
     autofill_country: state.autofill_country,
-    autofill_address_level2: state.autofill_address_level2,
-    autofill_address_level1: state.autofill_address_level1,
+    autofill_address_level2: state.autofill_address_level2, // city
+    autofill_address_level1: state.autofill_address_level1, // state/province
+    autofill_postal_code: state.autofill_postal_code,
+  };
+});
+
+// Payload values used when saving to backend (swap level1/level2 to match API storage)
+const saveValues = computed(() => {
+  return {
+    autofill_street_address: state.autofill_street_address,
+    autofill_unit: state.autofill_unit,
+    autofill_country: state.autofill_country,
+    // API stores city in level1 and state/province in level2; swap on write
+    autofill_address_level1: state.autofill_address_level2,
+    autofill_address_level2: state.autofill_address_level1,
     autofill_postal_code: state.autofill_postal_code,
   };
 });
@@ -58,7 +72,7 @@ async function save() {
   state.loading = true;
 
   if (props.id) {
-    PersonalInfoService.updateInfo(props.id, values.value)
+    PersonalInfoService.updateInfo(props.id, saveValues.value)
       .then(() => {
         emit("toggleBack");
         toast.success("Address saved.");
@@ -69,7 +83,7 @@ async function save() {
         state.loading = false;
       });
   } else {
-    PersonalInfoService.createInfo(values.value)
+    PersonalInfoService.createInfo(saveValues.value)
       .then(() => {
         emit("toggleBack");
         toast.success("Address saved.");
@@ -93,7 +107,7 @@ async function save() {
       ref="editAddressRef"
       label="address"
       :placeholder="`add address`"
-      :current="values"
+      :current="displayValues"
       name="address"
       @update="on_update_value"
       @save="save"

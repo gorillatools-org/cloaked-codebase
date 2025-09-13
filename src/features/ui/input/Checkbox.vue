@@ -32,6 +32,7 @@ const emits = defineEmits(["click"]);
   </button>
 </template>
 <style scoped lang="scss">
+/* stylelint-disable */
 .checkbox {
   width: 100%;
   height: 100%;

@@ -47,9 +47,13 @@ export default {
 
     // cloaked basic mode summary
     basicModeSummary: null,
+    recentlyEnrolled: false,
   },
 
   mutations: {
+    setRecentlyEnrolled(state, recentlyEnrolled) {
+      state.recentlyEnrolled = recentlyEnrolled;
+    },
     setRemovalLogData(state, resp) {
       state.removalLogData = {
         ...state.removalLogData,
@@ -150,10 +154,14 @@ export default {
     getBasicModeSummary: (state) => {
       return state?.basicModeSummary;
     },
-    hasRemovalEnrollment: (state) => !!state.enrollmentProfile?.name?.first,
+    hasRemovalEnrollment: (state) =>
+      !!state.enrollmentProfile?.name?.first || state.recentlyEnrolled,
     hasMonitoringEnrollment: (state) => !!state.enrollmentProfile?.dob,
   },
   actions: {
+    setRecentlyEnrolled({ commit }, recentlyEnrolled) {
+      commit("setRecentlyEnrolled", recentlyEnrolled);
+    },
     setBasicModeSummary({ commit }, summary) {
       commit("setBasicModeSummary", summary);
     },

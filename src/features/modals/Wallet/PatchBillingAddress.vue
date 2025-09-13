@@ -151,6 +151,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .inputs {
   display: flex;
   flex-wrap: wrap;

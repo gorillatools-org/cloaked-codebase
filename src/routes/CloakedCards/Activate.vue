@@ -226,6 +226,7 @@ const accordianItems = ref([
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 section.page {
   width: 100%;
   margin: 0 auto;

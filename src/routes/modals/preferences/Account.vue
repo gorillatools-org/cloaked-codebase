@@ -278,8 +278,8 @@ const handleOpenRemoveModal = (method) => {
       header: `Remove two-factor authentication ${
         isMethodEmail(method.method) ? "email" : "number"
       }?`,
-      subheader: `You won’t be able to sign in with two-factor authentication using this ${
-        isMethodEmail(method.method) ? "email" : "number"
+      subheader: `You won't be able to sign in with two-factor authentication using this ${
+        isMethodEmail(method.method) ? "email address" : "phone number"
       } again. You can always verify another ${
         isMethodEmail(method.method) ? "email address" : "phone number"
       } to continue using 2FA.`,
@@ -409,14 +409,14 @@ const kycValidated = computed(() => {
   return store.state.authentication?.user?.cloaked_card_kyc_configured;
 });
 
-const isMobileDevice = computed(() => navigator.maxTouchPoints > 0);
+const isTouchDevice = computed(() => navigator.maxTouchPoints > 0);
 
 const tooltipMessage = computed(() => {
   if (!kycValidated.value) {
     return "";
   }
 
-  let message = isMobileDevice.value ? "Copied" : "Click to copy username hash";
+  let message = isTouchDevice.value ? "Copied" : "Click to copy username hash";
 
   if (state.copied) {
     message = "Copied";
@@ -429,7 +429,7 @@ const tooltipMessage = computed(() => {
     <PreferencesPanel v-if="!rightPanel">
       <div class="preferences-account__username-row">
         <CountryAccountIcon
-          :countryInfo="{ countryCode: userCountryCode }"
+          :country-info="{ countryCode: userCountryCode }"
           :override="{ height: '48px', width: '48px' }"
           class="user-icon"
         />
@@ -446,8 +446,8 @@ const tooltipMessage = computed(() => {
             Username
           </BaseText>
           <AsyncText
-            :getValue="getUsername"
-            :tooltipMessage="tooltipMessage"
+            :get-value="getUsername"
+            :tooltip-message="tooltipMessage"
           />
         </div>
       </div>
@@ -507,7 +507,7 @@ const tooltipMessage = computed(() => {
         :value="
           mfaMethod?.displayValue ? mfaMethod.displayValue : 'an mfa device'
         "
-        xIcon
+        x-icon
         @delete="() => handleOpenRemoveModal(mfaMethod)"
       />
 
@@ -543,7 +543,7 @@ const tooltipMessage = computed(() => {
 
       <div
         v-if="showMfaSection && isMfaActive"
-        style="width: 100%; display: flex; padding: 24px 0px"
+        style="width: 100%; display: flex; padding: 24px 0"
         @mfa-devices-updated="getMfaMethodsAndDevices"
       >
         <Button
@@ -557,48 +557,49 @@ const tooltipMessage = computed(() => {
 
     <MfaSetup
       v-if="rightPanel === 'mfa-setup'"
-      :userHasTotpActivated="state.userHasTotpActivated"
-      @toggleBack="toggleBack"
+      :user-has-totp-activated="state.userHasTotpActivated"
+      @toggle-back="toggleBack"
       @mfa-devices-updated="getMfaMethodsAndDevices"
     />
 
     <ChangePassword
       v-if="rightPanel === 'password'"
-      @toggleBack="toggleBack"
+      @toggle-back="toggleBack"
     />
 
     <AccountRecovery
       v-if="rightPanel === 'recovery'"
-      @toggleBack="toggleBack"
+      @toggle-back="toggleBack"
     />
 
     <AuthorizedDevices
       v-if="rightPanel === 'authorized-devices'"
       :devices="state.mfaDevices"
-      @toggleBack="toggleBack"
+      @toggle-back="toggleBack"
       @mfa-devices-updated="getMfaMethodsAndDevices"
     />
 
     <ExportData
       v-if="rightPanel === 'export'"
-      @toggleBack="toggleBack"
+      @toggle-back="toggleBack"
     />
 
     <DeleteAccount
       v-if="rightPanel === 'delete'"
-      @toggleBack="toggleBack"
-      @refreshUser="getUserDeleteIsScheduled"
+      @toggle-back="toggleBack"
+      @refresh-user="getUserDeleteIsScheduled"
     />
 
     <ManageAccount
       v-if="rightPanel === 'manage-account'"
-      @toggleBack="toggleBack"
-      @refreshUser="getUserDeleteIsScheduled"
+      @toggle-back="toggleBack"
+      @refresh-user="getUserDeleteIsScheduled"
     />
   </section>
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .preferences-account {
   &__username-row {
     display: flex;

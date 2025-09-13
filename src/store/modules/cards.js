@@ -19,7 +19,6 @@ export default {
       transaction: null,
       card: null,
       settings: false,
-      fundingSources: false,
     },
     cardSettings: {},
     statements: [],
@@ -72,6 +71,22 @@ export default {
         data.results
       );
     },
+    removeFundingSource: (state, fundingSourceId) => {
+      state.fundingSources.results = state.fundingSources.results.filter(
+        (fundingSource) => fundingSource.id !== fundingSourceId
+      );
+    },
+    switchFundingSourceAutoPay: (state, data) => {
+      const { fundingSourceId, enabled } = data;
+      state.fundingSources.results = state.fundingSources.results.map(
+        (fundingSource) => {
+          if (fundingSource.id === fundingSourceId) {
+            return { ...fundingSource, is_auto_debit: enabled ? true : false };
+          }
+          return fundingSource;
+        }
+      );
+    },
     currentCard: (state, data) => {
       state.currentCard = Object.assign({}, data);
     },
@@ -117,14 +132,6 @@ export default {
       state.rightPanel.transaction = null;
       state.rightPanel.card = null;
       state.rightPanel.show = true;
-      state.rightPanel.fundingSources = false;
-    },
-    openFundingSources(state) {
-      state.rightPanel.fundingSources = true;
-      state.rightPanel.transaction = null;
-      state.rightPanel.card = null;
-      state.rightPanel.show = true;
-      state.rightPanel.settings = false;
     },
     closeRightPanel(state) {
       state.rightPanel.show = false;
@@ -132,7 +139,6 @@ export default {
         state.rightPanel.transaction = null;
         state.rightPanel.card = null;
         state.rightPanel.settings = false;
-        state.rightPanel.fundingSources = false;
       }, 500);
     },
     cardSettings(state, data) {
@@ -190,6 +196,12 @@ export default {
     },
     addMoreFundingSources({ commit }, data) {
       commit("addMoreFundingSources", data);
+    },
+    removeFundingSource({ commit }, fundingSourceId) {
+      commit("removeFundingSource", fundingSourceId);
+    },
+    switchFundingSourceAutoPay({ commit }, data) {
+      commit("switchFundingSourceAutoPay", data);
     },
     addCardList({ commit }, data) {
       commit("addCardList", data);

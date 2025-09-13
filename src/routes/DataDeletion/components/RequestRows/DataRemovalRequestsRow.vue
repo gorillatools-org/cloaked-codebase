@@ -214,7 +214,7 @@ const estimatedTime = computed(() => {
           v-if="totalRecordItems > 0"
           class="items-progress-bar"
           :percent="removalProgress"
-          :topColor="removalProgress === 100 ? '#00C47D' : undefined"
+          :top-color="removalProgress === 100 ? '#00C47D' : undefined"
         />
         <BaseText
           variant="body-small-medium"
@@ -294,10 +294,10 @@ const estimatedTime = computed(() => {
         </div>
 
         <DataRemovalRequestsRowDetailsPeopleList
-          :brokerName="props.request.broker_name"
+          :broker-name="props.request.broker_name"
           :records="recordsFormatted"
           :status="props.request.state"
-          :svgIcon="statusIcon"
+          :svg-icon="statusIcon"
         />
       </div>
     </div>
@@ -305,6 +305,7 @@ const estimatedTime = computed(() => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .requests-table-row-wrapper {
   display: flex;
   flex-direction: column;

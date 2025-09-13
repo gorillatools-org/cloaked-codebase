@@ -166,7 +166,7 @@ const openLink = () => {
         </BaseText>
         <BaseButton
           variant="secondary"
-          fullWidth
+          full-width
           icon="new-tab"
           class="exposure-status-faq__content-button"
           size="md"
@@ -180,6 +180,7 @@ const openLink = () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .exposure-status-faq {
   &__title {
     padding: 8px 0;

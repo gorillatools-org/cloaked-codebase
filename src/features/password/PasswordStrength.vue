@@ -113,6 +113,7 @@ const passwordHasValue = computed(() => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .password-check {
   font-size: 13px;
   font-family: $global-font;

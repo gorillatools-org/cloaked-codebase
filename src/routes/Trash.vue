@@ -20,7 +20,7 @@ function setType(type) {
       v-if="ui.type === TYPE.IDENTITY"
       :types="TYPE"
       :type="ui.type"
-      @setType="setType"
+      @set-type="setType"
     />
   </div>
 </template>

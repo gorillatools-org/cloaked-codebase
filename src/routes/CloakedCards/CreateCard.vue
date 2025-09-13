@@ -67,7 +67,7 @@ function removeFundingSource(source) {
   store.dispatch("openModal", {
     header: `Delete funding source?`,
     subheader:
-      "You will not be able to use this funding account to create cloak cards",
+      "You will not be able to use this funding account to create Virtual Cards",
     button: {
       text: "Yes, Delete",
       onClick: () => deleteFundingSource(source),
@@ -246,7 +246,7 @@ const hasSources = computed(() => {
               class="add-card"
               @click="addCard"
             >
-              Create your first Cloaked card
+              Create your first Cloaked Virtual Card
             </button>
           </div>
           <h1>
@@ -290,6 +290,7 @@ const hasSources = computed(() => {
   </div>
 </template>
 <style scoped lang="scss">
+/* stylelint-disable */
 .spinning {
   color: white;
   svg {

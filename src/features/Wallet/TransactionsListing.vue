@@ -116,6 +116,17 @@ watch(
   { deep: true }
 );
 
+// If the cards change, fetch the transactions. This only runs once.
+// This is needed because when the user refreshes the page with a card selected,
+// the transactions are not fetched since the route never changes.
+watch(
+  () => store.state.cards.cards.results,
+  () => {
+    getTransactions();
+  },
+  { once: true }
+);
+
 function convertToDollar(amount) {
   return (amount / 100)
     .toLocaleString("en-US", {
@@ -135,9 +146,9 @@ function addTransaction(transaction) {
 <template>
   <div class="transactions">
     <div class="title">
-      <h1 v-if="!route.params.id && !loading">All wallet activity</h1>
+      <h1 v-if="!route.params.id && !loading">All activity</h1>
       <h1 v-if="route.params.id && !loading">
-        {{ currentCard.identity_name || "" }} card activity
+        {{ currentCard.identity_name || "" }} activity
       </h1>
       <h1
         v-if="loading"
@@ -221,6 +232,7 @@ function addTransaction(transaction) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .transactions {
   width: 100%;
 

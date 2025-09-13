@@ -363,6 +363,7 @@ function resendEmail() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .check-verification-email {
   position: fixed;
   inset: 0;

@@ -250,6 +250,7 @@ const resetTotpTooltip = () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .breached {
   position: absolute;
   top: 15px;

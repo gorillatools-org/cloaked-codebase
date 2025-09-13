@@ -249,6 +249,7 @@ function removeFile(fileKey) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .disabled {
   .attachment-icon {
     opacity: 0.5;

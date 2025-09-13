@@ -33,28 +33,37 @@ export default class UserService {
   }
 
   static async getFlags() {
-    return api()
-      .get("/api/v1/settings/product-use/")
-      .then(({ data }) => {
-        return store.commit("onboardFlags", { flags: data.onboarding_meta });
-      });
+    try {
+      const { data } = await api().get("/api/v1/settings/product-use/");
+
+      // Update Vuex store
+      store.commit("onboardFlags", { flags: data.onboarding_meta });
+
+      // Update Pinia navigation store with collapse state
+      const { useNavigationStore } = await import("@/pinia/navigation.js");
+      const navigationStore = useNavigationStore();
+      navigationStore.loadCollapseState(data);
+
+      return data;
+    } catch (error) {
+      console.error("Failed to get flags:", error);
+      throw error;
+    }
   }
 
-  static async getNewOnboardingFlags() {
-    return api()
-      .get("/api/v1/settings/product-use/data-deletion/")
-      .then(({ data }) => {
-        return store.commit("newOnboardingFlags", { flags: data });
-      });
-  }
+  static async getProductFlags() {
+    try {
+      const { data } = await api().get("/api/v1/settings/product-use/");
 
-  static async setNewOnboardingFlag(flag, value) {
-    const payload = { [flag]: value };
-    return api()
-      .post("/api/v1/settings/product-use/data-deletion/", payload)
-      .then(({ data }) => {
-        return store.commit("newOnboardingFlags", { flags: data });
-      });
+      const { useNavigationStore } = await import("@/pinia/navigation.js");
+      const navigationStore = useNavigationStore();
+      navigationStore.loadCollapseState(data);
+
+      return data;
+    } catch (error) {
+      console.error("Failed to get product flags:", error);
+      throw error;
+    }
   }
 
   static async setFlag({ name, value }) {
@@ -82,6 +91,20 @@ export default class UserService {
           value: value,
         },
       ]
+    );
+  }
+
+  // same as above two but can set multiple flags at once
+  static async setProductUseFlags(flags) {
+    store.commit("setFlags", { flags });
+    const payload = Object.entries(flags).map(([name, value]) => ({
+      op: "add",
+      path: `/${name}`,
+      value: value,
+    }));
+    return api(null, { "content-type": "application/json-patch+json" }).patch(
+      "/api/v1/settings/product-use/",
+      payload
     );
   }
 

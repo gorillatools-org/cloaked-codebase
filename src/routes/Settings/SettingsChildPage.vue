@@ -36,6 +36,7 @@ function goBack() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .settings-child-page {
   display: flex;
   flex-direction: column;

@@ -2,9 +2,16 @@
 import store from "@/store";
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
+import { posthogCapture } from "@/scripts/posthog.js";
+import { PH_EVENT_USER_CLICKED_DOWNLOAD_APP } from "@/scripts/posthogEvents.js";
 
 function downloadMobile() {
   store.dispatch("toggleMobileAppModal", true);
+
+  // Capture PostHog event
+  posthogCapture(PH_EVENT_USER_CLICKED_DOWNLOAD_APP, {
+    source: "home_download_mobile",
+  });
 }
 </script>
 <template>
@@ -29,8 +36,9 @@ function downloadMobile() {
     </BaseText>
     <BaseButton
       variant="secondary"
-      fullWidth
+      full-width
       icon="arrow-down"
+      class="button"
       @click="downloadMobile"
     >
       Download
@@ -38,6 +46,7 @@ function downloadMobile() {
   </section>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .mobile-section {
   color: $color-primary-100;
   display: flex;

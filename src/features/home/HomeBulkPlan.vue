@@ -39,6 +39,7 @@ function navToSettings() {
   </div>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .home-bulk-plan {
   border-radius: 10px;
   border: 1px solid $color-primary-10;

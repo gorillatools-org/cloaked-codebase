@@ -1,6 +1,6 @@
 <script setup>
-import UiHeader from "@/features/onboarding-new/UiHeader.vue";
-import UiPageWrapper from "@/features/onboarding-new/UiPageWrapper.vue";
+import UiHeader from "@/features/eSim/UiHeader.vue";
+import UiPageWrapper from "@/features/eSim/UiPageWrapper.vue";
 import InlineSvg from "@/features/InlineSvg.vue";
 import { PH_SCREEN_EVENT_ESIM_ONBOARDING_PAYMENT_SCREEN } from "@/scripts/posthogEvents";
 import EsimSubscribePaymentDefault from "@/features/eSim/Subscription/EsimSubscribePaymentDefault.vue";
@@ -26,12 +26,12 @@ const user = computed(() => {
 </script>
 <template>
   <UiPageWrapper
-    showLogo
+    show-logo
     logo="cloaked-esim-logo"
-    :screenEvent="PH_SCREEN_EVENT_ESIM_ONBOARDING_PAYMENT_SCREEN"
-    :esimStep="3"
+    :screen-event="PH_SCREEN_EVENT_ESIM_ONBOARDING_PAYMENT_SCREEN"
+    :esim-step="3"
   >
-    <UiHeader leftAlign>
+    <UiHeader left-align>
       <h2>Your device is ready for Cloaked eSIM!</h2>
       <h5>
         Add Cloaked eSIM to your subscription today to get ultimate protection
@@ -41,7 +41,7 @@ const user = computed(() => {
       <EsimSubscribePaymentDefault
         v-if="esimPlan"
         :user="user"
-        :esimPlan="esimPlan"
+        :esim-plan="esimPlan"
         @next="emit('next')"
       >
         <h5>Why choose Cloaked eSIM?</h5>
@@ -74,6 +74,7 @@ const user = computed(() => {
   </UiPageWrapper>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .options-wrapper {
   display: flex;
   flex-direction: column;

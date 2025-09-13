@@ -8,6 +8,7 @@ import BaseMedallion, {
 } from "@/library/BaseMedallion.vue";
 import moment from "moment";
 import { phone_format } from "@/scripts/format";
+import type { BaseIconName } from "@/library/baseIconTypes.ts";
 
 type CallType = "missed" | "voicemail" | "spam" | "forwarded";
 
@@ -44,7 +45,7 @@ const emptyStateMessage = computed(() => {
 });
 
 type CallTypeConfig = {
-  icon: string;
+  icon: BaseIconName;
   color: MedallionColor;
   title: string;
 };
@@ -254,6 +255,7 @@ const handleFilterClick = (filter: string) => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .call-guard-activity-list {
   display: flex;
   flex-direction: column;

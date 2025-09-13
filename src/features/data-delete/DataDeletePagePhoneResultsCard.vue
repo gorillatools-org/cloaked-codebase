@@ -6,6 +6,7 @@ import DataDeleteCard from "@/features/data-delete/atoms/DataDeleteCard.vue";
 import { ref, watch } from "vue";
 import { useNameParsing } from "@/features/data-delete/composables/useNameParsing";
 import BaseText from "@/library/BaseText.vue";
+import BaseButton from "@/library/BaseButton.vue";
 
 const props = defineProps({
   result: {
@@ -20,6 +21,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isEmailCaptureModalFlag: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const { name, nameAndAge } = useNameParsing(props.result);
@@ -28,7 +33,7 @@ const hasHighRisk = ref(false);
 const hasMediumRisk = ref(false);
 const hasLowRisk = ref(false);
 
-const emit = defineEmits(["threat-level", "on-not-me"]);
+const emit = defineEmits(["threat-level", "on-not-me", "update:modelValue"]);
 watch(
   () => ({
     hasHighRisk: hasHighRisk.value,
@@ -41,6 +46,10 @@ watch(
     ),
   { immediate: true }
 );
+
+const handleEmailCapture = () => {
+  emit("update:modelValue", true);
+};
 </script>
 
 <template>
@@ -63,6 +72,18 @@ watch(
       >
         Not you?
       </BaseText>
+      <div
+        v-if="isEmailCaptureModalFlag"
+        class="data-delete-results-card__scan"
+      >
+        <BaseButton
+          variant="outline"
+          class="data-delete-results-card__scan-button"
+          @click="handleEmailCapture"
+        >
+          Send scan results via email
+        </BaseButton>
+      </div>
     </div>
     <DataDeletePageResultsCardHigh
       v-model="hasHighRisk"
@@ -135,6 +156,16 @@ watch(
 
     &:hover {
       opacity: 0.7;
+    }
+  }
+
+  &__scan {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+
+    &-button {
+      margin-top: 0;
     }
   }
 }

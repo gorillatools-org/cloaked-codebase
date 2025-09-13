@@ -1,15 +1,17 @@
 <script setup>
-import { computed } from "vue";
+import { computed, ref, onMounted, onBeforeUnmount } from "vue";
 import store from "@/store";
 import inlineSvg from "@/features/InlineSvg.vue";
 import TransactionDetails from "./RightPanel/TransactionDetails.vue";
 import CardDetails from "./RightPanel/CardDetails.vue";
 import SettingsDetails from "./RightPanel/SettingsDetails.vue";
-import FundingSources from "./RightPanel/FundingSources.vue";
 import DeleteCard from "./RightPanel/DeleteCard.vue";
 import { useToast } from "@/composables/useToast.js";
+import router from "@/routes/router";
+import CardsServices from "@/api/actions/cards-services";
 import { tools } from "@/scripts/tools";
 
+const isDeleting = ref(false);
 const toast = useToast();
 
 const props = defineProps({
@@ -31,12 +33,16 @@ const settings = computed(() => {
   return store.state.cards.rightPanel?.settings;
 });
 
-const fundingSources = computed(() => {
-  return store.state.cards.rightPanel?.fundingSources;
-});
-
 const active = computed(() => {
   return store.state.cards.rightPanel?.show;
+});
+
+onMounted(() => {
+  window.addEventListener("keydown", handleKeydown);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", handleKeydown);
 });
 
 function identity(id) {
@@ -45,6 +51,7 @@ function identity(id) {
 }
 
 function close() {
+  if (isDeleting.value) return;
   store.commit("closeRightPanel");
 }
 
@@ -52,24 +59,69 @@ function copyToClipboard(text) {
   tools.copyToClipboard(text);
   toast.success("Copied to clipboard");
 }
+
+function showDeleteModal() {
+  return store.dispatch("openModal", {
+    header: "Cancel card",
+    paragraphs: [
+      "Are you sure you want to cancel this card? This card's activity will still be accessible should you need to download it later.",
+    ],
+    button: {
+      text: "Yes, cancel card",
+      danger: true,
+      onClick: deleteCard,
+    },
+  });
+}
+
+function deleteCard() {
+  isDeleting.value = true;
+
+  CardsServices.deleteCard(card.value.identity_id, card.value.id)
+    .then(() => {
+      router
+        .push("/wallet")
+        .then(() => {
+          setTimeout(() => {
+            store.dispatch("addCardList", "");
+            store.dispatch("closeRightPanel");
+            CardsServices.getCardList();
+          }, 1);
+        })
+        .catch((e) => e);
+    })
+    .catch((err) => {
+      toast.error(
+        err.response?.data?.message || "Failed to cancel Virtual Card."
+      );
+    })
+    .finally(() => {
+      isDeleting.value = false;
+    });
+}
+
+function handleKeydown(e) {
+  if (e.key === "Escape" && active.value && !isDeleting.value) {
+    close();
+  }
+}
 </script>
 
 <template>
   <div>
     <div
       class="right-panel"
-      :class="{ active: active }"
-      @keydown.esc="close()"
+      tabindex="0"
+      :class="{ active: active, loading: isDeleting }"
     >
       <div class="container">
         <div class="header">
           <h1 v-if="transaction">Transaction details</h1>
           <h1 v-if="card">
-            {{ identity(card.identity_id)?.nickname || "New identity" }} card
+            {{ identity(card.identity_id)?.nickname || "New identity" }}
             settings
           </h1>
           <h1 v-if="settings">Wallet settings</h1>
-          <h1 v-if="fundingSources">Funding sources</h1>
 
           <div
             class="close"
@@ -83,20 +135,19 @@ function copyToClipboard(text) {
         <CardDetails v-if="card" />
         <SettingsDetails
           v-if="settings"
-          :createCardDisabled="props.createCardDisabled"
+          :create-card-disabled="props.createCardDisabled"
         />
-        <FundingSources v-if="fundingSources" />
 
         <div class="footer">
           <DeleteCard
             v-if="card"
-            :cardId="card.id"
-            :identityId="card.identity_id"
+            :loading="isDeleting"
+            @show-delete-modal="showDeleteModal"
           />
 
           <div class="id">
             <h1 v-if="transaction">Transaction ID</h1>
-            <h1 v-if="card">Card ID</h1>
+            <h1 v-if="card">Virtual Card ID</h1>
 
             <span
               v-if="transaction"
@@ -124,13 +175,14 @@ function copyToClipboard(text) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .right-panel {
   width: 550px;
   position: fixed;
   bottom: 0;
   right: 0;
   height: 100vh;
-  z-index: 105;
+  z-index: 451;
   background-color: $color-base-white-100;
   overflow: auto;
 
@@ -141,6 +193,10 @@ function copyToClipboard(text) {
   @include transform(translateX(550px));
 
   border-left: 1px solid $color-primary-10;
+
+  &.loading {
+    pointer-events: none;
+  }
 
   &.active {
     @include transform(translateX(0));

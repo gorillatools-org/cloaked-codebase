@@ -177,6 +177,9 @@ function onDragLeave() {
   display: flex;
   cursor: pointer;
   overflow: auto;
+  margin-bottom: 24px;
+
+  @include custom-scroll-bar;
 
   &__box {
     margin: auto;

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
 import EnrollmentCard from "@/features/enrollment/EnrollmentCard.vue";
@@ -12,10 +12,20 @@ import { useStateValidation } from "@/composables/validation/useStateValidation.
 import { useZipCodeValidation } from "@/composables/validation/useZipCodeValidation.js";
 import { useStreetValidation } from "@/composables/validation/useStreetValidation.js";
 import { useCityValidation } from "@/composables/validation/useCityValidation.js";
+import { posthogCapture } from "@/scripts/posthog.js";
+
+onMounted(() => posthogCapture("user_viewed_enrollment_form_addresses_manual"));
 
 const addresses = defineModel("addresses", { type: Array });
 
-const emit = defineEmits(["back"]);
+const emit = defineEmits(["back", "complete"]);
+
+defineProps({
+  isFullPage: {
+    type: Boolean,
+    default: true,
+  },
+});
 
 const countryOptions = computed(() =>
   ["US", "CA"].map((countryCode) => ({
@@ -104,16 +114,60 @@ const onAddAddress = () => {
     emit("back");
   }
 };
+
+const isAddressValid = computed(() => {
+  return (
+    street.value && city.value && state.value && country.value && zip.value
+  );
+});
+
+const isFormValid = computed(() => {
+  return (
+    isAddressValid.value &&
+    !countryError.value &&
+    !stateError.value &&
+    !zipCodeError.value &&
+    !streetError.value &&
+    !cityError.value
+  );
+});
+
+defineExpose({
+  isFormValid,
+});
+
+watch(
+  () => isAddressValid.value,
+  () => {
+    if (isAddressValid.value && validateForm()) {
+      emit("complete", {
+        address1: street.value,
+        address2: suite.value,
+        city: city.value,
+        state: state.value,
+        postal_code: zip.value,
+        country: country.value,
+      });
+    }
+  }
+);
 </script>
 
 <template>
   <div>
-    <EnrollmentCard class="page-enrollment-addresses-manual__card">
+    <EnrollmentCard
+      class="page-enrollment-addresses-manual__card"
+      :class="{
+        'page-enrollment-addresses-manual__card-full-page': isFullPage,
+      }"
+    >
       <EnrollmentCardHeader
+        v-if="isFullPage"
         icon="location-filled"
         class="page-enrollment-addresses-manual__header"
       />
       <BaseText
+        v-if="isFullPage"
         as="h2"
         variant="headline-5-bold"
         class="page-enrollment-addresses-manual__title"
@@ -183,6 +237,7 @@ const onAddAddress = () => {
       />
     </EnrollmentCard>
     <BaseButton
+      v-if="isFullPage"
       icon="check"
       size="md"
       full-width
@@ -199,8 +254,12 @@ const onAddAddress = () => {
 .page-enrollment-addresses-manual {
   &__card {
     grid-template-columns: 1fr 1fr;
-    grid-template-areas: "header header" "title title" "country country" "street street" "suite suite" "zip city" "state state";
+    grid-template-areas: "country country" "street street" "suite suite" "zip city" "state state";
     align-items: start;
+
+    &-full-page {
+      grid-template-areas: "header header" "title title" "country country" "street street" "suite suite" "zip city" "state state";
+    }
   }
 
   &__header {

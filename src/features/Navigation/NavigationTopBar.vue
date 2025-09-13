@@ -6,34 +6,64 @@ import NavigationDropdown from "@/features/Navigation/NavigationDropdown.vue";
 import NavigationAdvancedToggle from "@/features/Navigation/NavigationAdvancedToggle.vue";
 import NavigationSearchBar from "@/features/Navigation/NavigationSearchBar.vue";
 import { useBasicMode } from "@/composables/useBasicMode";
-import { isMobileDevice } from "@/scripts/regex";
+import { useDisplay } from "@/composables/useDisplay";
+import BaseIcon from "@/library/BaseIcon.vue";
+import { useNavigationStore } from "@/pinia/navigation";
 
 const route = useRoute();
-const { isBasicModeAccessible, isBasicModeEnabled } = useBasicMode();
+const { isBasicModeEnabled } = useBasicMode();
+const { isMobile } = useDisplay();
+const navigationStore = useNavigationStore();
 
-const basicModeEnabled = computed(
-  () => isBasicModeAccessible.value && isBasicModeEnabled.value
-);
+const basicModeEnabled = computed(() => isBasicModeEnabled.value);
 const inbox = computed(() => route?.meta?.nav === "inbox");
 
 const showSearchBar = computed(() => {
   const identitySearchPages = ["favorites", "ignored", "all", "category"];
   return identitySearchPages.includes(route.name?.toLowerCase()) || inbox.value;
 });
+
+const collapse = computed(() => {
+  return navigationStore.collapse;
+});
+
+const toggleCollapse = () => {
+  navigationStore.toggleCollapse();
+};
 </script>
 
 <template>
   <div class="navigation-top-bar">
-    <router-link
-      :to="basicModeEnabled ? '/summary' : '/'"
-      class="navigation-top-bar__logo"
-      tabindex="0"
-    >
-      <CloakedLogo class="navigation-top-bar__logo-image" />
-    </router-link>
+    <div class="navigation-top-bar__logo-container">
+      <router-link
+        :to="basicModeEnabled ? '/exposure-status' : '/'"
+        class="navigation-top-bar__logo"
+        tabindex="0"
+      >
+        <CloakedLogo class="navigation-top-bar__logo-image" />
+      </router-link>
+
+      <div
+        class="navigation-top-bar__logo-expand-container"
+        role="button"
+        :aria-pressed="collapse.toString()"
+        :aria-label="
+          collapse ? 'Expand navigation sidebar' : 'Collapse navigation sidebar'
+        "
+        tabindex="0"
+        @click="toggleCollapse"
+        @keydown.enter="toggleCollapse"
+        @keydown.space.prevent="toggleCollapse"
+      >
+        <BaseIcon
+          :name="collapse ? 'expand' : 'collapse'"
+          class="navigation-top-bar__logo-expand"
+        />
+      </div>
+    </div>
 
     <div
-      v-if="!isMobileDevice"
+      v-if="!isMobile"
       class="navigation-top-bar__search"
     >
       <NavigationSearchBar
@@ -43,9 +73,7 @@ const showSearchBar = computed(() => {
     </div>
 
     <div class="navigation-top-bar__actions">
-      <NavigationAdvancedToggle
-        v-if="isBasicModeAccessible && !isMobileDevice"
-      />
+      <NavigationAdvancedToggle v-if="!isMobile" />
       <NavigationDropdown />
     </div>
   </div>
@@ -59,6 +87,26 @@ const showSearchBar = computed(() => {
   justify-content: space-between;
   padding: 12px 16px;
   min-height: 60px;
+
+  &__logo-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__logo-expand-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+
+    &:hover {
+      cursor: pointer;
+      background-color: $color-primary-5;
+    }
+  }
 
   &__logo {
     width: 96px;

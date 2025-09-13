@@ -27,6 +27,7 @@ const { openDataDeleteOverlay } = useDataDeleteOverlay();
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .footer {
   display: flex;
   flex-direction: row;

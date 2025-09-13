@@ -24,6 +24,49 @@ export const toApiPayload = (request) => {
   };
 };
 
+export const toApiPayloadMapped = (request) => {
+  const newRequest = {};
+  Object.keys(request).forEach((key) => {
+    if (key === "name") {
+      newRequest[key] = {
+        first: toValue(request)?.name?.first || undefined,
+        last: toValue(request)?.name?.last || undefined,
+        middle: toValue(request)?.name?.middle || undefined,
+        prefix: toValue(request)?.name?.prefix || undefined,
+        suffix: toValue(request)?.name?.suffix || undefined,
+      };
+    }
+    if (key === "other_names") {
+      newRequest[key] = toValue(request)?.other_names || [];
+    }
+
+    if (key === "dob") {
+      const [month, day, year] = (toValue(request)?.dob ?? "").split("-");
+      newRequest[key] =
+        year && month && day ? `${year}-${month}-${day}` : undefined;
+    }
+
+    if (key === "addresses") {
+      newRequest[key] = toValue(request)?.addresses || [];
+    }
+
+    if (key === "email_addresses") {
+      newRequest[key] = toValue(request)?.email_addresses || [];
+    }
+
+    if (key === "phone_numbers") {
+      newRequest[key] =
+        toValue(request)?.phone_numbers?.map(formatPhoneStringBasic) || [];
+    }
+
+    if (key === "ssn") {
+      const ssnsValue = toValue(request)?.ssn?.split("-").join("") || null;
+      newRequest.ssns = ssnsValue ? [ssnsValue] : [];
+    }
+  });
+  return newRequest;
+};
+
 export const toEnrollmentRequest = (apiResponse) => {
   const [year, month, day] = (apiResponse?.dob ?? "").split("-");
 

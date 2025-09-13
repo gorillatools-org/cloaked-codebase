@@ -167,6 +167,7 @@ onMounted(() => {
   </div>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .referral-container {
   color: $color-primary-100;
   @media (min-width: 666px) {

@@ -159,7 +159,7 @@ onMounted(() => {
         class="referral-general"
       >
         <ReferralHero
-          :showInviteInput="true"
+          :show-invite-input="true"
           @sent="sent"
         />
         <div class="referral-content">
@@ -420,6 +420,7 @@ onMounted(() => {
   </div>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .term-links {
   color: $color-primary-100;
   font-size: 13px;

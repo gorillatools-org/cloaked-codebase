@@ -6,6 +6,9 @@ import { cleanDb } from "@/store/modules/localdb";
 import PersonalInfoService from "@/api/settings/personal-services";
 import SubscriptionService from "@/api/settings/subscription-services";
 import router from "@/routes/router";
+import { extensionMessaging } from "@/scripts/messaging";
+import { EXTENSION_MESSAGE_TYPES } from "@/scripts/constants";
+
 export const auth_channel = new BroadcastChannel("auth_channel");
 export const refresh_channel = new BroadcastChannel("refresh_channel");
 
@@ -48,6 +51,25 @@ window.addEventListener("storage", (storage) => {
   }
 });
 
+const sendLogoutEventToExtension = async () => {
+  if (
+    extensionMessaging &&
+    typeof extensionMessaging.sendMessage === "function"
+  ) {
+    try {
+      await extensionMessaging.sendMessage({
+        type: EXTENSION_MESSAGE_TYPES.DASHBOARD_LOGGED_OUT,
+        unencrypted: true,
+      });
+    } catch (err) {
+      console.warn(
+        "[auth] Failed to send DASHBOARD_LOGGED_OUT event to extension:",
+        err
+      );
+    }
+  }
+};
+
 export const logout = async ({
   dontSendEvent = false,
   callApi = true,
@@ -64,6 +86,8 @@ export const logout = async ({
       // do nothing
     }
   }
+
+  sendLogoutEventToExtension();
 
   await cleanDb();
   window.localStorage.clear();

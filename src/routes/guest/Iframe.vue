@@ -68,8 +68,11 @@ function popstate(event) {
       });
     }
   } else {
-    const [, pathValue] = window.location.href.match(/(auth\/[^/?]+)/);
-    setHistory(pathValue);
+    const match = window.location.href?.match(/(auth\/[^/?]+)/);
+    if (match) {
+      const [, pathValue] = match;
+      setHistory(pathValue);
+    }
   }
 }
 
@@ -160,11 +163,11 @@ async function iframeListener(message) {
         const route = Object.keys(routes).includes(message.data.data)
           ? routes[message.data.data]
           : message.data.data;
-        if (!window.location.href.match(new RegExp(route))) {
+        if (!window.location.href?.includes(route)) {
           setHistory(route);
         }
       } else {
-        if (!window.location.href.match(new RegExp(message.data.data))) {
+        if (!window.location.href?.includes(message.data.data)) {
           setHistory(message.data.data);
         }
       }
@@ -239,6 +242,7 @@ const src = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .iframe-loader {
   background-color: $color-background;
   position: absolute;

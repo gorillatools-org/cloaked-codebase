@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch, nextTick } from "vue";
 import CardSingle from "./CardsListing/CardSingle";
 import CardsServices from "@/api/actions/cards-services";
 import store from "@/store";
@@ -7,16 +7,34 @@ import inlineSvg from "@/features/InlineSvg.vue";
 import ReceivePaymentsPanel from "./ReceivePaymentsPanel.vue";
 import UiMenu from "@/features/UiMenu/UiMenu.vue";
 import UiMenuButton from "@/features/UiMenu/UiMenuButton.vue";
+import { useRoute, useRouter } from "vue-router";
+import CardNewSkeleton from "./CardsListing/CardNewSkeleton.vue";
 
-const emit = defineEmits(["type"]);
+const emit = defineEmits(["type", "addCard"]);
+
+const route = useRoute();
+const router = useRouter();
+
+const loading = ref(true);
+const receivePaymentsActive = ref(false);
+const filterOption = ref("Active");
+
+onMounted(() => {
+  fetchCardsForCurrentFilter();
+  receivePaymentsCheck();
+});
+
+const active = computed(() => {
+  return store.state.cards.rightPanel.show;
+});
 
 const cards = computed(() => {
   return store.state.cards.cards;
 });
 
-const loading = ref(true);
-
-const receivePaymentsActive = ref(false);
+const isCanceledFilterActive = computed(() => {
+  return filterOption.value === "Canceled";
+});
 
 const collection = computed(() => {
   return store.state.authentication?.user?.card_collections;
@@ -34,32 +52,6 @@ const collectionsActive = computed(() => {
   );
 });
 
-const active = computed(() => {
-  return store.state.cards.rightPanel.show;
-});
-
-watch(cards, () => {
-  if (cards.value?.results?.length < 0) {
-    loading.value = true;
-    return;
-  }
-
-  // Determine mismatch based on filterOption and flags
-  let isMismatch =
-    cards.value?.results == null ||
-    (filterOption.value === "Canceled" &&
-      cards.value?.results?.some((card) => !card.canceled)) || // In "Canceled" view, all cards should have `canceled = true`
-    (filterOption.value === "Active" &&
-      cards.value?.results?.some((card) => card.canceled || card.gift)); // In "Active" view, no cards should have `canceled = true` or `gift = true`
-
-  if (isMismatch) {
-    fetchCardsForCurrentFilter();
-  } else {
-    loading.value = true;
-    loading.value = false;
-  }
-});
-
 const fetchCardsForCurrentFilter = () => {
   if (filterOption.value === "Canceled") {
     cardsCanceled();
@@ -68,22 +60,19 @@ const fetchCardsForCurrentFilter = () => {
   }
 };
 
-onMounted(() => {
-  fetchCardsForCurrentFilter();
-});
-
-const filterOption = ref("Active");
+const switchToActiveAndFetchCards = () => {
+  filterOption.value = "Active";
+  return cardsActive();
+};
 
 const changeFilter = (newFilter) => {
   filterOption.value = newFilter;
   emit("type", { type: newFilter });
 };
 
-watch(filterOption, fetchCardsForCurrentFilter);
-
 const cardsActive = () => {
   loading.value = true;
-  CardsServices.getCardList().then(() => {
+  return CardsServices.getCardList().then(() => {
     setTimeout(() => {
       loading.value = false;
     }, 1000);
@@ -108,12 +97,55 @@ function receivePaymentsCheck() {
   }
 }
 
-onMounted(() => {
+watch(outstandingBalance, () => {
   receivePaymentsCheck();
 });
 
-watch(outstandingBalance, () => {
-  receivePaymentsCheck();
+watch(filterOption, (newFilter, oldFilter) => {
+  if (newFilter !== oldFilter) {
+    fetchCardsForCurrentFilter();
+    router.push("/virtual-cards");
+  }
+});
+
+watch(cards, () => {
+  if (cards.value?.results?.length < 0) {
+    loading.value = true;
+    return;
+  }
+
+  // Determine mismatch based on filterOption and flags
+  let isMismatch =
+    cards.value?.results == null ||
+    (filterOption.value === "Canceled" &&
+      cards.value?.results?.some((card) => !card.canceled)) || // In "Canceled" view, all cards should have `canceled = true`
+    (filterOption.value === "Active" &&
+      cards.value?.results?.some((card) => card.canceled || card.gift)); // In "Active" view, no cards should have `canceled = true` or `gift = true`
+
+  if (isMismatch) {
+    fetchCardsForCurrentFilter();
+  } else {
+    loading.value = true;
+    loading.value = false;
+  }
+});
+
+watch(
+  () => [route.params.id, cards.value?.results],
+  ([cardId, cards]) => {
+    if (cardId && cards) {
+      nextTick(() => {
+        const cardElement = document.querySelector(`#card-${cardId}`);
+        if (cardElement) {
+          cardElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      });
+    }
+  }
+);
+
+defineExpose({
+  switchToActiveAndFetchCards,
 });
 </script>
 
@@ -125,11 +157,11 @@ watch(outstandingBalance, () => {
     <ReceivePaymentsPanel
       v-if="receivePaymentsActive"
       :active="receivePaymentsActive"
-      :outstandingBalance="outstandingBalance"
+      :outstanding-balance="outstandingBalance"
     />
 
     <div class="title">
-      <h1>Cloaked cards</h1>
+      <h1>Wallet</h1>
 
       <div class="sort-item">
         <UiMenu placement="bottom-end">
@@ -173,20 +205,36 @@ watch(outstandingBalance, () => {
       </div>
     </div>
 
-    <div
-      v-if="cards?.results?.length"
-      class="list-details"
-    >
+    <div class="list-details">
       <div
-        v-if="!loading"
+        v-if="!loading && cards?.results?.length"
         class="list"
       >
         <CardSingle
           v-for="card in cards.results"
+          :id="`card-${card.id}`"
           :key="card.id"
           :card="card"
           :sent="filterOption === 'Active'"
         />
+      </div>
+
+      <div v-if="!loading && cards.results.length === 0">
+        <div
+          v-if="isCanceledFilterActive"
+          class="empty"
+        >
+          <p>No cards found</p>
+        </div>
+        <div
+          v-else
+          class="list"
+        >
+          <CardNewSkeleton
+            class="card"
+            @click="emit('addCard')"
+          />
+        </div>
       </div>
     </div>
 
@@ -196,17 +244,11 @@ watch(outstandingBalance, () => {
     >
       <inlineSvg name="loading-small" />
     </div>
-
-    <div
-      v-if="!cards?.results?.length && !loading"
-      class="empty"
-    >
-      <p>No cards found</p>
-    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .cards {
   width: 400px;
   height: calc(100vh - 60px);
@@ -303,10 +345,10 @@ watch(outstandingBalance, () => {
         --distance: calc(222px - 95px);
 
         opacity: 0;
-        animation: fadein 0.3s;
+        animation: fade-in 0.3s;
         animation-fill-mode: forwards;
 
-        @keyframes fadein {
+        @keyframes fade-in {
           0% {
             opacity: 0;
             top: 80px;

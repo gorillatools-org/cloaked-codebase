@@ -126,11 +126,11 @@ const selectedFilterRuleKey = computed(() => {
       :selected="props.selected"
       :options="props.options"
       :allowed="props.allowed"
-      :defaultValue="props.defaultValue"
+      :default-value="props.defaultValue"
       :unverified-entries="props.unverifiedEntries"
       @select="(selection) => $emit('select', selection)"
       @deselect="$emit('deselect')"
-      @sentToSettings="$emit('sentToSettings')"
+      @sent-to-settings="$emit('sentToSettings')"
     />
     <div
       v-if="props.locked"
@@ -207,6 +207,7 @@ const selectedFilterRuleKey = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .fwd-section-wrapper {
   border: 1px solid $color-primary-5;
   border-radius: 15px;

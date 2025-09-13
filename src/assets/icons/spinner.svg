@@ -14,7 +14,8 @@ export function render(_ctx, _cache) {
       default: _withCtx(() => _cache[0] || (_cache[0] = [
         _createTextVNode("@keyframes spin{0%{transform:rotate(0deg)}to{transform:rotate(360deg)}}")
       ])),
-      _: 1
+      _: 1,
+      __: [0]
     })),
     _cache[1] || (_cache[1] = _createElementVNode("circle", {
       cx: "10",

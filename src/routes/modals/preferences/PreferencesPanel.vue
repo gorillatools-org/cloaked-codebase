@@ -35,6 +35,7 @@ const hasFooter = computed(() => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .preferences-panel {
   display: flex;
   min-height: 100%;

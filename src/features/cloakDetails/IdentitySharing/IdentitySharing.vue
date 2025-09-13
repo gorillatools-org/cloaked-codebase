@@ -67,10 +67,10 @@ defineEmits([
 <template>
   <div>
     <IdentitySharingButton
-      :isLoading="props.isLoading"
+      :is-loading="props.isLoading"
       :is-active="props.value"
       :is-shared="props.isShared"
-      :hasAnnouncementTooltip="props.hasAnnouncementTooltip"
+      :has-announcement-tooltip="props.hasAnnouncementTooltip"
       :value="props.isTooltipOpen"
       @input="$emit('set-is-tooltip-open', $event)"
       @click="props.hasAnnouncementTooltip || $emit('input', true)"
@@ -79,11 +79,11 @@ defineEmits([
       <IdentitySharingModalPublished
         v-if="props.activeModal === 'IdentitySharingModalPublished'"
         without-overlay
-        :isLoading="props.isLoading"
+        :is-loading="props.isLoading"
         :identity="identity"
         :sharing="props.sharing"
-        :isGeneratingLink="props.isGeneratingLink"
-        :isGeneratingPassword="props.isGeneratingPassword"
+        :is-generating-link="props.isGeneratingLink"
+        :is-generating-password="props.isGeneratingPassword"
         :value="props.value"
         @input="$emit('input', $event)"
         @expired="$emit('expired', $event)"
@@ -100,7 +100,7 @@ defineEmits([
         v-else-if="props.activeModal === 'IdentitySharingModalExpired'"
         without-overlay
         :identity="identity"
-        :isLoading="props.isLoading"
+        :is-loading="props.isLoading"
         :value="props.value"
         @input="$emit('input', $event)"
         @open-create="$emit('set-active-modal', 'IdentitySharingModalCreate')"
@@ -108,7 +108,7 @@ defineEmits([
       <IdentitySharingModalDelete
         v-else-if="props.activeModal === 'IdentitySharingModalDelete'"
         without-overlay
-        :isLoading="props.isLoading"
+        :is-loading="props.isLoading"
         :value="props.value"
         @input="$emit('input', $event)"
         @delete="$emit('delete')"
@@ -119,7 +119,7 @@ defineEmits([
       <IdentitySharingModalCreate
         v-else
         without-overlay
-        :isLoading="props.isLoading"
+        :is-loading="props.isLoading"
         :is-shared="props.isShared"
         :identity="identity"
         :sharing="props.sharing"

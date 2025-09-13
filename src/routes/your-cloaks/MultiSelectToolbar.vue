@@ -190,7 +190,7 @@ function removeIdentityFromCategory() {
           </BaseText>
         </div>
         <div v-if="route.name.toLowerCase().includes('category')">
-          <EditCategoryButton :categoryId="route.params.id" />
+          <EditCategoryButton :category-id="route.params.id" />
         </div>
       </div>
       <div
@@ -203,7 +203,7 @@ function removeIdentityFromCategory() {
             width="240px"
             max-height="295px"
             placement="bottom-start"
-            hasContentClickClose
+            has-content-click-close
           >
             <div class="filter-item no-padding">
               <InlineSvg name="arrow-right-filter" />
@@ -431,6 +431,7 @@ function removeIdentityFromCategory() {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .multiselect-filters {
   height: 60px;
   display: flex;

@@ -127,7 +127,7 @@ const unwatchSimId = watch(
           v-if="state.deviceType === 'android'"
           readonly
           :value="state.smdpCodeCombo"
-          :isLoading="state.loading"
+          :is-loading="state.loading"
           label="Full String"
         />
       </AppModalParagraph>
@@ -141,7 +141,7 @@ const unwatchSimId = watch(
         <AtomInputInternalLabels
           readonly
           :value="state.smdp"
-          :isLoading="state.loading"
+          :is-loading="state.loading"
           label="SM-DP+ Address"
         />
       </AppModalParagraph>
@@ -149,7 +149,7 @@ const unwatchSimId = watch(
         <AtomInputInternalLabels
           readonly
           :value="state.activationCode"
-          :isLoading="state.loading"
+          :is-loading="state.loading"
           label="Activation Code"
         />
       </AppModalParagraph>
@@ -158,6 +158,7 @@ const unwatchSimId = watch(
   </AppModal>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .separator {
   background: $color-primary-20;
   position: relative;

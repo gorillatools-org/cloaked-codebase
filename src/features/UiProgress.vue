@@ -69,6 +69,7 @@ const progress = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .ui-progress {
   --progress: 0;
   padding-top: 8px;

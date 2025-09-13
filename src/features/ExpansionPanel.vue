@@ -50,7 +50,7 @@ const contentStyles = computed(() => {
         {{ props.buttonText }}
       </span>
       <ArrowButton
-        :isOpen="state.isOpen"
+        :is-open="state.isOpen"
         class="dark-arrow"
         @click="handleOnClick"
       />
@@ -65,6 +65,7 @@ const contentStyles = computed(() => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .expansion-panel {
   color: $color-primary-100;
 

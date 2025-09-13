@@ -109,7 +109,7 @@ const focusState = computed((oldValue) => {
     flex: 1;
     border-radius: $input-border-radius;
     color: $color-primary-100;
-    background-color: $color-primary-1;
+    background-color: $color-primary-10;
     border: 1px solid $color-primary-20;
   }
 }

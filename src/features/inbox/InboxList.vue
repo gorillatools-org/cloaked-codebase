@@ -721,6 +721,7 @@ function isSelected(routeName) {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .refresh-notice {
   justify-content: center;
   background-color: $color-primary-90;

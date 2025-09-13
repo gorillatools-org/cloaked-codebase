@@ -4,7 +4,7 @@ import BaseSheet from "@/library/BaseSheet.vue";
 import BaseText from "@/library/BaseText.vue";
 import EnrollmentTags from "@/features/enrollment/EnrollmentTags.vue";
 import EnrollmentTag from "@/features/enrollment/EnrollmentTag.vue";
-import { useNameValidation } from "@/composables/validation/useNameValidation.js";
+import { usePersonalNameValidation } from "@/composables/validation/usePersonalNameValidation.js";
 
 const names = defineModel("names", { type: Array });
 const prefix = defineModel("prefix", { type: String });
@@ -19,19 +19,19 @@ const {
   error: firstNameError,
   validate: validateFirstName,
   validateDebounced: validateFirstNameDebounced,
-} = useNameValidation(firstName);
+} = usePersonalNameValidation(firstName);
 
 const {
   error: middleNameError,
   validate: validateMiddleName,
   validateDebounced: validateMiddleNameDebounced,
-} = useNameValidation(middleName, { isRequired: false });
+} = usePersonalNameValidation(middleName, { isRequired: false });
 
 const {
   error: lastNameError,
   validate: validateLastName,
   validateDebounced: validateLastNameDebounced,
-} = useNameValidation(lastName);
+} = usePersonalNameValidation(lastName);
 
 const validateForm = () => {
   validateFirstName();
@@ -131,6 +131,7 @@ defineExpose({ validateForm });
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .monitoring-settings-basic-names {
   display: grid;
   row-gap: 24px;

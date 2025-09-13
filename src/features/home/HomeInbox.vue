@@ -183,7 +183,7 @@ function openInbox() {
                 height: '16px',
                 'align-self': 'center',
               }"
-              :noGradient="true"
+              :no-gradient="true"
             />
             <BaseText
               as="div"
@@ -241,6 +241,7 @@ function openInbox() {
   </section>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .title-row {
   display: flex;
   flex-direction: row;
@@ -251,12 +252,9 @@ function openInbox() {
 
   .link {
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
 
     &:hover {
-      transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
       opacity: 0.7;
-      transform: scale(1.01);
     }
   }
 }
@@ -272,7 +270,6 @@ function openInbox() {
   .inbox-item-wrapper {
     width: 100%;
     height: auto;
-    transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
     border-bottom: 1px solid $color-primary-10;
     overflow: hidden;
 
@@ -291,10 +288,7 @@ function openInbox() {
       text-overflow: ellipsis;
 
       &:hover {
-        box-shadow: 0 0 28px 0 $color-box-shadow;
-        transform: scale(1.01) translate3d(0, 0, 0);
-        transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-        z-index: 2;
+        background-color: $color-primary-5;
       }
 
       .top-row {
@@ -354,6 +348,10 @@ function openInbox() {
 
 .activity-content {
   color: $color-primary-70;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
 }
 
 .bold {

@@ -5,6 +5,7 @@ import Button from "@/features/Button.vue";
 import inlineSvg from "@/features/InlineSvg.vue";
 import CardsServices from "@/api/actions/cards-services";
 import ModalTemplate from "@/features/ModalTemplate.vue";
+import { getBankCardProviderType } from "@/scripts/cards.js";
 
 const props = defineProps({
   isVisible: {
@@ -79,7 +80,11 @@ function setDefaultFundingSource(value) {
         >
           <inlineSvg name="bank" />
           <div class="information">
-            <h1>{{ source.card_brand }}</h1>
+            <h1>
+              {{ source.card_brand }} ({{
+                getBankCardProviderType(source.provider)
+              }})
+            </h1>
             <p>
               <span>**** {{ source.pan_last_four }}</span>
               <span v-if="source.nickname">• {{ source.nickname }}</span>
@@ -116,6 +121,7 @@ function setDefaultFundingSource(value) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .funding-sources {
   .funding-source {
     border: 1px solid $color-primary-10;

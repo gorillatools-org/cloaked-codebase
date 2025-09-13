@@ -390,12 +390,12 @@ async function save() {
           :max="maxLength"
           tabindex="2"
           :value="state.card.card_number"
-          errorMessage="Not a valid card number"
+          error-message="Not a valid card number"
           @input="(event) => (state.card.card_number = event)"
           @blur="validateCardNumber"
           @focus="clearErrorType('card_number')"
         />
-        <CardLogo :cardType="cardType" />
+        <CardLogo :card-type="cardType" />
       </div>
       <div>
         <PreferencesInput
@@ -406,7 +406,7 @@ async function save() {
           :max="5"
           :format="formatCardExp"
           :value="state.card.expiry_date"
-          errorMessage="Not a valid expiration date"
+          error-message="Not a valid expiration date"
           @input="(event) => (state.card.expiry_date = event)"
           @blur="validateCardExp"
           @focus="clearErrorType('expiry_date')"
@@ -421,7 +421,7 @@ async function save() {
           :max="4"
           tabindex="4"
           :value="state.card.cvv"
-          errorMessage="Not a valid security code"
+          error-message="Not a valid security code"
           @input="(event) => (state.card.cvv = event)"
           @blur="validateCardCvv"
           @focus="clearErrorType('cvv')"
@@ -469,6 +469,7 @@ async function save() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .preferences-title {
   font-family: $global-font;
   font-style: normal;

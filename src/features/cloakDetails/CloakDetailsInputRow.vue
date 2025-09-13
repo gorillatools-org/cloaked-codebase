@@ -245,7 +245,7 @@ function saveNotes() {
         :title="props.showCopyTooltip ? props.tooltipMessage : ''"
         class="cloak-details-input-row__input"
         align-x="center"
-        :isOnSharedPage="props.isOnSharedPage"
+        :is-on-shared-page="props.isOnSharedPage"
       >
         <div
           v-if="props.loading"
@@ -257,10 +257,10 @@ function saveNotes() {
         <slot
           v-else
           name="input"
-          :isEditable="props.isEditable"
+          :is-editable="props.isEditable"
         >
           <CloakIdentifierIcon
-            :fieldType="'cloaked'"
+            :field-type="'cloaked'"
             :locked="true"
           />
           <div
@@ -346,7 +346,7 @@ function saveNotes() {
         v-if="props.showLockIcon"
         :title="props.numberLockingToolTipText"
         align-x="center"
-        :isOnSharedPage="false"
+        :is-on-shared-page="false"
         max-width="255"
       >
         <slot name="numberLocking" />
@@ -363,6 +363,7 @@ function saveNotes() {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .cloak-details-input-row {
   --input-wrapper-background: none;
   --input-wrapper-color: $color-primary-50;

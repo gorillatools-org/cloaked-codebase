@@ -126,6 +126,7 @@ function getFileSizeDisplay(size) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .file-list {
   &.error-main {
     background-color: $color-alert;

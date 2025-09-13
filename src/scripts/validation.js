@@ -9,10 +9,10 @@ export const password = (value) => {
 
 export const email = (value) => {
   const rules = new RegExp(
-    /^[a-zA-Z0-9~\-_.+]+@[a-zA-Z0-9\-_]+\.[a-zA-Z0-9.]+$/,
+    /^[a-zA-Z0-9~\-_.+]+@[a-zA-Z0-9\-_]+\.[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$/,
     "i"
   );
-  return rules.exec(value);
+  return !!rules.exec(value);
 };
 
 export const phone = (value, region = "US") => {
@@ -69,6 +69,13 @@ export const formatMultiplePillEntries = (incoming) => {
   return incoming.map((item) => item.trim()).filter((item) => !!item);
 };
 
+export const ssn = (value) => {
+  const rules = new RegExp(
+    /^(?!(000|666|9))\d{3}-?(?!00)\d{2}-?(?!0000)\d{4}$/
+  );
+  return !!rules.exec(value);
+};
+
 export const bankCardNumber = (value) => {
   const rules = new RegExp(/^\d{4}\s\d{4}\s\d{4}\s\d{4}$/, "i");
   return rules.exec(value);
@@ -94,6 +101,7 @@ export const validation = {
   url,
   maxPayload,
   formatMultiplePillEntries,
+  ssn,
   bankCardNumber,
   bankCardExpiresAt,
   bankCardExpiresAtInFuture,

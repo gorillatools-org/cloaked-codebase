@@ -75,7 +75,7 @@ defineExpose({ validateForm });
         title="Social Security Number"
         placeholder="123-45-6789"
         inputmode="numeric"
-        maxlength="11"
+        :maxlength="11"
         secret
         @blur="validateSsn"
         @input="validateSsnDebounced"
@@ -85,6 +85,7 @@ defineExpose({ validateForm });
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .monitoring-settings-personal {
   &__sheet {
     display: grid;

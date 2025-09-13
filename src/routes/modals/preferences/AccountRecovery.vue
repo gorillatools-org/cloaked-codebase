@@ -73,13 +73,13 @@ function goToRecoveryPassphrase() {
     <div class="section forward-panel">
       <AccountRecoveryPhone
         :phones="state.phones"
-        @toggleBack="emit('toggleBack')"
+        @toggle-back="emit('toggleBack')"
         @refresh="refreshPhones"
         @delete="(phoneId) => deletePhone(phoneId)"
       />
       <AccountRecoveryEmail
         :emails="state.emails"
-        @toggleBack="emit('toggleBack')"
+        @toggle-back="emit('toggleBack')"
         @refresh="refreshEmails"
         @delete="(emailId) => deleteEmail(emailId)"
       />

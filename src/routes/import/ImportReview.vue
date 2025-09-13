@@ -215,9 +215,9 @@ onBeforeMount(() => {
         <template #footer>
           <InfiniteLoader
             v-if="hasMoreIdentities"
-            :allDataFetched="!hasMoreIdentities"
+            :all-data-fetched="!hasMoreIdentities"
             class="import-mapping__infinite-loader"
-            @loadMore="loadMoreIdentities"
+            @load-more="loadMoreIdentities"
           />
         </template>
       </ReviewTable>

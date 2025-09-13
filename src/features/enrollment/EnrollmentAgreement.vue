@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, toRef } from "vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
 import DataDeleteAgreementModal from "@/features/data-delete/DataDeleteAgreementModal.vue";
@@ -23,9 +23,9 @@ const props = defineProps({
 const model = defineModel({ type: Boolean });
 
 const formattedName = useFormattedName(
-  props.firstName,
-  props.middleName,
-  props.lastName
+  toRef(() => props.firstName),
+  toRef(() => props.middleName),
+  toRef(() => props.lastName)
 );
 
 const isModalOpen = ref(false);

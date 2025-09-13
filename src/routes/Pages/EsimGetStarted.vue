@@ -120,14 +120,14 @@ watch(
   <EsimStepZipCode
     v-else-if="state.eSimStep === 1"
     @next="nextESimStep"
-    @updateZipCode="updateZipCode"
+    @update-zip-code="updateZipCode"
   />
   <EsimStepCheckLock
     v-else-if="state.eSimStep === 2"
-    :deviceType="state.deviceType"
-    :isPaid="state.isPaid"
+    :device-type="state.deviceType"
+    :is-paid="state.isPaid"
     @next="nextESimStep"
-    @updateDeviceType="updateDeviceType"
+    @update-device-type="updateDeviceType"
   />
 
   <EsimStepPay
@@ -136,13 +136,13 @@ watch(
   />
   <EsimStepCompatible
     v-else-if="state.eSimStep === 4 && state.showIncompatibleScreen === false"
-    :deviceType="state.deviceType"
-    :isPaid="state.isPaid"
+    :device-type="state.deviceType"
+    :is-paid="state.isPaid"
     :skipped="state.skipped"
     @next="nextESimStep"
-    @updateDeviceType="updateDeviceType"
+    @update-device-type="updateDeviceType"
     @incompatible="state.showIncompatibleScreen = true"
-    @updateSimId="state.simId = $event"
+    @update-sim-id="state.simId = $event"
   />
   <EsimStepCompatibleError
     v-else-if="state.eSimStep === 4 && state.showIncompatibleScreen === true"
@@ -151,35 +151,35 @@ watch(
 
   <EsimStepAreaCode
     v-else-if="state.eSimStep === 5"
-    :zipCodeInitialValue="state.zipCode"
-    :simId="state.simId"
+    :zip-code-initial-value="state.zipCode"
+    :sim-id="state.simId"
     @next="nextESimStep"
-    @updateNumber="updateNewNumber"
-    @updateZipCode="updateZipCode"
+    @update-number="updateNewNumber"
+    @update-zip-code="updateZipCode"
   />
   <EsimStepConfirmNumber
     v-else-if="state.eSimStep === 6"
-    :newNumber="state.newNumber"
-    :zipCode="state.zipCode"
-    :simId="state.simId"
+    :new-number="state.newNumber"
+    :zip-code="state.zipCode"
+    :sim-id="state.simId"
     @next="nextESimStep"
-    @updateNumber="updateNewNumber"
+    @update-number="updateNewNumber"
   />
   <EsimStepInstallSettings
     v-else-if="state.eSimStep === 7"
-    :deviceType="state.deviceType"
-    :simId="state.simId"
-    @updateDeviceType="updateDeviceType"
+    :device-type="state.deviceType"
+    :sim-id="state.simId"
+    @update-device-type="updateDeviceType"
     @next="nextESimStep"
   />
   <EsimStepInstallData
     v-else-if="state.eSimStep === 8"
-    :deviceType="state.deviceType"
-    @updateDeviceType="updateDeviceType"
+    :device-type="state.deviceType"
+    @update-device-type="updateDeviceType"
     @next="nextESimStep"
   />
   <EsimStepFinished
     v-else-if="state.eSimStep === 9"
-    :newNumber="state.newNumber"
+    :new-number="state.newNumber"
   />
 </template>

@@ -11,7 +11,6 @@ import { PH_EVENT_USER_VIEWED_DATA_DELETION_PHONE_VERIFICATION } from "@/scripts
 import BaseText from "@/library/BaseText.vue";
 import router from "@/routes/router";
 import { DOWNLOAD_APP_URL } from "@/scripts/constants";
-import { isMobileDevice } from "@/scripts/regex";
 import store from "@/store";
 import SubscriptionService from "@/api/settings/subscription-services";
 import UserService from "@/api/actions/user-service";
@@ -19,11 +18,14 @@ import { DATA_DELETE_REQUESTED } from "@/scripts/userFlags";
 import { useStripeIntentPrefetch } from "@/features/subscribe/composables/useStripeIntentPrefetch.js";
 import { useToast } from "@/composables/useToast.js";
 import { phone } from "phone";
+import { useDisplay } from "@/composables/useDisplay";
 
 const toast = useToast();
 defineOptions({ inheritAttrs: false });
 
 const { prefetchIntents } = useStripeIntentPrefetch();
+
+const { isMobile } = useDisplay();
 
 const props = defineProps({
   headlessUser: {
@@ -75,7 +77,7 @@ function redirectToLogin() {
   toast.success(
     "Looks like you already have a Cloaked account - we'll need you to enter your password."
   );
-  if (isMobileDevice) {
+  if (isMobile.value) {
     nextTick(() => {
       toast.success(
         "If you're looking to access the Cloaked mobile app, open the app and tap log in. Then, input your phone number to proceed."
@@ -89,7 +91,7 @@ function redirectToApp(verificationCode) {
   toast.success(
     "Looks like you already have a Cloaked account - signing in now."
   );
-  if (isMobileDevice) {
+  if (isMobile.value) {
     nextTick(() => {
       toast.success(
         "If you're looking to access the Cloaked mobile app, open the app and tap log in."
@@ -112,9 +114,7 @@ async function redirectToRegistration() {
     });
     await prefetchIntents();
     return searchRecords(); // This navigates user to search results page
-
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     toast.error("Failed to process your request. Please try again.");
   } finally {
     isDecidingWhereToRedirect.value = false;
@@ -323,7 +323,7 @@ watch(
         "
         @click="sendVerificationCodeAndCoolDown"
       >
-        <template v-if="isDecidingWhereToRedirect">
+        <template v-if="isDecidingWhereToRedirect || isFetching">
           Gathering data
           <Spinner />
         </template>
@@ -356,11 +356,11 @@ watch(
           class="data-delete-otp__link"
           @click="linkToLogin"
         >
-          {{ isMobileDevice ? "here" : "here." }}
+          {{ isMobile ? "here" : "here." }}
         </BaseText>
 
         <BaseText
-          v-if="isMobileDevice"
+          v-if="isMobile"
           variant="body-small-medium"
         >
           {{ " on desktop or" }}
@@ -395,13 +395,12 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .data-delete-otp {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin: 0 auto;
-  padding-left: 40px;
-  padding-right: 40px;
   width: 100%;
 
   @media all and (min-width: $screen-xl) {
@@ -503,6 +502,8 @@ watch(
 
   &__error {
     margin-top: 12px;
+    text-align: center;
+    max-width: 300px;
   }
 
   &__login {

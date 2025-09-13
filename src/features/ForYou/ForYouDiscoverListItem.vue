@@ -1,12 +1,15 @@
 <script setup>
+import { markRaw, ref, computed } from "vue";
 import BaseMedallion from "@/library/BaseMedallion.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
 import BaseProgressTag from "@/library/BaseProgressTag.vue";
-import { useToast } from "@/composables/useToast.js";
-import { computed } from "vue";
+import IdentityTheftProtectionModal from "@/features/IdentityTheftProtection/IdentityTheftProtectionModal.vue";
+import { useRouter } from "vue-router";
+import store from "@/store";
 
-const toast = useToast();
+const router = useRouter();
+const identityTheftProtectionModal = ref(false);
 
 const props = defineProps({
   feature: {
@@ -19,18 +22,21 @@ const iconMapping = {
   vpn: "website",
   id_monitoring: "search-user",
   heimdall: "phone-shield",
+  id_theft: "shield-tick",
 };
 
 const progressMapping = {
   vpn: "For Your Privacy",
   id_monitoring: "For Your Safety",
   heimdall: "For Tackling Spam",
+  id_theft: "Securing Your Identity",
 };
 
 const colorMapping = {
   vpn: "safe-zone-blue",
   id_monitoring: "safe-zone-green",
   heimdall: "spam-protection",
+  id_theft: "safe-zone-blue",
 };
 
 const icon = computed(() => {
@@ -46,7 +52,31 @@ const color = computed(() => {
 });
 
 const handleClick = () => {
-  toast.success("Details coming soon!");
+  // Check if this is the identity theft protection feature
+  if (props.feature.internal_name === "id_theft") {
+    openIdentityTheftProtectionModal();
+  } else {
+    router.push(`/for-you/feature/${props.feature.id}`);
+  }
+};
+
+const openIdentityTheftProtectionModal = () => {
+  identityTheftProtectionModal.value = true;
+
+  store.dispatch("openModal", {
+    customTemplate: {
+      template: markRaw(IdentityTheftProtectionModal),
+      props: {
+        show: true,
+      },
+      events: {
+        close: () => {
+          identityTheftProtectionModal.value = false;
+          store.dispatch("closeModal");
+        },
+      },
+    },
+  });
 };
 </script>
 
@@ -98,7 +128,7 @@ const handleClick = () => {
 
       <BaseButton
         class="for-you-discover-list-item__content-button"
-        fullWidth
+        full-width
         @click="handleClick"
       >
         {{ feature.style.primaryCTA }}
@@ -108,6 +138,7 @@ const handleClick = () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .for-you-discover-list-item {
   background-color: $color-base-white-100;
   border-radius: 30px;

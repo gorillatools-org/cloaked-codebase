@@ -921,8 +921,8 @@ function handleSearch(e) {
               <InfiniteLoader
                 v-if="!fullyLoaded"
                 key="inbox-compose"
-                :allDataFetched="fullyLoaded"
-                @loadMore="loadMore"
+                :all-data-fetched="fullyLoaded"
+                @load-more="loadMore"
               />
             </div>
           </div>
@@ -942,7 +942,7 @@ function handleSearch(e) {
             >
               <PillInput
                 ref="toInput"
-                :defaultValue="toFieldPills"
+                :default-value="toFieldPills"
                 :filter="check"
                 :multiple="!!firstItemIsPhone"
                 @value="setPills"
@@ -974,7 +974,7 @@ function handleSearch(e) {
               <PillInput
                 ref="ccInput"
                 :filter="check"
-                :defaultValue="ccFieldPills"
+                :default-value="ccFieldPills"
                 @value="setCC"
               />
             </div>
@@ -1033,11 +1033,11 @@ function handleSearch(e) {
         <InboxFileAttachments
           v-if="canAttach"
           ref="fileAttachment"
-          :isTextMessage="firstItemIsPhone"
+          :is-text-message="firstItemIsPhone"
           :filter="firstItemIsPhone && attachFilter"
-          :filesForRemoval="state.filesForRemoval"
+          :files-for-removal="state.filesForRemoval"
           @change="handleFileChange"
-          @filesRemoved="filesRemoved"
+          @files-removed="filesRemoved"
         />
         <div v-else />
         <button
@@ -1059,6 +1059,7 @@ function handleSearch(e) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .error_message {
   background-color: $color-base-white-5;
   color: $color-base-white-100;
@@ -1234,7 +1235,7 @@ button {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1150;
+  z-index: 400;
 }
 
 .disabled {

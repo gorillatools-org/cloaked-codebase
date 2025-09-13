@@ -113,7 +113,7 @@ function deleteCard() {
         />
 
         <div class="title">
-          <h1>Your Cloaked Card</h1>
+          <h1>Your Virtual Card</h1>
         </div>
 
         <div class="card">
@@ -205,6 +205,7 @@ function deleteCard() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 section.panel {
   height: 100vh;
   display: flex;

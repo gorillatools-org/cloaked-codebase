@@ -1,5 +1,6 @@
 import { computed } from "vue";
 import store from "@/store";
+import { PH_FEATURE_FLAG_AUTO_CLOAKING } from "@/scripts/posthogEvents";
 
 export const useFeatures = () => {
   const hasForYou = computed(() => {
@@ -18,7 +19,7 @@ export const useFeatures = () => {
   });
 
   const hasIdentityMonitoring = computed(() => {
-    return store.state.authentication?.user?.flags?.identity_monitoring_enabled;
+    return true;
   });
 
   const hasPayEnabled = computed(() => {
@@ -26,8 +27,13 @@ export const useFeatures = () => {
   });
 
   const hasAutoPasswordChange = computed(() => {
-    return store.state.authentication?.user?.flags
-      ?.autocloaking_operator_enabled;
+    return store.state.authentication?.user?.flags?.[
+      PH_FEATURE_FLAG_AUTO_CLOAKING
+    ];
+  });
+
+  const hasVpnEnabled = computed(() => {
+    return store.state.authentication?.user?.flags?.has_vpn_enabled;
   });
 
   return {
@@ -37,5 +43,6 @@ export const useFeatures = () => {
     hasPayEnabled,
     hasAutoPasswordChange,
     hasExposureStatus,
+    hasVpnEnabled,
   };
 };

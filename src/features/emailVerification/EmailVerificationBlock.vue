@@ -78,7 +78,7 @@ const firstUnverifiedEmail = computed(() => {
     <BaseButton
       variant="secondary"
       size="md"
-      fullWidth
+      full-width
       @click="openEmailVerification"
     >
       Verify now
@@ -87,6 +87,7 @@ const firstUnverifiedEmail = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .email-verification-block {
   &__title {
     padding: 8px 0;

@@ -1,18 +1,18 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed, useAttrs } from "vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseInputFeedback from "@/library/BaseInputFeedback.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
 
 defineOptions({ inheritAttrs: false });
 
-defineProps({
+const props = defineProps({
   title: {
     type: String,
     required: true,
   },
   action: {
-    type: String,
+    type: [String, null],
     default: null,
   },
   secret: {
@@ -20,16 +20,42 @@ defineProps({
     default: false,
   },
   error: {
-    type: String,
+    type: [String, null],
     default: null,
+  },
+  requiredMark: {
+    type: Boolean,
+    default: false,
   },
 });
 
-defineEmits(["click-action"]);
+const emit = defineEmits(["click-action"]);
 
-const model = defineModel({ type: String });
+const attrs = useAttrs();
+
+const model = defineModel({
+  type: String,
+  default: "",
+});
 
 const isHidden = ref(true);
+
+const inputType = computed(() => {
+  if (props.secret && (isHidden.value || attrs.disabled)) {
+    return "password";
+  }
+  return props.type || "text";
+});
+
+const secretIconName = computed(() => {
+  return isHidden.value || attrs.disabled ? "eye-visible" : "eye-hidden";
+});
+
+const handleActionClick = () => {
+  if (props.action) {
+    emit("click-action", props.action);
+  }
+};
 </script>
 
 <template>
@@ -43,25 +69,46 @@ const isHidden = ref(true);
       variant="body-small-medium"
       class="base-input__title"
     >
-      {{ title }}
+      <span>
+        {{ title }}
+        <span
+          v-if="requiredMark"
+          class="base-input__required-mark"
+        >
+          *
+        </span>
+      </span>
+      <slot name="label-after" />
     </BaseText>
     <input
       v-model="model"
-      :type="secret && (isHidden || $attrs.disabled) ? 'password' : 'text'"
+      :type="inputType"
       class="base-input__input"
       :class="{ 'base-input__input--error': error }"
       v-bind="{ ...$attrs, class: null, style: null }"
     />
+    <div
+      v-if="$slots.left"
+      class="base-input__addon-left"
+    >
+      <slot name="left" />
+    </div>
+    <div
+      v-if="$slots.right"
+      class="base-input__addon-right"
+    >
+      <slot name="right" />
+    </div>
     <BaseIcon
       v-if="action"
       :name="action"
       class="base-input__action"
       :class="{ 'base-input__action--active': !!model }"
-      @click="$emit('click-action', action)"
+      @click="handleActionClick"
     />
     <BaseIcon
       v-if="secret"
-      :name="isHidden || $attrs.disabled ? `eye-visible` : 'eye-hidden'"
+      :name="secretIconName"
       class="base-input__action"
       :class="{ 'base-input__action--active': !!model }"
       @click="isHidden = !isHidden"
@@ -86,12 +133,21 @@ const isHidden = ref(true);
 .base-input {
   display: grid;
   gap: 4px 8px;
-  grid-template-columns: 1fr 24px 24px 8px;
-  grid-template-areas: "title title title title" "input-start action-1 action-2 input-end";
+  grid-template-columns: 1fr 24px 24px 24px 8px;
+  grid-template-areas: "title title title title title" "input-start action-1 action-2 addon-right input-end";
+  position: relative;
 
   &__title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     grid-area: title;
+    justify-content: space-between;
     color: $color-primary-50;
+  }
+
+  &__required-mark {
+    color: $color-status-error;
   }
 
   &__input {
@@ -191,5 +247,60 @@ const isHidden = ref(true);
   &__feedback {
     grid-column: 1/5;
   }
+
+  &__addon-left {
+    grid-row: input-start;
+    grid-column: input-start / input-end;
+    place-self: center start;
+    margin-left: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+}
+
+// When there is no right addon, collapse the grid back to the original 4 columns
+.base-input:not(:has(.base-input__addon-right)) {
+  grid-template-columns: 1fr 24px 24px 8px;
+  grid-template-areas: "title title title title" "input-start action-1 action-2 input-end";
+}
+
+.base-input:has(.base-input__addon-left) .base-input__input {
+  padding-left: 44px;
+}
+
+.base-input__addon-right {
+  grid-area: addon-right;
+  place-self: center center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// When there is no right addon, keep original padding behavior
+.base-input:not(:has(.base-input__addon-right)) .base-input__input {
+  padding-right: 16px;
+}
+
+.base-input:has(.base-input__addon-right) .base-input__input {
+  padding-right: calc(16px + 1 * (24px + 8px));
+}
+
+.base-input:not(:has(.base-input__addon-right))
+  .base-input__input:has(~ .base-input__action:nth-of-type(1)) {
+  padding-right: calc(16px + 1 * (24px + 8px));
+}
+
+.base-input:not(:has(.base-input__addon-right))
+  .base-input__input:has(~ .base-input__action:nth-of-type(2)) {
+  padding-right: calc(16px + 2 * (24px + 8px));
+}
+
+.base-input:has(.base-input__addon-right):has(
+    .base-input__action:nth-of-type(2)
+  )
+  .base-input__input {
+  padding-right: calc(16px + 3 * (24px + 8px));
 }
 </style>

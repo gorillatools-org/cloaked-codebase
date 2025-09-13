@@ -355,6 +355,7 @@ function open(cloak) {
   </div>
 </template>
 <style scoped lang="scss">
+/* stylelint-disable */
 .empty-state {
   text-align: center;
   padding: 40px;

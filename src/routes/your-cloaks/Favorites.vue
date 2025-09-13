@@ -92,10 +92,10 @@ function setFilter(filter) {
       v-else
       ref="cloaklist"
       title="Favorites"
-      :identityList="identityList"
-      :allCloaksLoaded="allCloaksLoaded"
-      :filterOptions="availabileFilters"
-      @loadNextPage="loadNextPage"
+      :identity-list="identityList"
+      :all-cloaks-loaded="allCloaksLoaded"
+      :filter-options="availabileFilters"
+      @load-next-page="loadNextPage"
       @filter="(e) => setFilter(e)"
     />
   </div>

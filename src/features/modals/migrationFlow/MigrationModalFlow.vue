@@ -113,7 +113,7 @@ const onDownloadAndContinue = () => {
     <MigrationAnnouncement
       v-if="steps.currentStep === ANNOUNCEMENT"
       :username="username"
-      :isV1User="isV1User"
+      :is-v1-user="isV1User"
       @close="onDownloadAndContinue"
     />
   </div>

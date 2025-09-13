@@ -67,7 +67,7 @@ function openCard(id) {
     store.dispatch("closeRightPanel");
   } else {
     router.push({
-      path: `/wallet/card/${id}`,
+      path: `/virtual-cards/card/${id}`,
     });
   }
 }
@@ -85,7 +85,7 @@ function newCardIssued(card) {
   <section>
     <header>
       <h3 class="title">
-        <span>Cloaked Pay</span>
+        <span>Virtual Card</span>
       </h3>
     </header>
     <div class="block">
@@ -130,21 +130,23 @@ function newCardIssued(card) {
                 !props.cloak.cloaked_card && !loading && !collectionsActive
               "
             >
-              Generate new card
+              Generate new Virtual Card
             </span>
             <span
               v-else-if="
                 !props.cloak.cloaked_card && !loading && collectionsActive
               "
             >
-              Card generation disabled
+              Virtual Card generation disabled
             </span>
             <span
               v-else-if="loading"
               class="loading"
             >
               <span v-if="loading && !generating">Loading...</span>
-              <span v-else-if="loading && generating">Generating card...</span>
+              <span v-else-if="loading && generating">
+                Generating Virtual Card...
+              </span>
             </span>
           </div>
 
@@ -196,6 +198,7 @@ function newCardIssued(card) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 header {
   padding: 20px 20px 8px;
 

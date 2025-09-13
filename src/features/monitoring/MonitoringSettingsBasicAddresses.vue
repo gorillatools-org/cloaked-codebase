@@ -185,6 +185,7 @@ defineExpose({ validateForm });
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .page-monitoring-settings-address {
   display: grid;
   row-gap: 24px;

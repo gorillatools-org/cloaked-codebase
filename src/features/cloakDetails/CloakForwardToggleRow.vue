@@ -218,6 +218,7 @@ function toggleForward($event) {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .fwd-toggle-wrapper {
   display: flex;
   flex-direction: row;

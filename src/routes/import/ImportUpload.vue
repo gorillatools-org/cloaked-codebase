@@ -18,7 +18,6 @@ import {
   IMPORT_OPTION_OTHER_BROWSER,
   IMPORT_OPTION_CSV,
 } from "@/store/modules/accounts-importer/shared.js";
-import FeedbackForGuide from "@/features/import/FeedbackForGuide";
 import { ref, computed, onMounted, defineAsyncComponent } from "vue";
 import { useRoute } from "vue-router";
 
@@ -91,7 +90,6 @@ onMounted(() => {
           class="import-upload__guide"
         >
           <Component :is="comp" />
-          <FeedbackForGuide :source="title" />
         </div>
       </div>
       <div class="import-upload__column">
@@ -107,6 +105,7 @@ onMounted(() => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .import-upload {
   max-height: 100%;
   display: flex;
@@ -132,6 +131,7 @@ onMounted(() => {
     grid-gap: 24px;
     margin-top: 16px;
     overflow: hidden;
+    margin-bottom: -24px;
   }
 
   &__step {
@@ -175,6 +175,7 @@ onMounted(() => {
   &__guide {
     overflow: auto;
     padding: 4px 0 16px;
+    @include custom-scroll-bar;
   }
 }
 

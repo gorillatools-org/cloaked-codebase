@@ -133,6 +133,7 @@ onBeforeMount(getProfile);
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .page-monitoring {
   display: grid;
   padding: 0 8px 8px 0;

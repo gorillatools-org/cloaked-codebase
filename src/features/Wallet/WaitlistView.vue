@@ -1,9 +1,24 @@
 <script setup>
 import inlineSvg from "@/features/InlineSvg.vue";
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import store from "@/store";
 import CardsServices from "@/api/actions/cards-services";
 import CardExampleGroup from "@/features/Wallet/CardExampleGroup.vue";
+import { useBasicMode } from "@/composables/useBasicMode.js";
+import { posthogCapture } from "@/scripts/posthog";
+import VirtualCardsOffboardedUserSection from "@/features/VirtualCards/Sections/VirtualCardsOffboardedUserSection.vue";
+
+const { isBasicModeEnabled } = useBasicMode();
+
+onMounted(() => {
+  if (!shouldContactSupport.value) {
+    posthogCapture(`dashboard_pay_waitlist_${eventModeName.value}_mode_viewed`);
+  }
+});
+
+const eventModeName = computed(() => {
+  return isBasicModeEnabled.value ? "basic" : "advanced";
+});
 
 const status = computed(() => {
   if (
@@ -16,14 +31,28 @@ const status = computed(() => {
   }
 });
 
+// Used to show the offboarded section
+const shouldContactSupport = computed(() => {
+  const user = store.state.authentication?.user;
+  return user?.cloaked_card_onboarded && !user?.cloaked_card_enabled;
+});
+
 function signUp() {
   CardsServices.addToWaitlist();
+  posthogCapture(
+    `dashboard_pay_waitlist_${eventModeName.value}_mode_join_clicked`
+  );
 }
 </script>
 
 <template>
   <section class="waitlist">
-    <div class="waitlist__content">
+    <VirtualCardsOffboardedUserSection v-if="shouldContactSupport" />
+
+    <div
+      v-else-if="!shouldContactSupport"
+      class="waitlist__content"
+    >
       <div class="waitlist__title">
         <span class="waitlist__pill">Coming Soon</span>
         <h1>Cloaked Pay</h1>
@@ -31,12 +60,12 @@ function signUp() {
 
       <div class="waitlist__text">
         <p>
-          Cloaked Pay brings a new level of security and privacy to your
-          Activity with 0% APR and no hidden fees.
+          Experience a new era of control, privacy, and protection with Cloaked
+          Pay.
         </p>
         <p>
-          You can generate virtual Mastercard® cards numbers for every payment,
-          get priceless protection from fraudulent Activity and more.
+          Create unique virtual Mastercard® numbers for every purchase. Cloak
+          your real card. Lock out fraud. Stay one step ahead of fraudsters.
         </p>
       </div>
 
@@ -61,11 +90,15 @@ function signUp() {
       </div>
     </div>
 
-    <CardExampleGroup class="waitlist__card-examples" />
+    <CardExampleGroup
+      v-if="!shouldContactSupport"
+      class="waitlist__card-examples"
+    />
   </section>
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .waitlist {
   position: relative;
   overflow: hidden;

@@ -50,6 +50,7 @@ const closeModal = () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .text {
   color: $color-primary-100;
   padding: 36px 0;

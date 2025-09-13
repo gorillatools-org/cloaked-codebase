@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import store from "@/store/index.js";
 import BaseText from "@/library/BaseText.vue";
 import BaseSheet from "@/library/BaseSheet.vue";
@@ -7,6 +7,9 @@ import BaseButton from "@/library/BaseButton.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
 import EnrollmentOrb from "@/features/enrollment/EnrollmentOrb.vue";
 import { useDisplay } from "@/composables/useDisplay.js";
+import { posthogCapture } from "@/scripts/posthog.js";
+
+onMounted(() => posthogCapture("user_viewed_enrollment_form_ready"));
 
 defineEmits(["download-app", "go-to-dashboard"]);
 

@@ -1,65 +1,157 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, toValue, computed, watch, onUnmounted } from "vue";
 import ExposureStatusRecords from "@/features/ExposureStatus/ExposureStatusRecords.vue";
 import IdentityTheftProtectionBlock from "@/features/IdentityTheftProtection/IdentityTheftProtectionBlock.vue";
 import DownloadAppBlock from "@/features/DownloadApp/DownloadAppBlock.vue";
 import ExposureStatusFAQ from "@/features/ExposureStatus/ExposureStatusFAQ.vue";
-import ExposureStatusBrokerList from "@/features/ExposureStatus/ExposureStatusBrokerList.vue";
-import ExposureStatusSplash from "@/features/ExposureStatus/ExposureStatusSplash.vue";
 import DataDeleteService from "@/api/actions/data-delete-service.js";
 import ExposureStatusGraph from "@/features/ExposureStatus/ExposureStatusGraph.vue";
 import EmailVerificationBlock from "@/features/emailVerification/EmailVerificationBlock.vue";
-import SingleCloakedPhoneWaitlist from "@/features/SingleCloakedPhone/SingleCloakedPhoneWaitlist.vue";
-import { isMobileDevice } from "@/scripts/regex";
+import { useDisplay } from "@/composables/useDisplay";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { useRouter, useRoute } from "vue-router";
+import store from "@/store";
+import { posthogCapture } from "@/scripts/posthog.js";
 
-const rawGraphData = ref(null);
+const router = useRouter();
+const route = useRoute();
+const {
+  hasLoadedFeatureFlag: hasLoadedEnrollmentV2Flag,
+  featureFlag: enrollmentV2Enabled,
+} = usePostHogFeatureFlag("enrollment_v2_enabled");
+
+const rawGraphData = computed(
+  () => store.getters["dataDelete/getGraphData"] || {}
+);
 const hideGraph = ref(false);
 const isLoading = ref(true);
-const isEnrolled = ref(false);
+
+const { isMobile } = useDisplay();
+
+const enrollmentPollingInterval = ref(null);
+const enrollmentTimeoutSet = ref(false);
+const enrollmentTimeouts = ref([]);
+
+async function fetchEnrolledData() {
+  const removalLogPromise = DataDeleteService.getRemovalLog().catch(() => null);
+  const graphDataPromise = DataDeleteService.getGraphData().catch(() => null);
+
+  const [removalLogResponse, graphResponse] = await Promise.all([
+    removalLogPromise,
+    graphDataPromise,
+  ]);
+  return [removalLogResponse, graphResponse];
+}
 
 async function loadEnrolledData() {
-  try {
-    const removalLogPromise = DataDeleteService.getRemovalLog().catch(
-      () => null
+  const [removalLogResponse, graphResponse] = await fetchEnrolledData();
+
+  if (!removalLogResponse?.data || !graphResponse?.data) {
+    return setEnrolledDataOnInterval();
+  }
+
+  return setEnrolledData(removalLogResponse, graphResponse);
+}
+
+async function setEnrolledDataOnInterval() {
+  if (enrollmentPollingInterval.value) {
+    clearInterval(enrollmentPollingInterval.value);
+  }
+  const [removalLogResponse, graphResponse] = await fetchEnrolledData();
+  if (!removalLogResponse?.data || !graphResponse?.data) {
+    enrollmentPollingInterval.value = setInterval(
+      () => setEnrolledDataOnInterval(removalLogResponse, graphResponse, true),
+      1000
     );
-    const graphDataPromise = DataDeleteService.getGraphData().catch(() => null);
+  } else {
+    setEnrolledData(removalLogResponse, graphResponse);
+    await DataDeleteService.getEnrollmentData();
+    clearInterval(enrollmentPollingInterval.value);
+    // NOTE: clear quick interval, then fetch data again in 3, 6, and 10 seconds
 
-    const [, graphResponse] = await Promise.all([
-      removalLogPromise,
-      graphDataPromise,
-    ]);
-
-    if (graphResponse) {
-      rawGraphData.value = graphResponse.data;
-      if (
-        !graphResponse.data?.graph_data ||
-        !graphResponse.data?.graph_data?.length
-      ) {
-        hideGraph.value = true;
-      }
-    } else {
-      hideGraph.value = true;
+    if (!enrollmentTimeoutSet.value) {
+      enrollmentTimeoutSet.value = true;
+      const t1 = setTimeout(() => {
+        loadEnrolledData();
+      }, 3000);
+      const t2 = setTimeout(() => {
+        loadEnrolledData();
+      }, 6000);
+      const t3 = setTimeout(() => {
+        loadEnrolledData();
+      }, 10000);
+      enrollmentTimeouts.value.push(t1, t2, t3);
     }
-  } catch (error) {
-    console.error("Error loading enrolled data:", error);
+  }
+}
+
+async function setEnrolledData(removalLogResponse, graphResponse) {
+  if (graphResponse) {
+    const hasGraph =
+      Array.isArray(graphResponse.data?.graph_data) &&
+      graphResponse.data.graph_data.length > 0;
+    hideGraph.value = !hasGraph;
+  } else {
     hideGraph.value = true;
   }
 }
 
-onMounted(async () => {
-  isLoading.value = true;
-
-  try {
-    const response = await DataDeleteService.getEnrollmentData();
-
-    if (response) {
-      isEnrolled.value = true;
-      await loadEnrolledData();
-    }
-  } finally {
-    isLoading.value = false;
-  }
+const isEnrolled = computed(() => {
+  return store.getters["dataDelete/hasRemovalEnrollment"];
 });
+
+onMounted(async () => {
+  if (
+    toValue(hasLoadedEnrollmentV2Flag) &&
+    toValue(enrollmentV2Enabled) &&
+    !toValue(isEnrolled)
+  ) {
+    router.push({ name: "ExposureStatusEnrollExposures" });
+  }
+  posthogCapture("user_viewed_exposure_status_page");
+});
+
+watch(
+  () => toValue(router.currentRoute).path,
+  async () => {
+    isLoading.value = true;
+    try {
+      const response = await DataDeleteService.getEnrollmentData();
+      if (response) {
+        await loadEnrolledData();
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  },
+  { immediate: true }
+);
+
+onUnmounted(() => {
+  if (enrollmentPollingInterval.value) {
+    clearInterval(enrollmentPollingInterval.value);
+  }
+  if (enrollmentTimeouts.value?.length) {
+    enrollmentTimeouts.value.forEach((id) => clearTimeout(id));
+    enrollmentTimeouts.value = [];
+  }
+  enrollmentTimeoutSet.value = false;
+});
+
+const unwatch = watch(
+  () => [hasLoadedEnrollmentV2Flag.value, isLoading.value],
+  ([hasLoadedFlag, isLoadingPage]) => {
+    if (
+      !isLoadingPage &&
+      hasLoadedFlag &&
+      enrollmentV2Enabled.value &&
+      !isEnrolled.value
+    ) {
+      router.push({ name: "ExposureStatusEnrollExposures" });
+      unwatch();
+    }
+  }
+);
 </script>
 
 <template>
@@ -73,42 +165,41 @@ onMounted(async () => {
         'page-exposure-status__content--full-width': isLoading || !isEnrolled,
       }"
     >
-      <ExposureStatusBrokerList v-if="isEnrolled && !isMobileDevice" />
-      <ExposureStatusSplash
-        :isLoading="isLoading"
-        :isEnrolled="isEnrolled"
+      <router-view
+        :is-enrolled="isEnrolled"
+        :is-loading="isLoading"
       />
     </div>
 
     <div
       class="page-exposure-status__aside"
       :class="{
-        'page-exposure-status__aside--hidden': isLoading || !isEnrolled,
+        'page-exposure-status__aside--hidden':
+          isLoading || !isEnrolled || route?.meta?.hideAside,
       }"
     >
       <ExposureStatusRecords class="page-exposure-status__aside-item" />
       <DownloadAppBlock
-        v-if="isMobileDevice"
+        v-if="isMobile"
         class="page-exposure-status__aside-item"
       />
       <ExposureStatusGraph
         v-if="!hideGraph"
         class="page-exposure-status__aside-item"
-        :rawGraphData="rawGraphData"
+        :raw-graph-data="rawGraphData"
       />
       <EmailVerificationBlock class="page-exposure-status__aside-item" />
       <IdentityTheftProtectionBlock class="page-exposure-status__aside-item" />
-      <SingleCloakedPhoneWaitlist class="page-exposure-status__aside-item" />
       <ExposureStatusFAQ class="page-exposure-status__aside-item" />
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .page-exposure-status {
   display: flex;
   height: 100%;
-  padding: 0 8px 8px 8px;
   overflow: hidden;
   position: relative;
 
@@ -134,12 +225,13 @@ onMounted(async () => {
   &__content {
     flex: 1;
     border-radius: 20px;
-    padding: 0 24px 24px 24px;
+    padding: 0 24px;
     overflow-y: auto;
     @include custom-scroll-bar;
     position: relative;
     z-index: 1;
     width: 100%;
+    height: 100%;
 
     transition: all 0.4s ease;
 
@@ -163,7 +255,6 @@ onMounted(async () => {
 
     &--full-width {
       width: 100%;
-      margin-right: -414px;
 
       @media (max-width: 1023px) {
         margin-right: 0;
@@ -190,7 +281,9 @@ onMounted(async () => {
 
     transition:
       opacity 0.5s ease,
-      transform 0.5s ease;
+      transform 0.5s ease,
+      width 0.5s ease,
+      padding 0.5s ease;
 
     @media (max-width: 1023px) {
       transition: none;
@@ -203,6 +296,9 @@ onMounted(async () => {
 
     &--hidden {
       opacity: 0;
+      width: 0;
+      padding: 0;
+      overflow: hidden;
 
       .page-exposure-status__aside-item {
         opacity: 0;

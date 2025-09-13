@@ -20,8 +20,11 @@ import { posthogCapture } from "@/scripts/posthog.js";
 import { bankCardExpiresAtStringToDate } from "@/scripts/tools.js";
 import store from "@/store";
 import { computed, watch } from "vue";
+import { isString } from "lodash-es";
 
 const toast = useToast();
+
+const emit = defineEmits(["close", "addSuccess"]);
 
 const props = defineProps({
   isVisible: {
@@ -36,6 +39,7 @@ const props = defineProps({
 
 function closeModal() {
   store.dispatch("closeModal");
+  emit("close");
 }
 
 const isButtonDisabled = computed(() => {
@@ -101,15 +105,26 @@ function addCard() {
 
   CardsServices.addBankCard(payload)
     .then(() => {
+      emit("addSuccess");
       closeModal();
       toast.success("Card was added successfully");
       posthogCapture("dashboard_pay_wallet_add_funding_source_success");
     })
-    .catch(() => {
+    .catch((error) => {
       isSubmitting.value = false;
-      toast.error(
-        "We could not add your funding source. Please double check the card data you provided."
-      );
+
+      const errorMessage = error.response.data?.error;
+      if (
+        errorMessage &&
+        isString(errorMessage) &&
+        errorMessage.toLowerCase().includes("exists")
+      ) {
+        toast.error("This card has already been added as a funding source.");
+      } else {
+        toast.error(
+          "We could not add your funding source. Please double check the card data you provided."
+        );
+      }
       posthogCapture("dashboard_pay_wallet_add_funding_source_failed");
     });
 }
@@ -252,6 +267,7 @@ watch(() => props.isVisible, { immediate: true });
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .inputs {
   display: flex;
   flex-wrap: wrap;

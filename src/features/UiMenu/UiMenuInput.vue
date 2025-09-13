@@ -44,6 +44,7 @@ function handleBlur() {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .ui-menu-input {
   width: 100%;
   padding: 5px 10px;

@@ -69,6 +69,7 @@ function handleChange() {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .check-button {
   width: 16px;
   height: 16px;

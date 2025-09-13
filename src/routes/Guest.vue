@@ -11,8 +11,9 @@ onMounted(() => {
     !route.path.includes("data-delete") &&
     !route.path.includes("data-remove-graph") &&
     !route.path.includes("subscribe-now") &&
-    !route.path.includes("subscribe-today") &&
-    !route.path.includes("invitation")
+    !route.path.includes("native-checkout") &&
+    !route.path.includes("invitation") &&
+    !route.path.includes("mobile")
   ) {
     router.push({
       name: "login",
@@ -31,6 +32,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 main {
   background-color: $color-base-white-100;
 

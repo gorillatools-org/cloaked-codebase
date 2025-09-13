@@ -128,10 +128,10 @@
     <CheckListDoneModal
       :key="state.modalData.type || state.showModal"
       :open="state.showModal"
-      :modalData="state.modalData"
-      :freeShirtUrl="claimFreeTShirtUrl"
+      :modal-data="state.modalData"
+      :free-shirt-url="claimFreeTShirtUrl"
       @close="() => (state.showModal = false)"
-      @showModal="showDoneModal"
+      @show-modal="showDoneModal"
     />
   </div>
 </template>
@@ -275,6 +275,7 @@ function showDoneModal() {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .get-started-modal {
   position: fixed;
   background-color: rgb(0 0 0 / 50%);

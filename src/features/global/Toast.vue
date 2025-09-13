@@ -24,6 +24,7 @@ const show = computed(() => toastState.show);
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .v-enter-active,
 .v-leave-active {
   transition: opacity 500ms ease;

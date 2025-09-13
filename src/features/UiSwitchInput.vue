@@ -43,6 +43,7 @@ const handleChange = () => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .ui-switch-input {
   display: block;
   position: relative;

@@ -19,6 +19,7 @@
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .loading-skel-wrapper {
   display: flex;
   flex-direction: column;

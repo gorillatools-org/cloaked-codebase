@@ -86,6 +86,7 @@ export default {
         subheader: modalInfo.subheader,
         paragraphs: modalInfo.paragraphs,
         cancelText: modalInfo.cancelText,
+        cancelIcon: modalInfo.cancelIcon,
         showCancel:
           modalInfo.showCancel === undefined ? true : modalInfo.showCancel,
         cancelAction: modalInfo.cancelAction,
@@ -109,6 +110,7 @@ export default {
           danger: !!modalInfo.button.danger,
           onClick: modalInfo.button.onClick,
           disabled: modalInfo.button.disabled,
+          icon: modalInfo.button.icon,
         };
       }
 

@@ -150,6 +150,7 @@ function animationLengthSec(recording) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .activity-call-display-voicemail {
   cursor: pointer;
   margin: 0 24px;

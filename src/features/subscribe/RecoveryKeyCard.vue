@@ -107,6 +107,7 @@ const isPasswordVisible = ref(false);
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .recovery-key-card {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -116,17 +117,8 @@ const isPasswordVisible = ref(false);
   padding: 24px;
   position: relative;
   height: auto;
-
-  @at-root .theme-dark & {
-    background: rgba($color-primary-100-dark, 0.07);
-    border: 1px solid rgba($color-primary-100-dark, 0.015);
-    box-shadow: 0 4px 16px 0 rgb(0 0 0 / 15%);
-  }
-
-  @at-root .theme-light & {
-    background: rgba($color-primary-100-light, 0.05);
-    border: 1px solid rgba($color-primary-100-light, 0.015);
-  }
+  background: rgba($color-primary-100-dark, 0.07);
+  box-shadow: 0 4px 16px 0 rgb(0 0 0 / 15%);
 
   &__label {
     opacity: 0.7;

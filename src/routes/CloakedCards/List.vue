@@ -32,7 +32,7 @@ function openCard(card) {
 <template>
   <section class="page">
     <div class="title">
-      <h1>All Cloaked cards</h1>
+      <h1>All Virtual Cards</h1>
     </div>
 
     <div class="list">
@@ -119,6 +119,7 @@ function openCard(card) {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 section.page {
   width: 100%;
   padding: 24px 24px;

@@ -43,14 +43,47 @@ export const nameCheck = (name) => {
   return /^[^\x00-\x1F!-&(-,/:-@[-_\x7B-\x7F]{1,100}$/.test(name);
 };
 
-export const isMobileDevice =
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
-export const isAndroid = /Android/i.test(navigator.userAgent);
+export const personalNameCheck = (name) => {
+  return /^[a-zA-Z\u0080-\u024F\u1E00-\u1EFF\s.'\u2019-]{1,100}$/.test(name);
+};
+
+export const isAndroid =
+  typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
 
 export const codeCheck = (code) => {
   return !!code && code?.match(/[0-9]{6}/i);
+};
+/* The regex patterns below are primarily used/* The regex patterns below are used for Array-related data validation.
+   These patterns must match what the backend expects for compatibility.
+   Do not modify these without coordinating with the backend team,
+   as changes would be breaking. */
+// Address validation regex patterns
+export const addressNameCheck = (name) => {
+  return /^[a-zA-Z\u0080-\u024F\u1E00-\u1EFF\s.-]{1,100}$/.test(name);
+};
+
+export const addressStreetCheck = (address) => {
+  return /^[a-zA-Z0-9\u0080-\u024F\u1E00-\u1EFF\s.,#'\u2019/-]{1,100}$/.test(
+    address
+  );
+};
+
+export const postalCodeCheck = (postalCode) => {
+  return /^((\d{5}-\d{4})|(\d{5})|([A-Z]\d[A-Z]\s?\d[A-Z]\d))$/.test(
+    postalCode
+  );
+};
+
+export const cityCheck = (city) => {
+  return /^[a-zA-Z\u0080-\u024F\s.'\u2019-]{1,100}$/.test(city);
+};
+
+export const stateCheck = (state) => {
+  return /^[\w-]{2,10}$/.test(state);
+};
+
+export const countryCodeCheck = (country) => {
+  return /^[a-zA-Z]{2}$/.test(country);
 };
 
 export const regex = {
@@ -60,7 +93,14 @@ export const regex = {
   matchInWord,
   isTypeBanned,
   emailCheck,
-  isMobileDevice,
+  nameCheck,
+  personalNameCheck,
   isAndroid,
   codeCheck,
+  addressNameCheck,
+  addressStreetCheck,
+  postalCodeCheck,
+  cityCheck,
+  stateCheck,
+  countryCodeCheck,
 };

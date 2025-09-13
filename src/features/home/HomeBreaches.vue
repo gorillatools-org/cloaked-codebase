@@ -127,7 +127,7 @@ function createCloak(listItem) {
           :website="data.website"
           :icon="data.icon"
           :article="data.article"
-          @clickCreate="createCloak(data)"
+          @click-create="createCloak(data)"
         />
       </div>
       <div class="breach-list-wrapper">
@@ -138,7 +138,7 @@ function createCloak(listItem) {
           :website="data.website"
           :icon="data.icon"
           :article="data.article"
-          @clickCreate="createCloak(data)"
+          @click-create="createCloak(data)"
         />
       </div>
     </div>

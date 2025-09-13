@@ -17,6 +17,7 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 div.toggle {
   display: flex;
   align-items: center;

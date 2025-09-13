@@ -8,6 +8,7 @@ import {
   watch,
   reactive,
   nextTick,
+  toValue,
 } from "vue";
 
 import store from "@/store";
@@ -30,14 +31,15 @@ import { useFunnel } from "@/features/subscribe/composables/useFunnel";
 import { FUNNEL_STEP } from "./utils";
 import { PH_EVENT_USER_CLICKED_DATA_DELETION_SETUP_ACCOUNT_BUTTON } from "@/scripts/posthogEvents";
 import DataDeletePageOtp from "@/features/data-delete/DataDeletePageOtp.vue";
+import DataDeletePageOtpBrave from "@/features/data-delete/DataDeletePageOtpBrave.vue";
 import DataDeletePageResults from "@/features/data-delete/DataDeletePageResults.vue";
 import DataDeletePageAdditionalSearch from "@/features/data-delete/DataDeletePageAdditionalSearch.vue";
 import DataDeletePageLoader from "@/features/data-delete/DataDeletePageLoader.vue";
 import { useRoute } from "vue-router";
 import router from "@/routes/router";
 import { useToast } from "@/composables/useToast.js";
-import { isMobileDevice } from "@/scripts/regex";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { useDisplay } from "@/composables/useDisplay";
+import { fetchFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 
 const toast = useToast();
 
@@ -45,6 +47,25 @@ const route = useRoute();
 
 useThemeQueryParameter();
 usePostHogFunnelTracking();
+
+const SOURCE_STORAGE_KEY = "browser-type";
+
+function persistSource(source) {
+  if (!source) return;
+  try {
+    localStorage.setItem(SOURCE_STORAGE_KEY, source);
+  } catch {
+    return null;
+  }
+}
+
+function getPersistedSource() {
+  try {
+    return localStorage.getItem(SOURCE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
 
 const { dataDeleteInputForm } = useDataDeleteInput();
 const { formattedPhoneNumber, formattedUserName } =
@@ -57,6 +78,7 @@ const searchStep = ref("initial");
 const searchResults = ref([]);
 const numTotalResults = ref(0);
 const verifiedUserInfo = ref(null);
+const isBraveOtp = ref(false);
 
 const {
   clearSearchProgressFromSessionStorage,
@@ -66,6 +88,8 @@ const {
 const statusState = reactive({
   hasAlreadyStartedDD: false,
 });
+
+const { isMobile } = useDisplay();
 
 async function searchPublicRecords({
   firstName,
@@ -82,6 +106,9 @@ async function searchPublicRecords({
   }
 
   isFetching.value = true;
+  const { value: enrollmentV2Enabled } = await fetchFeatureFlag(
+    "enrollment_v2_enabled"
+  );
   const { data } = await DataDeleteService.getPublicRecords({
     firstName,
     lastName,
@@ -90,6 +117,7 @@ async function searchPublicRecords({
     age,
     email,
     useArray,
+    redactAddress: !toValue(enrollmentV2Enabled), // if enrollment v2 is enabled, we don't redact address
   });
 
   if (data.in_progress) {
@@ -193,25 +221,14 @@ const storeSearchProgressInSessionStorage = () => {
   });
 };
 
-const { featureFlag: splitCheckoutVariant } = usePostHogFeatureFlag(
-  "split-checkout-5-28-25"
-);
-
 function setSetup() {
   handOffSearchResultsToNativeMobileApp();
   storeSearchProgressInSessionStorage();
 
-  if (splitCheckoutVariant.value === "split-checkout") {
-    router.push({
-      name: "SubscribePlan",
-      query: route.query,
-    });
-  } else {
-    router.push({
-      name: "SubscribeNow",
-      query: route.query,
-    });
-  }
+  router.push({
+    name: "SubscribeNow",
+    query: route.query,
+  });
 }
 
 function setSearchStep(value) {
@@ -249,6 +266,13 @@ watch(searchResults, () => {
 });
 
 onMounted(async () => {
+  const sourceFromUrl = route.query?.source;
+  const source = sourceFromUrl ?? getPersistedSource();
+
+  if (source) persistSource(source);
+
+  isBraveOtp.value = source === "brave";
+
   const mountIframePromise = mountHeadlessIframe();
   const cloudflareToken = await cloudflareCaptcha.value.verify();
 
@@ -280,16 +304,16 @@ async function verifyOTPCode({ phone_number, code }) {
 const cloudflareCaptcha = ref(null);
 
 const createUser = async (cloudflareToken) => {
-  const initUserResponse = await createHeadlessUser(
-    cloudflareToken,
-    formattedPhoneNumber
-  );
+  const initUserResponse = await createHeadlessUser({
+    captcha: cloudflareToken,
+    phone_number: formattedPhoneNumber,
+  });
 
   if (initUserResponse?.username_exists) {
     toast.success(
       "Looks like you already have a Cloaked account - we'll need you to enter your password."
     );
-    if (isMobileDevice) {
+    if (isMobile.value) {
       nextTick(() => {
         toast.success(
           "If you're looking to access the Cloaked mobile app, open the app and tap log in. Then, input your phone number to proceed."
@@ -313,35 +337,50 @@ async function loginPasswordlessUser({ phone, code }) {
     <DataDeletePageBackground />
     <DataDeletePageAlreadyStarted v-if="statusState.hasAlreadyStartedDD" />
     <template v-else>
-      <DataDeletePageOtp
-        v-if="step === FUNNEL_STEP.OTP"
+      <DataDeletePageOtpBrave
+        v-if="step === FUNNEL_STEP.OTP && isBraveOtp"
         class="data-delete__page"
-        :headlessUser="headlessUser"
-        :formattedPhone="formattedPhoneNumber"
+        :headless-user="headlessUser"
+        :formatted-phone="formattedPhoneNumber"
         :is-fetching="isFetching"
-        :isVerifyingCode="isVerifyingCode"
-        :verifyCodeError="verifyCodeError"
-        :verifiedUserInfo="verifiedUserInfo"
-        :loginUserError="loginUserError"
-        @verifyCode="verifyOTPCode"
-        @searchPublicRecords="searchPublicRecords"
-        @createUser="createUser"
-        @loginPasswordlessUser="loginPasswordlessUser"
+        :is-verifying-code="isVerifyingCode"
+        :verify-code-error="verifyCodeError"
+        :verified-user-info="verifiedUserInfo"
+        :login-user-error="loginUserError"
+        @verify-code="verifyOTPCode"
+        @search-public-records="searchPublicRecords"
+        @create-user="createUser"
+        @login-passwordless-user="loginPasswordlessUser"
+      />
+      <DataDeletePageOtp
+        v-else-if="step === FUNNEL_STEP.OTP"
+        class="data-delete__page"
+        :headless-user="headlessUser"
+        :formatted-phone="formattedPhoneNumber"
+        :is-fetching="isFetching"
+        :is-verifying-code="isVerifyingCode"
+        :verify-code-error="verifyCodeError"
+        :verified-user-info="verifiedUserInfo"
+        :login-user-error="loginUserError"
+        @verify-code="verifyOTPCode"
+        @search-public-records="searchPublicRecords"
+        @create-user="createUser"
+        @login-passwordless-user="loginPasswordlessUser"
       />
       <DataDeletePageLoader
         v-else-if="step === FUNNEL_STEP.LOADER"
-        :searchComplete="searchComplete"
-        :userName="formattedUserName"
+        :search-complete="searchComplete"
+        :user-name="formattedUserName"
         class="data-delete__page"
-        @setStep="setStep(FUNNEL_STEP.RESULTS)"
+        @set-step="setStep(FUNNEL_STEP.RESULTS)"
       />
       <DataDeletePageResults
         v-else-if="step === FUNNEL_STEP.RESULTS"
         :phone="dataDeleteInputForm.phone"
-        :numTotalResults="numTotalResults"
-        :searchResults="searchResults"
-        :hasError="hasSearchError"
-        :isForcingNewSearch="isForcingNewSearch"
+        :num-total-results="numTotalResults"
+        :search-results="searchResults"
+        :has-error="hasSearchError"
+        :is-forcing-new-search="isForcingNewSearch"
         :records="sortedRecords"
         class="data-delete__page"
         @force-new-search="forceNewSearch"
@@ -352,12 +391,12 @@ async function loginPasswordlessUser({ phone, code }) {
         v-else-if="step === FUNNEL_STEP.NOT_YOU"
         :value="dataDeleteInputForm"
         :is-fetching="isFetching"
-        :searchStep="searchStep"
-        :isForcingNewSearch="isForcingNewSearch"
+        :search-step="searchStep"
+        :is-forcing-new-search="isForcingNewSearch"
         class="data-delete__page"
         @input="dataDeleteInputForm = $event"
-        @setSearchStep="setSearchStep"
-        @searchPublicRecords="searchPublicRecords"
+        @set-search-step="setSearchStep"
+        @search-public-records="searchPublicRecords"
       />
     </template>
     <CloudflareCaptcha ref="cloudflareCaptcha" />

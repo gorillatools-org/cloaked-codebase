@@ -100,7 +100,7 @@ const warningMessage = computed(() => {
   return null;
 });
 
-const isMobileDevice = computed(() => navigator.maxTouchPoints > 0);
+const isTouchDevice = computed(() => navigator.maxTouchPoints > 0);
 
 const inputType = computed(() => {
   if (
@@ -211,7 +211,7 @@ const showCopyTooltip = computed(() => {
 });
 
 const tooltipMessage = computed(() => {
-  let message = isMobileDevice.value ? "Copied" : "Click to copy";
+  let message = isTouchDevice.value ? "Copied" : "Click to copy";
 
   if (state.copied) {
     message = "Copied";
@@ -513,16 +513,16 @@ onBeforeMount(() => {
     :loading-message="state.loadingMesssage"
     :textarea="props.field === 'notes'"
     :tooltip-message="tooltipMessage"
-    :showCopyTooltip="showCopyOption"
+    :show-copy-tooltip="showCopyOption"
     :warning="!!warningMessage"
-    :warningTooltipMessage="warningMessage"
+    :warning-tooltip-message="warningMessage"
     :aria-id="`CloakedDetail${label || ''}Row`"
     :maxlength="props.field === 'password' ? 128 : undefined"
     :is-menu-open="state.isMenuOpen"
-    :isOnSharedPage="props.isOnSharedPage"
+    :is-on-shared-page="props.isOnSharedPage"
     :is-editable="state.isEditable"
-    :numberLockingToolTipText="state.numberLockingToolTipText"
-    :showLockIcon="showLockIcon"
+    :number-locking-tool-tip-text="state.numberLockingToolTipText"
+    :show-lock-icon="showLockIcon"
     @mouseleave="handleMouseLeave"
     @click-input-wrapper="handleClickInputWrapper"
     @keydown.enter="handleEnterPress"
@@ -554,7 +554,7 @@ onBeforeMount(() => {
       <CloakIdentifierIcon
         v-else-if="state.value && state.value.length"
         :field="props.field"
-        :fieldType="props.fieldType"
+        :field-type="props.fieldType"
       />
       <InlineSvg
         v-else
@@ -567,7 +567,7 @@ onBeforeMount(() => {
         :disabled="
           state.lockStatus === 'locked' || state.lockStatus === 'expired'
         "
-        colorOverride
+        color-override
         icon
         @click="handleNumberLockToggle"
       >

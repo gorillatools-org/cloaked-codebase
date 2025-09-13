@@ -1,7 +1,21 @@
 <script setup>
 import ButtonPlans from "@/features/subscribe/ButtonPlans.vue";
-import { toRef } from "vue";
+import { toRef, computed } from "vue";
 import { usePlanType } from "@/features/subscribe/composables/usePlanType.js";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT } from "@/scripts/posthogEvents";
+import { useDisplay } from "@/composables/useDisplay.js";
+
+const {
+  featureFlag: topOfFunnelExperiment,
+  hasLoadedFeatureFlag: topOfFunnelFlagLoaded,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT);
+
+const showSubscribeNowCta = computed(
+  () =>
+    topOfFunnelFlagLoaded.value &&
+    topOfFunnelExperiment.value === "checkout-cta-subscribe-now-copy"
+);
 
 const props = defineProps({
   option: {
@@ -12,49 +26,32 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  isLoading: {
-    type: Boolean,
-    default: false,
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
 });
-
 defineEmits(["choose-plan"]);
 
-const type = usePlanType(toRef(() => props?.option?.stripePlan));
+const planType = usePlanType(toRef(() => props?.option?.stripePlan));
+
+const { isMobile } = useDisplay();
 </script>
 
 <template>
   <ButtonPlans
     id="choose-plan-cta"
-    :type="type?.toLowerCase()"
-    class="choose-plan-cta"
-    v-bind="$attrs"
-    :disabled="props.disabled || props.isLoading"
-    :loading="props.isLoading"
-    fullWidth
+    :type="planType?.toLowerCase()"
+    size="lg"
+    :full-width="!isMobile || showSubscribeNowCta"
     @click="$emit('choose-plan')"
   >
-    <span v-if="props.hasPlan">
-      <span v-if="props.isLoading">Switching plan</span>
-      <span v-else>Switch to {{ type?.toLowerCase() }} plan</span>
+    <span v-if="hasPlan">
+      <span v-if="$attrs.loading">Switching plan</span>
+      <span v-else>Switch to {{ planType?.toLowerCase() }} plan</span>
     </span>
     <span v-else>
-      <span v-if="props.isLoading">Processing...</span>
-      <span v-else>Start your {{ type?.toLowerCase() }} plan</span>
+      <span v-if="$attrs.loading">Processing...</span>
+      <span v-else>
+        <span v-if="showSubscribeNowCta">Subscribe now</span>
+        <span v-else>Start your {{ planType?.toLowerCase() }} plan</span>
+      </span>
     </span>
   </ButtonPlans>
 </template>
-
-<style lang="scss" scoped>
-.choose-plan-cta {
-  &__discount {
-    display: inline-block;
-    margin: 0 -3px;
-    opacity: 0.6;
-  }
-}
-</style>

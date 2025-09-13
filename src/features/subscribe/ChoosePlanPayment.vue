@@ -1,15 +1,13 @@
 <script setup>
 import ChoosePlanCta from "@/features/subscribe/ChoosePlanCta.vue";
 import SubscribeInputPromo from "@/features/subscribe/SubscribeInputPromo.vue";
-import { ref, toRef, watch, computed } from "vue";
-// import store from "@/store";
+import { ref, toRef, watch, computed, onMounted } from "vue";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { usePromoCode } from "@/composables/usePromoCode";
 import { usePaymentIntent } from "@/composables/usePaymentIntent";
 import { usePaymentProviderStripe } from "@/composables/usePaymentProviderStripe";
 import { usePaymentProviderPaypal } from "@/composables/usePaymentProviderPaypal";
 import { usePlanOptions } from "@/features/subscribe/composables/usePlanOptions";
-import { useBillingCycle } from "@/features/subscribe/composables/useBillingCycle";
 import { usePlans } from "@/features/subscribe/composables/usePlans";
 import { usePlanPrice } from "@/features/subscribe/composables/usePlanPrice.js";
 import { usePriceAnchor } from "@/features/subscribe/composables/usePriceAnchor.js";
@@ -17,10 +15,30 @@ import { usePriceDiscount } from "@/features/subscribe/composables/usePriceDisco
 import {
   formattedPrice,
   isValidPrice,
-} from "@/features/subscribe/composables/utils.js";
-import { toValue } from "@vueuse/core/index";
+} from "@/features/subscribe/composables/utils.ts";
+import { toValue, until } from "@vueuse/core/index";
 import { useStripeIntent } from "@/features/subscribe/composables/useStripeIntent.js";
 import BaseText from "@/library/BaseText.vue";
+import { usePlanType } from "@/features/subscribe/composables/usePlanType.js";
+import { usePlanBilling } from "@/features/subscribe/composables/usePlanBilling.js";
+import ChoosePlanGuarantee from "@/features/subscribe/ChoosePlanGuarantee.vue";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import {
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT,
+  PH_FEATURE_FLAG_CHECKOUT_MINIMAL_COPY_MODE,
+  PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE,
+} from "@/scripts/posthogEvents";
+import { useRoute } from "vue-router";
+
+const {
+  featureFlag: checkoutMinimalModeEnabled,
+  hasLoadedFeatureFlag: checkoutMinimalModeLoaded,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_CHECKOUT_MINIMAL_COPY_MODE);
+
+const isMinimalModeDisabled = computed(
+  () =>
+    checkoutMinimalModeLoaded.value && checkoutMinimalModeEnabled.value !== true
+);
 
 const props = defineProps({
   user: {
@@ -43,9 +61,9 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  title: {
+  billingCycle: {
     type: String,
-    default: "Checkout",
+    required: true,
   },
 });
 
@@ -54,17 +72,17 @@ const paymentMethod = defineModel("paymentMethod", {
   type: String,
 });
 
-const { activePlan, allPlans } = usePlans();
+const route = useRoute();
+const promoCode = route.query["promo-code"] ?? "";
+const isPromoCodeInputVisible = ref(!!promoCode);
 
-const { selectedBillingCycle } = useBillingCycle(allPlans);
+const { activePlan } = usePlans();
 
 const { selectedPlanOption, selectedPlan, selectedPaypalPlan } = usePlanOptions(
   {
-    selectedBillingCycle,
+    selectedBillingCycle: toRef(() => props.billingCycle),
   }
 );
-
-const isPromoCodeInputVisible = ref(false);
 
 const {
   isValidatingPromoCode,
@@ -74,21 +92,19 @@ const {
   validatePromoCode,
 } = usePromoCode(selectedPlan);
 
+onMounted(async () => {
+  if (!promoCode) return;
+  await until(() => !!selectedPlan.value?.product_id).toBe(true);
+  promoCodeInput.value = promoCode;
+  validatePromoCode();
+});
+
 const { paymentIntent, isLoadingIntent, promoDiscount } = usePaymentIntent(
   selectedPlan,
   promoCodeOffer,
   promoCodeError,
   validatePromoCode
 );
-
-const discountModel = defineModel("discount", {
-  default: null,
-  type: Number,
-});
-
-watch(promoDiscount, (newValue) => {
-  discountModel.value = newValue;
-});
 
 const price = usePlanPrice(selectedPlan);
 const anchoredPrice = usePriceAnchor(
@@ -106,6 +122,7 @@ const { clearIntentCache } = useStripeIntent();
 
 const onSubscribed = (plan) => {
   clearIntentCache();
+  posthogCapture("user_subscribed", plan);
   emit("subscribed", plan);
 };
 
@@ -155,6 +172,31 @@ defineExpose({
 const isHeadlessUser = computed(() => {
   return !props.user || props.user.account_version < 2;
 });
+
+const {
+  featureFlag: checkoutNewBaseLine,
+  hasLoadedFeatureFlag: checkoutNewBaseLineLoaded,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE);
+
+const showGuaranteeBelowCta = computed(
+  () =>
+    checkoutNewBaseLineLoaded.value &&
+    checkoutNewBaseLine.value === "new-baseline"
+);
+
+const {
+  featureFlag: topOfFunnelExperiment,
+  hasLoadedFeatureFlag: topOfFunnelFlagLoaded,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT);
+
+const showSubscribeNowCta = computed(
+  () =>
+    topOfFunnelFlagLoaded.value &&
+    topOfFunnelExperiment.value === "checkout-cta-subscribe-now-copy"
+);
+
+const planType = usePlanType(toRef(() => selectedPlanOption.value?.stripePlan));
+const billingCycleLabel = usePlanBilling(selectedPlan);
 </script>
 
 <template>
@@ -162,13 +204,18 @@ const isHeadlessUser = computed(() => {
     v-show="selectedPlanOption"
     class="choose-plan-payment"
   >
-    <div class="choose-plan-payment__header">
+    <div
+      class="choose-plan-payment__header"
+      :class="{
+        'choose-plan-payment__header--minimal-mode': !isMinimalModeDisabled,
+      }"
+    >
       <BaseText
         as="div"
         variant="headline-3-bold"
         class="choose-plan-payment__header-title"
       >
-        <h2>{{ title }}</h2>
+        <h2>Checkout</h2>
 
         <BaseText
           v-if="paymentMethod === 'Card'"
@@ -182,6 +229,7 @@ const isHeadlessUser = computed(() => {
         </BaseText>
       </BaseText>
       <BaseText
+        v-if="isMinimalModeDisabled"
         as="div"
         variant="body-3-semibold"
         class="choose-plan-payment__header-subtitle"
@@ -270,55 +318,69 @@ const isHeadlessUser = computed(() => {
       </BaseText>
     </section>
     <section class="choose-plan-payment__total">
-      <BaseText
-        as="div"
-        variant="body-2-semibold"
-        class="choose-plan-payment__total-title"
-      >
-        Total
-      </BaseText>
-      <BaseText
-        variant="headline-4-bold"
-        as="p"
-        class="choose-plan-payment__total-price"
-      >
-        <span
-          v-if="isValidPrice(anchoredPrice)"
-          class="choose-plan-payment__total-price-strikeout"
+      <div class="choose-plan-payment__total-row">
+        <BaseText
+          as="div"
+          variant="body-2-semibold"
+          class="choose-plan-payment__total-title"
         >
-          {{ formattedPrice(anchoredPrice) }}
-        </span>
-        <span
-          v-else-if="isValidPrice(discountedPrice)"
-          class="choose-plan-payment__total-price-strikeout"
-        >
-          {{ formattedPrice(price) }}
-        </span>
-        <span
-          v-if="isValidPrice(discountedPrice)"
-          class="choose-plan-payment__total-price-span"
-        >
-          {{ formattedPrice(discountedPrice) }}
-        </span>
-        <span
-          v-else-if="isValidPrice(price)"
-          class="choose-plan-payment__total-price-span"
-        >
-          {{ formattedPrice(price) }}
-        </span>
-      </BaseText>
+          Total
+        </BaseText>
+        <div>
+          <BaseText
+            v-if="showSubscribeNowCta"
+            as="div"
+            variant="body-small-semibold"
+            class="choose-plan-payment__plan-type"
+          >
+            {{ planType }}
+            {{ billingCycleLabel }}
+            Plan
+          </BaseText>
+          <BaseText
+            variant="headline-4-bold"
+            as="p"
+            class="choose-plan-payment__total-price"
+          >
+            <span
+              v-if="isValidPrice(anchoredPrice)"
+              class="choose-plan-payment__total-price-strikeout"
+            >
+              {{ formattedPrice(anchoredPrice) }}
+            </span>
+            <span
+              v-else-if="isValidPrice(discountedPrice)"
+              class="choose-plan-payment__total-price-strikeout"
+            >
+              {{ formattedPrice(price) }}
+            </span>
+            <span
+              v-if="isValidPrice(discountedPrice)"
+              class="choose-plan-payment__total-price-span"
+            >
+              {{ formattedPrice(discountedPrice) }}
+            </span>
+            <span
+              v-else-if="isValidPrice(price)"
+              class="choose-plan-payment__total-price-span"
+            >
+              {{ formattedPrice(price) }}
+            </span>
+          </BaseText>
+        </div>
+      </div>
       <slot name="after-total" />
     </section>
     <ChoosePlanCta
       v-if="selectedPlanOption && (paymentMethod === 'Card' || isHeadlessUser)"
       :option="selectedPlanOption"
       :has-plan="!!activePlan"
-      :is-loading="
-        (isProcessingStripePayment || props.isLoading) && !stripeError
+      :loading="(isProcessingStripePayment || props.isLoading) && !stripeError"
+      :disabled="
+        (props.disabled || isProcessingStripePayment || props.isLoading) &&
+        !stripeError
       "
-      :disabled="props.disabled && !stripeError"
       class="choose-plan-payment__cta"
-      size="lg"
       @choose-plan="onChoosePlan"
     />
     <section
@@ -345,11 +407,17 @@ const isHeadlessUser = computed(() => {
         {{ paypalError }}
       </BaseText>
     </section>
+    <ChoosePlanGuarantee
+      v-if="showGuaranteeBelowCta"
+      class="choose-plan-picker-flat__guarantee"
+      text="30-day money-back guarantee"
+    />
   </div>
 </template>
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .choose-plan-payment {
   &__header {
     display: flex;
@@ -360,6 +428,10 @@ const isHeadlessUser = computed(() => {
       margin-bottom: 4px;
       display: flex;
       justify-content: space-between;
+    }
+
+    &--minimal-mode {
+      margin-bottom: 16px;
     }
   }
 
@@ -460,15 +532,14 @@ const isHeadlessUser = computed(() => {
 
   &__cta {
     width: 100%;
+    margin-top: 36px;
   }
 
   &__total {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
     margin-top: 24px;
-    margin-bottom: 36px;
+    // margin-bottom: 36px;
     padding-top: 16px;
 
     @at-root .theme-dark & {
@@ -477,6 +548,13 @@ const isHeadlessUser = computed(() => {
 
     @at-root .theme-light & {
       border-top: 1px solid rgba($black, 0.1);
+    }
+
+    &-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
     }
 
     &-title {
@@ -500,11 +578,36 @@ const isHeadlessUser = computed(() => {
     }
   }
 
+  &__plan-type {
+    text-align: right;
+
+    @at-root .theme-light & {
+      opacity: 0.5;
+    }
+
+    @at-root .theme-dark & {
+      opacity: 0.6;
+    }
+  }
+
   &__paypal-wrapper {
+    margin-top: 36px;
     &--disabled {
       opacity: 0.5;
       pointer-events: none;
       cursor: not-allowed;
+    }
+  }
+
+  .choose-plan-picker-flat {
+    &__guarantee {
+      margin-top: 16px;
+      padding-left: 6px;
+      padding-right: 6px;
+      padding: 0;
+      border: 0;
+      font-size: 14px;
+      font-weight: 600;
     }
   }
 }

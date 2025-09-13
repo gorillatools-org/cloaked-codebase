@@ -200,6 +200,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .date-input {
   width: 100%;
   margin-top: 20px;

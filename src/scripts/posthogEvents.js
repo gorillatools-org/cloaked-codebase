@@ -146,6 +146,11 @@ export const PH_EVENT_USER_VIEWED_DD_SECONDARY_FORM_INFO =
 export const PH_EVENT_USER_ADDED_DD_SECONDARY_FORM_INFO =
   "user_added_data_deletion_secondary_information";
 
+export const PH_EVENT_USER_SUBMITTED_DD_SCAN_EMAIL_MODAL_CAPTURE =
+  "user_submitted_data_deletion_scan_email_modal_capture";
+export const PH_EVENT_USER_VIEWED_DD_SCAN_EMAIL_MODAL =
+  "user_viewed_data_delete_scan_email_modal";
+
 // New onboarding screen events
 export const PH_SCREEN_EVENT_ONBOARDING_INTRO_FIRST_SCREEN =
   "dd_onboarding_intro_1st_screen";
@@ -212,14 +217,13 @@ export const PH_FEATURE_FLAG_DATA_DELETION_IN_APP_SEARCH = "dd_in_app_search";
 export const PH_EVENT_USER_CLICKED_LOGIN_NO_WASM = "user_clicked_login_no_wasm";
 export const PH_FEATURE_FLAG_DD_SCHEDULE_CALL = "dd_schedule_call";
 export const PH_FEATURE_FLAG_DD_ONBOARDING = "dd_onboarding_enabled";
+export const PH_FEATURE_FLAG_DD_EMAIL_CAPTURE_MODAL = "dd_email_capture_modal";
 export const PH_FEATURE_ENABLE_BREACHES_FLOW_ENABLED =
   "dd_onboarding_breaches_flow_enabled";
 export const PH_FEATURE_FLAG_DD_SURVEY_VS_VIDEO =
   "post_payment_onboarding_experiments";
 export const PH_FEATURE_FLAG_GOOGLE_SEARCH_REMOVAL =
   "test-google-search-removals";
-export const PH_FEATURE_FLAG_USER_INVITE_UPGRADE =
-  "upgrade-or-invite-bulk-plan";
 export const PH_FEATURE_FLAG_AI_OPERATOR = "operator-enabled";
 export const PH_FEATURE_FLAG_AUTO_CLOAKING = "autocloaking-operator-enabled";
 
@@ -248,3 +252,21 @@ export const PH_EVENT_OPERATOR_EXTENSION_MODAL_USER_CLICKED_INSTALL_CLOAKED_EXTE
   "operator_extension_modal_user_clicked_install_cloaked_extension";
 export const PH_EVENT_OPERATOR_EXTENSION_MODAL_USER_CLICKED_VIEW_MANUAL_REMOVAL_STEPS =
   "operator_extension_modal_user_clicked_view_manual_removal_steps";
+
+// app download event
+export const PH_EVENT_USER_CLICKED_DOWNLOAD_APP = "user_clicked_download_app";
+
+// Top of Funnel Experiment
+export const PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT =
+  "top-of-funnel-experiment";
+
+// Data Deletion Improvement
+export const PH_FEATURE_FLAG_DATA_DELETION_IMPROVEMENT =
+  "data_deletion_improvement";
+
+// Checkout Minimal Copy Mode
+export const PH_FEATURE_FLAG_CHECKOUT_MINIMAL_COPY_MODE =
+  "checkout-minimal-copy-mode";
+
+// Checkout New Baseline Experiment
+export const PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE = "checkout-new-baseline";

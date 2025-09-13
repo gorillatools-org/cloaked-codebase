@@ -7,16 +7,28 @@ import BaseButton from "@/library/BaseButton.vue";
 import MonitoringFeaturesSheet from "@/features/monitoring/MonitoringFeaturesSheet.vue";
 import MonitoringTerms from "@/features/monitoring/MonitoringTerms.vue";
 import { useDataDeleteOverlay } from "@/routes/DataDeletion/composables/useDataDeleteOverlay.js";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const isOpen = defineModel({ type: Boolean });
 
 const { openDataDeleteOverlay } = useDataDeleteOverlay();
 
+const { featureFlag: enrollmentV2Enabled } = usePostHogFeatureFlag(
+  "enrollment_v2_enabled"
+);
+
 const onSetUp = () => {
   isOpen.value = false;
 
   setTimeout(() => {
-    openDataDeleteOverlay();
+    if (enrollmentV2Enabled.value) {
+      router.push({ name: "ExposureStatusEnrollExposures" });
+    } else {
+      openDataDeleteOverlay();
+    }
   }, 400);
 };
 </script>
@@ -71,16 +83,6 @@ const onSetUp = () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-
-  &__medallion {
-    :deep(.base-medallion__button) {
-      background-color: $color-safe-zone-green-15;
-    }
-
-    :deep(.base-medallion__button-icon) {
-      background-color: $color-safe-zone-green;
-    }
   }
 
   &__title {

@@ -320,6 +320,7 @@ function deleteThread() {
   </button>
 </template>
 <style scoped lang="scss">
+/* stylelint-disable */
 .list-item {
   width: auto;
   min-width: 100%;

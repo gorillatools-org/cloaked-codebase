@@ -8,7 +8,13 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  isActive: {
+    type: Boolean,
+    default: false,
+  },
 });
+
+const emit = defineEmits(["click"]);
 
 const iconMapping = {
   vpn: "website",
@@ -36,7 +42,11 @@ const progress = computed(() => {
 </script>
 
 <template>
-  <div class="for-you-activated-list-item">
+  <div
+    class="for-you-activated-list-item"
+    :class="{ 'for-you-activated-list-item--active': isActive }"
+    @click="emit('click', props.feature)"
+  >
     <BaseIcon
       :name="icon"
       class="for-you-activated-list-item__icon"
@@ -64,6 +74,7 @@ const progress = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .for-you-activated-list-item {
   display: flex;
   align-items: center;
@@ -92,6 +103,7 @@ const progress = computed(() => {
     top: 50%;
     left: 16px;
     transform: translateY(-50%);
+    border: 1px solid $color-primary-10;
   }
 
   &__content {
@@ -120,8 +132,22 @@ const progress = computed(() => {
   }
 
   &:hover {
-    background-color: $color-primary-5;
+    background-color: $color-primary-1;
     cursor: pointer;
+  }
+
+  &--active {
+    background-color: rgba($color-foam-blue, 0.15);
+
+    & .for-you-activated-list-item__icon {
+      background-color: transparent;
+      border: 1px solid $color-foam-blue;
+    }
+
+    &:hover {
+      background-color: rgba($color-foam-blue, 0.15);
+      cursor: default;
+    }
   }
 }
 </style>

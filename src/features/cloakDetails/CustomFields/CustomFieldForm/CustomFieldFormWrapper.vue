@@ -54,7 +54,7 @@ const isSaveDisabled = computed(() => {
         Cancel
       </Button>
       <Button
-        :loading="attrs.isLoading"
+        :loading="attrs['is-loading']"
         :disabled="isSaveDisabled"
         @click="$emit('attempt-save')"
       >

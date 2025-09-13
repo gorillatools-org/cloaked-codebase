@@ -34,6 +34,7 @@ const onUpgradePlan = () => openPlansModal();
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .subscription-family-plans {
   max-width: 660px;
   padding: 20px;

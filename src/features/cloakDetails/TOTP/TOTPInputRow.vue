@@ -9,7 +9,7 @@ const attrs = useAttrs();
 
 <template>
   <AppTooltipIntro
-    :value="attrs.isTotpIntroDisplayed"
+    :value="attrs['is-totp-intro-displayed']"
     :has-click-open="false"
     :has-click-close="false"
     :has-outside-click-close="true"
@@ -20,12 +20,12 @@ const attrs = useAttrs();
       v-bind="attrs"
       field="one-time passcode"
       placeholder="Add one-time passcode"
-      :fieldType="'totp'"
-      :initialValue="attrs.totp?.value"
-      :copy-value="attrs.totpToken"
+      :field-type="'totp'"
+      :initial-value="attrs.totp?.value"
+      :copy-value="attrs['totp-token']"
       :loading="attrs.loading"
       :error="!!attrs.errors"
-      :identityId="attrs.identityId"
+      :identity-id="attrs['identity-id']"
     >
       <template #input="{ isEditable }">
         <TOTPToken

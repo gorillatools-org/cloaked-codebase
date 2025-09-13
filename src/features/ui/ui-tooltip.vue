@@ -24,6 +24,7 @@ const props = defineProps({
   offsetY: { type: [Number, String], default: 0 },
   canShow: { type: Boolean, default: true },
   isOnSharedPage: { type: Boolean, default: false },
+  isMultiline: { type: Boolean, default: false },
 });
 const attrs = useAttrs();
 
@@ -58,9 +59,7 @@ const style = computed(() => {
   return calculatedStyle;
 });
 
-const isMobileDevice = computed(() => {
-  return navigator.maxTouchPoints > 0;
-});
+const isTouchDevice = computed(() => navigator.maxTouchPoints > 0);
 
 watch(
   () => props.title,
@@ -112,7 +111,7 @@ function handleMouseMove() {
 }
 
 function handleMouseEnter() {
-  if (!props.canShow || isMobileDevice.value) {
+  if (!props.canShow || isTouchDevice.value) {
     return;
   }
 
@@ -299,6 +298,7 @@ function moveBack() {
         class="ui-tooltip__content"
         :class="{
           'ui-tooltip__content--shared-page': props.isOnSharedPage,
+          'ui-tooltip__content--multiline': props.isMultiline,
         }"
       >
         <slot name="content">
@@ -310,6 +310,7 @@ function moveBack() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .ui-tooltip-wrapper {
   display: inline-flex;
   align-items: center;
@@ -340,6 +341,10 @@ function moveBack() {
     padding: 10px;
     line-height: 16px;
     color: $color-primary-1;
+
+    &--multiline {
+      white-space: pre-line;
+    }
 
     &--shared-page {
       background: $color-primary-90-light;

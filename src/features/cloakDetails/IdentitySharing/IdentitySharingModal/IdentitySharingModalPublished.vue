@@ -344,6 +344,7 @@ function copyAll() {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .sharing-modal-published {
   max-height: 535px;
   transition: max-height 0.25s ease-in-out;

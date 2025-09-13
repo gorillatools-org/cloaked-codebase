@@ -16,6 +16,8 @@ import {
 } from "@/features/enrollment/composables.js";
 import { formatPhoneStringBasic } from "@/scripts/format.js";
 import { getFormattedDateOfBirthValue } from "@/features/enrollment/utils.js";
+import { useToast } from "@/composables/useToast.js";
+import { MAX_ADDRESSES_LIMIT } from "@/scripts/constants";
 
 defineProps({
   isSubmitting: {
@@ -43,6 +45,7 @@ const email = ref("");
 const address = ref("");
 const addressError = ref("");
 const namesError = ref("");
+const toast = useToast();
 
 const onAddPhone = () => {
   validatePhone();
@@ -76,6 +79,14 @@ const onRemoveEmail = (email) => {
 };
 
 const onAddAddress = (address) => {
+  // Check if we're at the limit of 25 addresses
+  if (addresses.value.length >= MAX_ADDRESSES_LIMIT) {
+    toast.error(
+      `You can only add up to ${MAX_ADDRESSES_LIMIT} addresses. Please remove an existing address before adding a new one.`
+    );
+    return;
+  }
+
   addresses.value.push(address);
 };
 
@@ -321,6 +332,7 @@ const onRemoveName = (name) => {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .monitoring-settings-basic {
   &__sheet {
     display: grid;

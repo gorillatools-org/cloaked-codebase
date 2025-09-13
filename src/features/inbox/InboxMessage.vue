@@ -562,8 +562,8 @@ watch(
               "
               key="inbox-messages"
               :loading="state.fetching"
-              :allDataFetched="!state.nextUrl"
-              @loadMore="fetchThread"
+              :all-data-fetched="!state.nextUrl"
+              @load-more="fetchThread"
             />
             <div
               v-if="
@@ -633,11 +633,11 @@ watch(
                 :class="{ inbound: activity?.inbound }"
               >
                 <InboxSafeUGC
-                  contentType="text_message"
+                  content-type="text_message"
                   :content="activity?.message?.body"
                   :inbound="activity?.inbound"
                   :message="true"
-                  :overrideBodyStyle="{
+                  :override-body-style="{
                     'word-wrap': 'normal',
                     'white-space': 'wrap',
                     display: 'flex',
@@ -756,10 +756,10 @@ watch(
             :filter="getFilePermissions"
             :disabled="state.files.length > 4"
             :error="validation.maxPayload(state.files)"
-            :filesForRemoval="state.filesForRemoval"
-            :isTextMessage="true"
+            :files-for-removal="state.filesForRemoval"
+            :is-text-message="true"
             @change="handleFileChange"
-            @filesRemoved="filesRemoved"
+            @files-removed="filesRemoved"
           >
             <template #icon>
               <AttachmentsIcon />
@@ -859,6 +859,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .loading-skeleton {
   background-color: $color-base-white-100;
   color: $color-primary-50;

@@ -3,6 +3,9 @@ import MonitoringSettingsBasicAddresses from "@/features/monitoring/MonitoringSe
 import BaseButton from "@/library/BaseButton.vue";
 import { ref } from "vue";
 import MonitoringDetailHeaderBack from "@/features/monitoring/MonitoringDetailHeaderBack.vue";
+import { useToast } from "@/composables/useToast.js";
+import { MAX_ADDRESSES_LIMIT } from "@/scripts/constants";
+import BaseText from "@/library/BaseText.vue";
 
 const addresses = defineModel("addresses", { type: Array });
 
@@ -14,11 +17,20 @@ const street = ref("");
 const suite = ref("");
 
 const addressForm = ref(null);
+const toast = useToast();
 
 const onAddAddress = () => {
   const isValid = addressForm.value?.validateForm();
 
   if (isValid) {
+    // Check if we're at the limit of 25 addresses
+    if (addresses.value.length >= MAX_ADDRESSES_LIMIT) {
+      toast.error(
+        `You can only add up to ${MAX_ADDRESSES_LIMIT} addresses. Please remove an existing address before adding a new one.`
+      );
+      return;
+    }
+
     addresses.value.push({
       address1: street.value,
       address2: suite.value,
@@ -60,14 +72,25 @@ const onRemoveAddress = (address) => {
       @remove-address="onRemoveAddress"
       @add-address="onAddAddress"
     />
+    <BaseText
+      variant="body-small-medium"
+      class="settings-data-removal-addresses__count"
+    >
+      {{ addresses.length }} of {{ MAX_ADDRESSES_LIMIT }} addresses
+    </BaseText>
     <BaseButton
       icon="check"
       size="md"
       full-width
+      :disabled="addresses.length >= MAX_ADDRESSES_LIMIT"
       @click="onAddAddress"
       @keydown.enter="onAddAddress"
     >
-      Add Address
+      {{
+        addresses.length >= MAX_ADDRESSES_LIMIT
+          ? `Address Limit Reached (${MAX_ADDRESSES_LIMIT})`
+          : "Add Address"
+      }}
     </BaseButton>
   </div>
 </template>

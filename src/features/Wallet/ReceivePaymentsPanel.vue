@@ -79,7 +79,7 @@ const openDefaultFundingSources = () => {
 
 <template>
   <div v-if="multiCardPaymentPanelActivated">
-    <MultiCardPaymentPanel :outstandingBalance="props.outstandingBalance" />
+    <MultiCardPaymentPanel :outstanding-balance="props.outstandingBalance" />
   </div>
 
   <div
@@ -121,7 +121,7 @@ const openDefaultFundingSources = () => {
       </div>
 
       <Button
-        fullWidth
+        full-width
         size="xl"
         :disabled="buttonDisabled"
         :loading="buttonDisabled"
@@ -134,6 +134,7 @@ const openDefaultFundingSources = () => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .receive-payments-panel {
   z-index: 1;
   background-color: $color-base-white-100;

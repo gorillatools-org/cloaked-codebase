@@ -1,8 +1,8 @@
 <script setup>
-import UiHeader from "@/features/onboarding-new/UiHeader.vue";
-import UiButton from "@/features/onboarding-new/UiButton.vue";
-import UiButtonRow from "@/features/onboarding-new/UiButtonRow.vue";
-import UiPageWrapper from "@/features/onboarding-new/UiPageWrapper.vue";
+import UiHeader from "@/features/eSim/UiHeader.vue";
+import UiButton from "@/features/eSim/UiButton.vue";
+import UiButtonRow from "@/features/eSim/UiButtonRow.vue";
+import UiPageWrapper from "@/features/eSim/UiPageWrapper.vue";
 import EsimMobileToggleWidget from "@/features/eSim/EsimMobileToggleWidget.vue";
 import AtomInputCheckbox from "@/library/AtomInputCheckbox.vue";
 import { PH_SCREEN_EVENT_ESIM_ACTIVATING_ESIM_SCREEN } from "@/scripts/posthogEvents";
@@ -32,14 +32,14 @@ function handleInput(e) {
 </script>
 <template>
   <UiPageWrapper
-    showLogo
+    show-logo
     logo="cloaked-esim-logo"
-    :screenEvent="PH_SCREEN_EVENT_ESIM_ACTIVATING_ESIM_SCREEN"
-    :esimStep="2"
+    :screen-event="PH_SCREEN_EVENT_ESIM_ACTIVATING_ESIM_SCREEN"
+    :esim-step="2"
   >
     <UiHeader
-      leftAlign
-      maxWidth="450px"
+      left-align
+      max-width="450px"
     >
       <h2>Check device lock settings</h2>
       <h5>
@@ -59,11 +59,11 @@ function handleInput(e) {
 
     <EsimMobileToggleWidget
       class="esim-mobile-toggle-widget"
-      :deviceType="props.deviceType"
-      :imgName="`${props.deviceType}-lock`"
+      :device-type="props.deviceType"
+      :img-name="`${props.deviceType}-lock`"
       :instructions="instructions"
       center
-      @updateDeviceType="(deviceType) => emit('updateDeviceType', deviceType)"
+      @update-device-type="(deviceType) => emit('updateDeviceType', deviceType)"
     />
     <UiButtonRow>
       <UiButton

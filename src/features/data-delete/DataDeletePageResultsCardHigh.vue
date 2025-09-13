@@ -66,7 +66,7 @@ watch(
     type="alert"
     class="data-delete-results-high"
   >
-    <DataDeleteThreatTag threatLevel="high" />
+    <DataDeleteThreatTag threat-level="high" />
     <div
       v-if="result.ssn || dateOfBirth"
       class="data-delete-results-high__column"

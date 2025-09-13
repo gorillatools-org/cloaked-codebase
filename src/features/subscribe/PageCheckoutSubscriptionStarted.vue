@@ -1,6 +1,5 @@
 <script setup>
 import PageCheckoutHeader from "@/features/subscribe/PageCheckoutHeader.vue";
-import UserReviews from "@/features/subscribe/UserReviews.vue";
 import BaseButton from "@/library/BaseButton.vue";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { PH_EVENT_BULK_PLAN_SUB_STARTED_CLICK } from "@/scripts/posthogEvents.js";
@@ -18,9 +17,7 @@ const { isMobile } = useDisplay();
 </script>
 <template>
   <div class="page-checkout-subscription-started">
-    <PageCheckoutHeader>
-      <UserReviews />
-    </PageCheckoutHeader>
+    <PageCheckoutHeader />
     <div class="page-checkout-subscription-started__content">
       <BaseText
         as="h1"
@@ -47,7 +44,7 @@ const { isMobile } = useDisplay();
       <BaseButton
         variant="cloaked-gradient"
         size="lg"
-        fullWidth
+        full-width
         icon="arrow-right"
         class="page-checkout-subscription-started__cta"
         @click="onContinue"

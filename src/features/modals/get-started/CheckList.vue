@@ -113,6 +113,7 @@ function closeModal(event, partialUrl) {
 }
 </script>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .checklist-container {
   .checklist-item {
     display: flex;

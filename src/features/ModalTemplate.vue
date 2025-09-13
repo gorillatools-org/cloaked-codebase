@@ -1,12 +1,5 @@
 <script setup>
-import {
-  reactive,
-  watch,
-  computed,
-  useSlots,
-  nextTick,
-  onUnmounted,
-} from "vue";
+import { reactive, watch, computed, useSlots, onUnmounted } from "vue";
 import InlineSvg from "@/features/InlineSvg.vue";
 import BaseText from "@/library/BaseText.vue";
 
@@ -55,6 +48,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  preventEscapeOnInputFocus: {
+    type: Boolean,
+    default: false,
+  },
   size: {
     type: String,
     default: "medium",
@@ -67,6 +64,7 @@ const props = defineProps({
 const state = reactive({
   isEnterState: false,
   isLeaveState: false,
+  isInitialized: false,
 });
 
 const style = computed(() => {
@@ -94,31 +92,46 @@ function close() {
 
 function handleKeydown(event) {
   if (event.key === "Escape" && props.show) {
+    if (props.preventEscapeOnInputFocus && hasInputFocused()) {
+      return;
+    }
+
     event.stopPropagation();
     close();
   }
+}
+
+function hasInputFocused() {
+  const active = document.activeElement;
+  return (
+    active &&
+    (active.tagName === "INPUT" ||
+      active.tagName === "TEXTAREA" ||
+      active.isContentEditable)
+  );
 }
 
 watch(
   () => props.show,
   (value) => {
     if (value) {
+      // Reset states
       state.isLeaveState = false;
+      state.isEnterState = false;
 
-      nextTick(() => {
+      // Use requestAnimationFrame for smoother animation timing
+      requestAnimationFrame(() => {
         state.isEnterState = true;
-        document.addEventListener("keydown", handleKeydown, true); // Use capture phase
+        state.isInitialized = true;
+        document.addEventListener("keydown", handleKeydown, true);
       });
     } else {
       state.isEnterState = false;
-
-      nextTick(() => {
-        state.isLeaveState = true;
-        document.removeEventListener("keydown", handleKeydown, true);
-      });
+      state.isLeaveState = true;
+      document.removeEventListener("keydown", handleKeydown, true);
     }
   },
-  { immediate: true, deep: true }
+  { immediate: true }
 );
 </script>
 
@@ -127,6 +140,7 @@ watch(
     class="modal-container"
     :class="{
       active: props.show,
+      initialized: state.isInitialized,
       'modal-container--enter-state': state.isEnterState,
       'modal-container--leave-state': state.isLeaveState,
     }"
@@ -202,6 +216,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .modal-container {
   position: fixed;
   top: 0;
@@ -215,14 +230,18 @@ watch(
   opacity: 0;
   visibility: hidden;
 
-  @include transition(all 0.3s ease);
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
 
   &.active {
     opacity: 1;
     visibility: visible;
+  }
 
+  &.initialized {
     .content {
-      opacity: 1;
+      transition: all 0.45s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     }
   }
 
@@ -250,14 +269,16 @@ watch(
     background: $color-primary-1;
     border-radius: 28px;
     border: 1px solid $color-primary-10;
-
-    @include transition(all 0.45s cubic-bezier(0.68, -0.55, 0.27, 1.55));
-    @include transition-delay(0.2s);
-
-    opacity: 0;
     display: flex;
     flex-direction: column;
     box-shadow: 0 30px 120px rgba($black, 0.25);
+
+    // Initial state - invisible and slightly scaled down
+    opacity: 0;
+    @include transform(scale(0.95));
+
+    // Remove conflicting transitions - let animations handle the timing
+    transition: none;
 
     &.large {
       max-width: 670px;
@@ -352,43 +373,42 @@ watch(
 
   &--enter-state {
     .content {
-      animation: modal-template-enter 0.45s
-        cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      animation: modal-template-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)
+        forwards;
     }
   }
 
   &--leave-state {
     .content {
-      animation: modal-template-leave 0.45s
-        cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      animation: modal-template-leave 0.25s ease-in forwards;
     }
   }
 
   @keyframes modal-template-enter {
     0% {
       opacity: 0;
+      @include transform(scale(0.95) translateY(20px));
+    }
 
-      @include transform(scale(0.9));
+    50% {
+      opacity: 0.8;
     }
 
     100% {
       opacity: 1;
-
-      @include transform(scale(1));
+      @include transform(scale(1) translateY(0));
     }
   }
 
   @keyframes modal-template-leave {
     0% {
       opacity: 1;
-
-      @include transform(scale(1));
+      @include transform(scale(1) translateY(0));
     }
 
     100% {
       opacity: 0;
-
-      @include transform(scale(0.9));
+      @include transform(scale(0.95) translateY(-10px));
     }
   }
 }

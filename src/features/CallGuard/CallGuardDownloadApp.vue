@@ -2,15 +2,17 @@
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
 import { DOWNLOAD_APP_URL } from "@/scripts/constants";
-import { isMobileDevice } from "@/scripts/regex";
+import { useDisplay } from "@/composables/useDisplay";
 import store from "@/store";
 
 const props = defineProps<{
   isSetupComplete: boolean;
 }>();
 
+const { isMobile } = useDisplay();
+
 function toggleDownloadAppModal() {
-  if (isMobileDevice) {
+  if (isMobile.value) {
     window.open(DOWNLOAD_APP_URL, "_blank");
   } else {
     store.dispatch("toggleMobileAppModal", true);
@@ -42,7 +44,7 @@ function toggleDownloadAppModal() {
       variant="secondary"
       size="md"
       icon="new-tab"
-      fullWidth
+      full-width
       class="call-guard-download-app__button"
       @click="toggleDownloadAppModal"
     >
@@ -52,6 +54,7 @@ function toggleDownloadAppModal() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .call-guard-download-app {
   padding: 24px 16px 16px 16px;
   background-color: $color-base-white-100;

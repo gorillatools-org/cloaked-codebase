@@ -10,6 +10,8 @@ import IdentityIcon from "@/features/ui/IdentityIcon.vue";
 const props = defineProps({
   cloak: { type: Object, default: null },
   readOnly: { type: Boolean, default: false },
+  // This is used to keep receiving the refresh event, even after the component is unmounted (which using emit is not possible)
+  refreshCallback: { type: Function, default: null },
 });
 
 const emit = defineEmits(["refresh"]);
@@ -35,10 +37,16 @@ function save() {
   ]);
   state.cloakCopyForUpdate = { ...props.cloak };
   IdentityService.updateCloak(props.cloak.id, payload).then(() => {
-    emit("refresh", {
+    const eventPayload = {
       ...state.cloakCopyForUpdate,
       nickname: payload.nickname,
-    });
+    };
+
+    emit("refresh", eventPayload);
+
+    if (props.refreshCallback) {
+      props.refreshCallback(eventPayload);
+    }
   });
 }
 

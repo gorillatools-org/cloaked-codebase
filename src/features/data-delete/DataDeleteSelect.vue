@@ -108,11 +108,22 @@ const model = defineModel({ type: String });
     }
 
     @at-root .data-delete-select--flat & {
-      background: rgb(255 255 255 / 10%);
       border: none;
 
-      &:hover {
-        background: rgb(255 255 255 / 11%);
+      @at-root .theme-dark & {
+        background: rgba($white, 0.1);
+
+        &:hover {
+          background: rgba($white, 0.11);
+        }
+      }
+
+      @at-root .theme-light & {
+        background: rgba($black, 0.1);
+
+        &:hover {
+          background: rgba($black, 0.11);
+        }
       }
     }
 

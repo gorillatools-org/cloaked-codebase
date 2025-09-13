@@ -8,6 +8,9 @@ import UserService from "@/api/actions/user-service";
 import { nextTick, watch } from "vue";
 import { useToast } from "@/composables/useToast.js";
 import { DATA_DELETE_REQUESTED } from "@/scripts/userFlags";
+import { initializeExtensionAuth } from "@/features/extension-auth/core";
+import { extensionMessaging } from "@/scripts/messaging";
+import { EXTENSION_MESSAGE_TYPES } from "@/scripts/constants";
 
 const { success, error } = useToast();
 
@@ -32,7 +35,15 @@ export default {
       state.MfaMethods = methods;
     },
     setExtensionAuth: (state, { oauth }) => {
-      state.extension = oauth;
+      if (oauth?.expires_in) {
+        const expires_at = moment().add(oauth.expires_in, "seconds").format();
+        state.extension = {
+          ...oauth,
+          expires_at,
+        };
+      } else {
+        state.extension = oauth;
+      }
     },
     setPayload: (state, { payload }) => {
       state.encryption = payload.encryption;
@@ -42,7 +53,6 @@ export default {
       const extension_key = Object.keys(payload.auth ?? {}).filter(
         (k) => k !== import.meta.env.VITE_CLIENT_ID
       );
-
       state.extension =
         payload?.auth?.[extension_key[0]] || state.extension || null;
     },
@@ -87,6 +97,9 @@ export default {
     },
     setLogout: (state) => {
       Object.assign(state, defaultState());
+    },
+    replaceState: (state, newState) => {
+      Object.assign(state, newState);
     },
   },
   getters: {
@@ -194,11 +207,27 @@ export default {
         client_id,
         handler: ({ data }) => {
           commit("setExtensionAuth", { oauth: data });
+          dispatch("broadcastExtensionAuthSuccess");
         },
       });
     },
+    handleAuthSuccess(
+      { dispatch, commit },
+      { oauth, payload, username, reload = false }
+    ) {
+      commit("setPayload", { payload });
+      dispatch("setAccessToken", { oauth: oauth.data });
+      if (username) {
+        commit("setUsername", username);
+      }
+
+      refresh_channel?.postMessage("refresh");
+      if (reload) {
+        window.location.reload();
+      }
+    },
     setAuthPayload: (
-      { dispatch, commit, state },
+      { dispatch, state },
       { payload, codeVerifier, client_id, username, isLoggingIn }
     ) => {
       if (state.user && state.user.id !== payload.user.id) {
@@ -210,15 +239,13 @@ export default {
             if (!isLoggingIn) {
               dispatch("logout", {}, { root: true });
             }
-            setTimeout(() => {
-              commit("setPayload", { payload });
-              dispatch("setAccessToken", { oauth: oauth.data });
-              if (username) {
-                commit("setUsername", username);
-              }
-              refresh_channel?.postMessage("refresh");
-              window.location.reload();
-            }, 500);
+
+            dispatch("handleAuthSuccess", {
+              oauth,
+              payload,
+              username,
+              reload: true,
+            });
           },
         });
       } else {
@@ -227,8 +254,11 @@ export default {
           codeVerifier,
           client_id,
           handler: (oauth) => {
-            commit("setPayload", { payload });
-            dispatch("setAccessToken", { oauth: oauth.data });
+            dispatch("handleAuthSuccess", {
+              oauth,
+              payload,
+              username,
+            });
           },
         });
       }
@@ -295,6 +325,42 @@ export default {
     },
     setMfaMethods({ commit }, enabledMethods) {
       commit("setMfaMethods", enabledMethods);
+    },
+    async initiateExtensionAuth(
+      _context,
+      options = { silent: true, debug: false }
+    ) {
+      try {
+        if (options.debug) {
+          console.log("[Store] Starting extension authentication flow...");
+        }
+
+        await initializeExtensionAuth(router, options);
+        return { success: true };
+      } catch (error) {
+        console.error("Extension authentication initiation failed:", {
+          error: error?.message || error,
+        });
+        throw error;
+      }
+    },
+    async broadcastExtensionAuthSuccess({ state }) {
+      if (!state.extension?.access_token) {
+        console.warn("No extension tokens to broadcast");
+        return;
+      }
+
+      try {
+        if (extensionMessaging?.sendMessage) {
+          await extensionMessaging.sendMessage({
+            type: EXTENSION_MESSAGE_TYPES.EXTENSION_AUTH_COMPLETE,
+            unencrypted: true,
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to broadcast auth success to extension:", err);
+        throw err; // Re-throw to let caller handle if needed
+      }
     },
   },
 };

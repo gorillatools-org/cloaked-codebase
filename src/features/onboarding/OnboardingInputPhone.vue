@@ -45,9 +45,9 @@ const tel = computed({
     ref="telRef"
     v-model="tel"
     autofocus
-    :defaultCountry="state.country"
-    :onlyCountries="phoneCountries"
-    :validCharactersOnly="true"
+    :default-country="state.country"
+    :only-countries="phoneCountries"
+    :valid-characters-only="true"
     class="onboarding-input-phone"
     @country-changed="setCountry"
   />
@@ -55,6 +55,7 @@ const tel = computed({
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .onboarding-input-phone {
   padding: 8px 12px;
   height: 60px;

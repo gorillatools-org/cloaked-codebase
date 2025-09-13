@@ -1,43 +1,13 @@
-<script setup>
+<script setup lang="ts">
 import BaseButton from "@/library/BaseButton.vue";
-import store from "@/store";
-import router from "@/routes/router";
-import CardsServices from "@/api/actions/cards-services";
 
-const props = defineProps({
-  cardId: {
-    type: String,
-    required: true,
-  },
-  identityId: {
-    type: Number,
-    required: true,
-  },
-});
+const emit = defineEmits<{
+  (e: "showDeleteModal"): void;
+}>();
 
-function showDeleteModal() {
-  return store.dispatch("openModal", {
-    header: "Cancel card",
-    paragraphs: [
-      "Are you sure you want to cancel this card? This card's activity will still be accessible should you need to download it later.",
-    ],
-    button: {
-      text: "Yes, cancel card",
-      danger: true,
-      onClick: deleteCard,
-    },
-  });
-}
-
-function deleteCard() {
-  router.push("/wallet").catch((e) => e);
-  store.dispatch("closeRightPanel");
-  store.dispatch("addCardList", "");
-
-  CardsServices.deleteCard(props.identityId, props.cardId).then(() => {
-    CardsServices.getCardList();
-  });
-}
+const props = defineProps<{
+  loading: boolean;
+}>();
 </script>
 
 <template>
@@ -45,11 +15,13 @@ function deleteCard() {
     <BaseButton
       size="lg"
       variant="primary"
-      backgroundColor="danger"
-      fullWidth
-      @click="showDeleteModal()"
+      background-color="danger"
+      full-width
+      :loading="props.loading"
+      :disabled="props.loading"
+      @click="emit('showDeleteModal')"
     >
-      Cancel card
+      Cancel Virtual Card
     </BaseButton>
   </div>
 </template>

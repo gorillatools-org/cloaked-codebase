@@ -2,30 +2,30 @@ import { watch } from "vue";
 import { SCREEN } from "@/composables/useScreen";
 import { useRoute, useRouter } from "vue-router";
 
-const SCREEN_TO_ROUTE = {
+const SCREEN_ROUTES = {
   [SCREEN.APP]: null,
   [SCREEN.DOWNLOAD_MOBILE_APP]: null,
-  [SCREEN.DATA_DELETE_ENROLLMENT_OLD]: "DeleteFlow",
   [SCREEN.DATA_DELETE_ENROLLMENT]: "Enrollment",
-  [SCREEN.NEW_ONBOARDING]: "NewOnboardingWelcome",
-  [SCREEN.DEFAULT_ONBOARDING]: "OnboardingUser",
-  [SCREEN.WELCOME_MODAL]: null,
 };
 
 export const useScreenRouting = (screen) => {
   const router = useRouter();
   const route = useRoute();
 
-  const routeScreen = () => {
-    const expectedRoute = SCREEN_TO_ROUTE[screen.value];
+  const navigateToScreen = () => {
+    const targetRoute = SCREEN_ROUTES[screen.value];
 
-    if (!expectedRoute || route.name.startsWith(expectedRoute)) {
+    if (!targetRoute || route.name?.startsWith(targetRoute)) {
       return;
     }
 
-    route.name === expectedRoute || router.push({ name: expectedRoute });
+    if (route.name === targetRoute || route.name?.startsWith(targetRoute)) {
+      return;
+    }
+
+    router.push({ name: targetRoute });
   };
 
-  watch(screen, routeScreen, { immediate: true });
-  watch(route, routeScreen, { immediate: true });
+  watch(screen, navigateToScreen, { immediate: true });
+  watch(route, navigateToScreen, { immediate: true });
 };

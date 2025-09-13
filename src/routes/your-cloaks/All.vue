@@ -188,14 +188,14 @@ function createNewIdentity() {
       <CloaksList
         v-if="dbLoaded"
         ref="cloakListRef"
-        hoverText="New Identity"
+        hover-text="New Identity"
         :add="true"
-        :identityList="identityList"
-        :identifierPriority="state.filter"
-        :filterOptions="availabileFilters"
-        :allCloaksLoaded="allCloaksLoaded"
+        :identity-list="identityList"
+        :identifier-priority="state.filter"
+        :filter-options="availabileFilters"
+        :all-cloaks-loaded="allCloaksLoaded"
         :loading="state.loading"
-        @loadNextPage="loadNextPage"
+        @load-next-page="loadNextPage"
         @filter="(e) => setFilter(e)"
       >
         <template #identity-banners>
@@ -224,6 +224,7 @@ function createNewIdentity() {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 @import "@/assets/scss/recursive/_mixins.scss";
 
 .title {

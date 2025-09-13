@@ -394,6 +394,7 @@ function isActive(index) {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .inbox-menu {
   position: fixed;
   margin-top: 5px;

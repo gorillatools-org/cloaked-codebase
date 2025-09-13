@@ -63,7 +63,7 @@ watch(
   <CustomFieldFormAddressExisting
     v-else
     v-bind="$attrs"
-    :existingAddresses="existingAddresses"
+    :existing-addresses="existingAddresses"
     @input="$emit('input', $event)"
     @add-new="onAddNew"
   />

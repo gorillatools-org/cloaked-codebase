@@ -135,7 +135,7 @@ const attemptSave = () => {
     :errors="errors"
     :form-type="formType"
     :field-type="fieldType"
-    :existingAddresses="existingAddresses"
+    :existing-addresses="existingAddresses"
     @input="
       ($event) => {
         emit('input', $event);

@@ -136,11 +136,11 @@ const notes = computed(() => {
       <CloakInfoRow
         field="notes"
         placeholder="Add secure notes"
-        :initialValue="notes"
+        :initial-value="notes"
         :loading="state.loading"
-        :readOnly="props.readOnly"
+        :read-only="props.readOnly"
         :enter-ctrl="true"
-        :identityId="props.cloak.id"
+        :identity-id="props.cloak.id"
         @save="(newVal) => save(newVal)"
         @delete="deleteNotes"
       />

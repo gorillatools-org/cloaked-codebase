@@ -1,11 +1,27 @@
 <script setup>
+import { computed } from "vue";
 import PageCheckoutSignup from "@/features/subscribe/PageCheckoutSignup.vue";
-import UserReviews from "@/features/subscribe/UserReviews.vue";
 import PageCheckoutHeader from "@/features/subscribe/PageCheckoutHeader.vue";
+import PageCheckoutReviews from "@/features/subscribe/PageCheckoutReviews.vue";
+import PageCheckoutDiscountOffer from "@/features/subscribe/PageCheckoutDiscountOffer.vue";
 import BaseText from "@/library/BaseText.vue";
 import { onMounted, ref } from "vue";
 import { posthogCapture } from "@/scripts/posthog.js";
-import { useDisplay } from "@/composables/useDisplay.js";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import {
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT,
+  PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE,
+} from "@/scripts/posthogEvents";
+
+const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
+);
+
+const showLimitedDiscountOfferBanner = computed(
+  () =>
+    hasLoadedFeatureFlag.value &&
+    featureFlag.value === "checkout-limited-time-discount-offer"
+);
 
 const props = defineProps({
   headlessUser: {
@@ -24,12 +40,9 @@ const props = defineProps({
 
 const emit = defineEmits(["set-user", "subscribed"]);
 
-const { isDesktop } = useDisplay();
-
 onMounted(() => posthogCapture("user_viewed_checkout_page"));
-const onSubscribed = (plan) => {
+const onSubscribed = () => {
   emit("subscribed");
-  posthogCapture("user_subscribed", plan);
 };
 
 const onLogin = () => posthogCapture("sign_in_from_subscribe_now");
@@ -41,12 +54,28 @@ defineExpose({
   subscribeWithStripe: () => checkoutRef.value.subscribeWithStripe(),
   isProcessingStripePayment: () => checkoutRef.value.isProcessingStripePayment,
 });
+
+const {
+  featureFlag: checkoutNewBaseLine,
+  hasLoadedFeatureFlag: checkoutNewBaseLineLoaded,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE);
+
+const showCheckoutReviewsOnTop = computed(
+  () => checkoutNewBaseLine.value !== "new-baseline"
+);
 </script>
 
 <template>
   <div class="page-checkout">
+    <PageCheckoutDiscountOffer
+      v-if="showLimitedDiscountOfferBanner"
+      :minutes="5"
+      :discount-percent="20"
+    />
+    <PageCheckoutReviews
+      v-if="checkoutNewBaseLineLoaded && showCheckoutReviewsOnTop"
+    />
     <PageCheckoutHeader>
-      <UserReviews v-if="isDesktop" />
       <RouterLink
         v-if="$route.name === 'SubscribeNow'"
         to="auth/login"
@@ -65,6 +94,9 @@ defineExpose({
         (form, paymentMethod) => $emit('set-user', form, paymentMethod)
       "
       @subscribed="onSubscribed"
+    />
+    <PageCheckoutReviews
+      v-if="checkoutNewBaseLineLoaded && !showCheckoutReviewsOnTop"
     />
   </div>
 </template>

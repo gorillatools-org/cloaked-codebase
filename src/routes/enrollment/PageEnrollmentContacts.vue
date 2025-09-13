@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import BaseInput from "@/library/BaseInput.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
@@ -12,6 +12,9 @@ import { formatPhoneStringBasic } from "@/scripts/format.js";
 import { useEmailValidation } from "@/composables/validation/useEmailValidation.js";
 import { usePhoneValidation } from "@/composables/validation/usePhoneValidation.js";
 import { useFormattedPhones } from "@/features/enrollment/composables.js";
+import { posthogCapture } from "@/scripts/posthog.js";
+
+onMounted(() => posthogCapture("user_viewed_enrollment_form_contacts"));
 
 defineEmits(["next"]);
 

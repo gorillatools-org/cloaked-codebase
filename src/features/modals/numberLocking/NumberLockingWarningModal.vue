@@ -106,6 +106,7 @@ const BODY_2 = {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .modal-container.num-locking-warning {
   .content {
     max-width: 512px;

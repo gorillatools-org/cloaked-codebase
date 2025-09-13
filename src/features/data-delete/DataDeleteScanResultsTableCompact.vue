@@ -168,17 +168,10 @@ const onRecordExpanded = (record, index) => {
   margin: 32px auto 0;
   border-radius: 12px;
   overflow: hidden;
+  background: $color-base-black-5;
 
   @media all and (min-width: $screen-xl) {
     border-radius: 16px;
-  }
-
-  @at-root .theme-dark & {
-    background: rgba($color-primary-100-dark, 0.1);
-  }
-
-  @at-root .theme-light & {
-    background: rgba($color-primary-100-light, 0.05);
   }
 
   &__header {
@@ -189,14 +182,7 @@ const onRecordExpanded = (record, index) => {
       grid-template-columns: 160fr 120fr 115fr 130fr 108fr 70fr 60fr;
       padding: 14px 16px;
       gap: 16px;
-
-      @at-root .theme-dark & {
-        background: rgba($color-primary-100-dark, 0.05);
-      }
-
-      @at-root .theme-light & {
-        background: rgba($color-primary-100-light, 0.05);
-      }
+      background: $color-base-black-5;
     }
 
     &-cell {
@@ -207,20 +193,14 @@ const onRecordExpanded = (record, index) => {
 
   &__row {
     &:nth-child(odd) {
-      @at-root .theme-dark & {
-        background: rgba($color-primary-100-dark, 0.05);
-      }
-
-      @at-root .theme-light & {
-        background: rgba($color-primary-100-light, 0.05);
-      }
+      background: $color-base-black-5;
     }
   }
 
   &__expand {
     width: 100%;
     padding: 20px;
-    background: rgba($color-primary-100-dark, 0.05);
+    background: $color-base-black-5;
     border: none;
     color: $color-primary-100;
     display: flex;

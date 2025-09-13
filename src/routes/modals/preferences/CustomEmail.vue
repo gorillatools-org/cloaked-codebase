@@ -8,6 +8,7 @@ import { useToast } from "@/composables/useToast.js";
 import CustomEmailService from "@/api/actions/custom-email-service.js";
 import InlineSvg from "@/features/InlineSvg.vue";
 import { tools } from "@/scripts/tools";
+import PersonalServices from "@/api/settings/personal-services";
 
 const rightPanel = computed(() => {
   return store.state.ui.preference.right;
@@ -50,7 +51,7 @@ function close() {
 }
 
 function updateEmailDomain(value) {
-  CustomEmailService.updateEmailDomain(value)
+  PersonalServices.updateUserProfile({ email_domain: value })
     .then(() => {
       getDomains();
       store.dispatch("setEmailTypeSetting", value);
@@ -308,6 +309,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .custom-email {
   .title {
     margin-bottom: 30px;

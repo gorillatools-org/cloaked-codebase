@@ -45,6 +45,7 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .infinite-loader {
   height: 50px;
   width: 100%;

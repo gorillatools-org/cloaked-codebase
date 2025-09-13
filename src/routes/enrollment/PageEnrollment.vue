@@ -12,9 +12,14 @@ import { useDataDeleteOverlay } from "@/routes/DataDeletion/composables/useDataD
 import { useMonitoringAutofill } from "@/features/monitoring/useMonitoringAutofill.js";
 import { useBasicMode } from "@/composables/useBasicMode.js";
 import { DOWNLOAD_APP_URL } from "@/scripts/constants.js";
-import { PH_EVENT_USER_SUBMITTED_DD_SUBMISSION_FORM } from "@/scripts/posthogEvents.js";
 import { toApiPayload } from "@/features/enrollment/data-utils.js";
 import store from "@/store/index.js";
+import {
+  PH_EVENT_USER_SUBMITTED_DD_SUBMISSION_FORM,
+  PH_EVENT_USER_VIEWED_DD_SUBMISSION_FORM,
+} from "@/scripts/posthogEvents.js";
+
+onMounted(() => posthogCapture(PH_EVENT_USER_VIEWED_DD_SUBMISSION_FORM));
 
 const route = useRoute();
 const router = useRouter();
@@ -238,35 +243,34 @@ const { isBasicModeEnabled } = useBasicMode();
 
 const onClose = async () => {
   await closeDataDeleteOverlay();
-
   if (isBasicModeEnabled.value) {
-    router.push({ name: "SummaryBasicMode" });
+    router.push({ name: "ExposureStatusBrokers" });
   } else {
     router.push({ name: "Home" });
   }
 };
 
 const onDownloadApp = async () => {
+  window.open(DOWNLOAD_APP_URL, "_blank");
   await closeDataDeleteOverlay();
   request.value = null;
   clearSearchProgressFromSessionStorage();
-  router.push({ name: "SummaryBasicMode" });
-  window.open(DOWNLOAD_APP_URL, "_blank");
   posthogCapture("monitoring_tof_user_clicked_download_cloaked");
+  router.push({ name: "ExposureStatusBrokers" });
 };
 
 const onGoToDashboard = async () => {
   await closeDataDeleteOverlay();
   request.value = null;
-  clearSearchProgressFromSessionStorage();
-  router.push({ name: "SummaryBasicMode" });
+  await clearSearchProgressFromSessionStorage();
   posthogCapture("monitoring_tof_user_clicked_go_to_dashboard");
+  router.push({ name: "ExposureStatusBrokers" });
 };
 
 const onGoToMonitoring = async () => {
   await closeDataDeleteOverlay();
   request.value = null;
-  clearSearchProgressFromSessionStorage();
+  await clearSearchProgressFromSessionStorage();
   router.push({ name: "MonitoringStatus" });
 };
 

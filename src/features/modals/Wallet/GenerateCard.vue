@@ -9,6 +9,8 @@ import CardsServices from "@/api/actions/cards-services";
 import { useToast } from "@/composables/useToast.js";
 import ModalTemplate from "@/features/ModalTemplate.vue";
 import { posthogCapture } from "@/scripts/posthog.js";
+import FundingSourceListItem from "@/features/Wallet/FundingSource/FundingSourceListItem.vue";
+import SelectMerchantDropdown from "@/features/Wallet/SelectMerchantDropdown.vue";
 
 const toast = useToast();
 
@@ -75,6 +77,8 @@ const periodOptions = [
   },
 ];
 
+const selectedMerchant = ref("");
+
 const activePeriod = ref(cardSettings?.value?.period || null);
 const maxTransactions = ref(
   periodOptions.find((option) => option.value === activePeriod.value)
@@ -98,11 +102,27 @@ const sources = computed(() => {
   return results?.sort((a, b) => b.primary - a.primary);
 });
 
-const primarySource = computed(() => {
-  return sources?.value.find((source) => source.primary).id;
+const filteredSources = computed(() => {
+  if (showAll.value) {
+    return sources.value;
+  }
+
+  return [...sources.value]
+    .sort((a, b) => {
+      return b.id === fundingSource.value ? 1 : -1;
+    })
+    .slice(0, 1);
 });
 
-const fundingSource = ref(null);
+const isSelectedPeriodValid = computed(() => {
+  return periodOptions.find((option) => option.value === activePeriod.value);
+});
+
+const primarySource = computed(() => {
+  return sources?.value.find((source) => source.primary)?.id;
+});
+
+const fundingSource = ref(primarySource.value);
 
 const selectedSource = computed(() => {
   return fundingSource.value || primarySource.value;
@@ -113,7 +133,7 @@ function selectSource(source) {
   form.value.source = source.id;
 }
 
-const showAll = ref(true);
+const showAll = ref(false);
 
 const dollars = ref(
   convertToDollarFormatted(cardSettings?.value?.spending_limit) || ""
@@ -165,6 +185,29 @@ const form = ref({
 
 const generating = ref(false);
 
+function generateCardName() {
+  const sourceCardBrand = sources.value?.find(
+    (source) => source.id === fundingSource.value
+  )?.card_brand;
+
+  const capitalizedSourceCardBrand =
+    sourceCardBrand?.charAt(0).toUpperCase() + sourceCardBrand?.slice(1);
+
+  const cardsNames = store.state.cards.cards.results.map(
+    (card) => card.identity_name
+  );
+
+  let generatedCardName = `${capitalizedSourceCardBrand}`;
+
+  let i = 1;
+  do {
+    generatedCardName = `${capitalizedSourceCardBrand} ${i}`;
+    i++;
+  } while (cardsNames.includes(generatedCardName));
+
+  return generatedCardName;
+}
+
 function generateCard(id) {
   generating.value = true;
 
@@ -187,10 +230,10 @@ function generateCard(id) {
     transaction_period_max_transactions: transactionPeriodMaxTransactions,
   };
 
-  const createCard = (identityId) => {
+  const createCard = (identityId, deleteIdentityOnFail) => {
     CardsServices.createIdentityCard(identityId, requestData)
       .then((cardDetailsResponse) => {
-        emit("newCardIssued", cardDetailsResponse.data);
+        emit("newCardIssued", cardDetailsResponse.data.id);
         emit("refresh");
         closeModal();
         posthogCapture(
@@ -199,10 +242,15 @@ function generateCard(id) {
         toast.success("Card generated successfully");
       })
       .catch((err) => {
-        toast.error(err || "Failed to generate card.");
+        toast.error(err || "Failed to generate Virtual Card.");
         posthogCapture(
           "dashboard_pay_wallet_add_new_card_modal_card_generation_failed"
         );
+
+        if (deleteIdentityOnFail) {
+          IdentityService.deleteCloak(identityId);
+          store.dispatch("removeCloaks", [identityId]);
+        }
       })
       .finally(() => {
         generating.value = false;
@@ -213,10 +261,18 @@ function generateCard(id) {
     createCard(id);
   } else {
     // Create an identity first
-    IdentityService.createIdentity({ website_url: NO_URL_IDENTITY_DOMAIN })
+    IdentityService.createIdentity({
+      website_url:
+        selectedMerchant.value?.website_url || NO_URL_IDENTITY_DOMAIN,
+      nickname:
+        selectedMerchant.value?.title ||
+        selectedMerchant.value?.nickname ||
+        selectedMerchant.value ||
+        generateCardName(),
+    })
       .then((response) => {
         const newIdentityId = response.data.id;
-        createCard(newIdentityId); // Use the new identity ID to create the card
+        createCard(newIdentityId, true); // Use the new identity ID to create the card
       })
       .catch((err) => {
         toast.error(
@@ -226,24 +282,59 @@ function generateCard(id) {
       });
   }
 }
+
+function preventAmountInputCharacters(event) {
+  const { key, target } = event;
+  const controlKeys = ["Backspace", "ArrowLeft", "ArrowRight", "Delete", "Tab"];
+
+  if (controlKeys.includes(key)) return;
+
+  // Prevent non-numeric and non-decimal characters
+  if (!/[\d.]/.test(key)) {
+    event.preventDefault();
+    return;
+  }
+
+  // Prevent more than 1 decimal point
+  const { value, selectionStart, selectionEnd } = target;
+  if (key === "." && value.includes(".")) {
+    event.preventDefault();
+    return;
+  }
+
+  // Prevent more than 2 decimal places
+  const newValue =
+    value.slice(0, selectionStart) + key + value.slice(selectionEnd);
+  const decimalPart = newValue.split(".")[1];
+
+  if (decimalPart && decimalPart.length > 2) {
+    event.preventDefault();
+  }
+}
 </script>
 
 <template>
   <ModalTemplate
     :show="props.isVisible"
+    :prevent-escape-on-input-focus="true"
     @close="closeModal"
   >
     <template #header>
       <div class="title">
-        <h1>Generate new card</h1>
+        <h1>Generate Virtual Card</h1>
       </div>
     </template>
     <template #body>
+      <div class="select-merchant-dropdown">
+        <SelectMerchantDropdown v-model="selectedMerchant" />
+      </div>
+
       <div class="amount">
         <inlineSvg name="cash-filled" />
         <input
           v-model="dollars"
           type="text"
+          @keydown="preventAmountInputCharacters"
           @input="updateCents($event.target.value)"
         />
       </div>
@@ -272,69 +363,24 @@ function generateCard(id) {
       </div>
 
       <div class="funding-sources">
-        <div v-if="showAll">
-          <div
-            v-for="source in sources
-              .slice()
-              .filter((source) => source.id === selectedSource)"
-            :key="source.id"
-            class="funding-source"
-            :class="{ selected: source.id === selectedSource }"
-            @click="selectSource(source)"
-          >
-            <inlineSvg name="bank" />
-            <div class="information">
-              <h1>{{ source.card_brand }}</h1>
-              <p>
-                <span>**** {{ source.pan_last_four }}</span>
-                <span v-if="source.nickname">• {{ source.nickname }}</span>
-              </p>
-            </div>
-
-            <span
-              v-if="source.primary"
-              class="default-pill"
-            >
-              Default
-            </span>
-
-            <div class="selected-icon" />
-          </div>
-        </div>
-
-        <div v-else>
-          <div
-            v-for="source in sources"
-            :key="source.id"
-            class="funding-source"
-            :class="{ selected: source.id === selectedSource }"
-            @click="selectSource(source)"
-          >
-            <inlineSvg name="bank" />
-            <div class="information">
-              <h1>{{ source.card_brand }}</h1>
-              <p>
-                <span>**** {{ source.pan_last_four }}</span>
-                <span v-if="source.nickname">• {{ source.nickname }}</span>
-              </p>
-            </div>
-
-            <span
-              v-if="source.primary"
-              class="default-pill"
-            >
-              Default
-            </span>
-
-            <div class="selected-icon" />
-          </div>
+        <div
+          v-for="source in filteredSources"
+          :key="source.id"
+        >
+          <FundingSourceListItem
+            :is-selected="source.id === fundingSource"
+            :is-select-mode="true"
+            :funding-source="source"
+            @select="selectSource(source)"
+          />
         </div>
 
         <span
+          v-if="sources.length > 1"
           class="show"
           @click="showAll = !showAll"
         >
-          {{ showAll ? "Show all" : "Show less" }}
+          {{ showAll ? "Show less" : "Show all" }}
         </span>
       </div>
     </template>
@@ -350,6 +396,7 @@ function generateCard(id) {
         :disabled="
           generating ||
           !isAmountValid ||
+          !isSelectedPeriodValid ||
           (activePeriod === 'fixed' && !isMaxTransactionsValid)
         "
         @click="generateCard(props.id)"
@@ -361,6 +408,7 @@ function generateCard(id) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .title {
   p {
     margin-top: 8px;
@@ -374,6 +422,7 @@ function generateCard(id) {
 
 .amount {
   position: relative;
+  margin-top: 24px;
 
   svg {
     position: absolute;
@@ -397,10 +446,6 @@ function generateCard(id) {
     font-weight: 600;
     line-height: normal;
     text-align: left;
-
-    &:focus {
-      outline: none;
-    }
   }
 
   &::after {
@@ -506,108 +551,10 @@ function generateCard(id) {
 }
 
 .funding-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 24px;
-
-  .funding-source {
-    border: 1px solid $color-primary-10;
-    border-radius: 16px;
-    padding: 16px;
-    margin-top: 4px;
-    position: relative;
-    color: $color-primary-100;
-
-    &:hover {
-      background-color: $color-primary-5;
-      cursor: pointer;
-    }
-
-    &.selected {
-      .selected-icon {
-        &::after {
-          content: "";
-          display: block;
-          width: 8px;
-          height: 8px;
-          background-color: $color-primary-100;
-          border-radius: 50%;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-        }
-      }
-    }
-
-    &:first-child {
-      margin-top: 0;
-    }
-
-    svg {
-      width: 24px;
-      height: 24px;
-      margin-right: 16px;
-      position: absolute;
-      top: 50%;
-      left: 16px;
-      transform: translateY(-50%);
-    }
-
-    .information {
-      padding-left: 40px;
-      padding-right: 40px;
-
-      h1 {
-        font-size: 15px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-        color: $color-primary-100;
-        text-transform: capitalize;
-      }
-
-      p {
-        font-size: 12px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        margin-top: 4px;
-
-        span {
-          display: inline-block;
-
-          &:nth-of-type(2) {
-            margin-left: 4px;
-          }
-        }
-      }
-    }
-
-    .default-pill {
-      position: absolute;
-      top: 50%;
-      right: 56px;
-      transform: translateY(-50%);
-      background-color: $color-success;
-      color: $white;
-      font-size: 10px;
-      font-style: normal;
-      font-weight: 600;
-      line-height: normal;
-      padding: 4px 10px;
-      border-radius: 19px;
-    }
-
-    .selected-icon {
-      position: absolute;
-      top: 50%;
-      right: 24px;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 2px solid $color-primary-100;
-    }
-  }
 
   .show {
     margin-top: 12px;

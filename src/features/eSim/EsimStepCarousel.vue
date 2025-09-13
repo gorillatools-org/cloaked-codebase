@@ -1,8 +1,8 @@
 <script setup>
-import UiHeader from "@/features/onboarding-new/UiHeader.vue";
-import UiButton from "@/features/onboarding-new/UiButton.vue";
-import UiButtonRow from "@/features/onboarding-new/UiButtonRow.vue";
-import UiPageWrapper from "@/features/onboarding-new/UiPageWrapper.vue";
+import UiHeader from "@/features/eSim/UiHeader.vue";
+import UiButton from "@/features/eSim/UiButton.vue";
+import UiButtonRow from "@/features/eSim/UiButtonRow.vue";
+import UiPageWrapper from "@/features/eSim/UiPageWrapper.vue";
 import InlineSvg from "@/features/InlineSvg";
 import { PH_SCREEN_EVENT_ESIM_ONBOARDING_INTRO_SCREEN } from "@/scripts/posthogEvents";
 import { reactive, computed } from "vue";
@@ -92,10 +92,10 @@ function backInfoStep() {
 
 <template>
   <UiPageWrapper
-    showLogo
+    show-logo
     animate
     logo="cloaked-esim-logo"
-    :screenEvent="PH_SCREEN_EVENT_ESIM_ONBOARDING_INTRO_SCREEN"
+    :screen-event="PH_SCREEN_EVENT_ESIM_ONBOARDING_INTRO_SCREEN"
     :style="{ height: '100%' }"
   >
     <UiHeader>
@@ -144,7 +144,7 @@ function backInfoStep() {
       <UiButtonRow>
         <UiButton
           gradient
-          imgName="arrow-long-right"
+          img-name="arrow-long-right"
           @click="emit('next')"
         >
           Continue
@@ -154,6 +154,7 @@ function backInfoStep() {
   </UiPageWrapper>
 </template>
 <style lang="scss" scoped>
+/* stylelint-disable */
 .default-carousel {
   height: 500px;
   width: 100%;

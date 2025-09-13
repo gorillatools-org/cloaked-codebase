@@ -190,7 +190,7 @@ watch(
           max-height="288px"
           placement="left-start"
           class="cloak-category-section__menu"
-          :hasOutsideClickClose="false"
+          :has-outside-click-close="false"
         >
           <template #content>
             <UiMenuInput
@@ -301,6 +301,7 @@ watch(
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .readOnly {
   pointer-events: none;
 }

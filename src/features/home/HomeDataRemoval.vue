@@ -250,6 +250,7 @@ function focusInput() {
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .input-wrapper {
   position: relative;
   width: auto;

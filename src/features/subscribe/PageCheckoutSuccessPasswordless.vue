@@ -1,5 +1,4 @@
 <script setup>
-import UserReviews from "@/features/subscribe/UserReviews.vue";
 import ConcentricWave from "@/features/subscribe/ConcentricWave.vue";
 import PasswordlessCard from "@/features/subscribe/PasswordlessCard.vue";
 import BulkPlanCard from "@/features/subscribe/BulkPlanCard.vue";
@@ -29,9 +28,7 @@ const { isMobile } = useDisplay();
 <template>
   <div class="page-checkout-success-recovery">
     <ConcentricWave class="page-checkout-success-recovery__wave" />
-    <PageCheckoutHeader>
-      <UserReviews />
-    </PageCheckoutHeader>
+    <PageCheckoutHeader />
     <div class="page-checkout-success-recovery__content">
       <BaseText
         as="h1"

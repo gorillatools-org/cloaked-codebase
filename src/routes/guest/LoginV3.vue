@@ -18,7 +18,7 @@ onMounted(() => {
 <template>
   <AuthIframe
     source="auth/login"
-    useV3Route
-    :prevRoute="prevRoute"
+    use-v3-route
+    :prev-route="prevRoute"
   />
 </template>

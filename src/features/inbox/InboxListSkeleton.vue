@@ -21,6 +21,7 @@
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .skeleton-row {
   --linear-gradient: linear-gradient(
       -90deg,

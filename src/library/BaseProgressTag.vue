@@ -1,7 +1,7 @@
 <script setup>
 import BaseText from "@/library/BaseText.vue";
 
-const props = defineProps({
+defineProps({
   color: {
     type: String,
     default: "safe-zone-blue",
@@ -19,13 +19,18 @@ const props = defineProps({
         "safe-zone-green",
       ].includes(value),
   },
+  variant: {
+    type: String,
+    default: "primary",
+    validator: (value) => ["primary", "secondary"].includes(value),
+  },
 });
 </script>
 
 <template>
   <div
     class="base-progress-tag"
-    :class="`base-progress-tag--${props.color}`"
+    :class="[`base-progress-tag--${color}`, `base-progress-tag--${variant}`]"
   >
     <div class="base-progress-tag__icon"></div>
     <BaseText
@@ -44,7 +49,11 @@ const props = defineProps({
   align-items: center;
   gap: 10px;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 8px 12px;
+
+  &__text {
+    font-weight: 700;
+  }
 
   &__icon {
     width: 6px;
@@ -52,6 +61,7 @@ const props = defineProps({
     border-radius: 50%;
     position: relative;
     z-index: 1;
+    background-color: var(--tag-color);
 
     &::before {
       content: "";
@@ -65,108 +75,81 @@ const props = defineProps({
       z-index: -1;
       animation: ping 2.3s cubic-bezier(0, 0, 0.2, 1) infinite;
       opacity: 0.3;
-      background-color: inherit;
+      background-color: var(--tag-color);
     }
-  }
-
-  &__text {
-    font-weight: 700;
   }
 
   &--cloaked {
-    background-color: $color-cloaked-15;
-
-    .base-progress-tag__icon {
-      background-color: $color-cloaked;
-    }
+    --tag-color: #{$color-cloaked};
+    --tag-bg-color: #{$color-cloaked-15};
   }
 
   &--spirit-rose {
-    background-color: $color-spirit-rose-15;
-
-    .base-progress-tag__icon {
-      background-color: $color-spirit-rose;
-    }
+    --tag-color: #{$color-spirit-rose};
+    --tag-bg-color: #{$color-spirit-rose-15};
   }
 
   &--arctic-lime {
-    background-color: $color-arctic-lime-15;
-
-    .base-progress-tag__icon {
-      background-color: $color-arctic-lime;
-    }
+    --tag-color: #{$color-arctic-lime};
+    --tag-bg-color: #{$color-arctic-lime-15};
   }
 
   &--foam-blue {
-    background-color: $color-foam-blue-15;
-
-    .base-progress-tag__icon {
-      background-color: $color-foam-blue;
-    }
+    --tag-color: #{$color-foam-blue};
+    --tag-bg-color: #{$color-foam-blue-15};
   }
 
   &--crest-blue {
-    background-color: $color-crest-blue-15;
-
-    .base-progress-tag__icon {
-      background-color: $color-crest-blue;
-    }
+    --tag-color: #{$color-crest-blue};
+    --tag-bg-color: #{$color-crest-blue-15};
   }
 
   &--violet-reflection {
-    background-color: $color-violet-reflection-15;
-
-    .base-progress-tag__icon {
-      background-color: $color-violet-reflection;
-    }
+    --tag-color: #{$color-violet-reflection};
+    --tag-bg-color: #{$color-violet-reflection-15};
   }
 
   &--caribbean-green {
-    background-color: $color-caribbean-green-15;
-
-    .base-progress-tag__icon {
-      background-color: $color-caribbean-green;
-    }
+    --tag-color: #{$color-caribbean-green};
+    --tag-bg-color: #{$color-caribbean-green-15};
   }
 
   &--spam-protection {
-    background-color: $color-spam-protection-15;
-
-    .base-progress-tag__icon {
-      background-color: $color-spam-protection;
-    }
+    --tag-color: #{$color-spam-protection};
+    --tag-bg-color: #{$color-spam-protection-15};
   }
 
   &--safe-zone-blue {
-    background-color: $color-safe-zone-blue-15;
-
-    .base-progress-tag__icon {
-      background-color: $color-safe-zone-blue;
-    }
+    --tag-color: #{$color-safe-zone-blue};
+    --tag-bg-color: #{$color-safe-zone-blue-15};
   }
 
   &--safe-zone-green {
-    background-color: $color-safe-zone-green-15;
-
-    .base-progress-tag__icon {
-      background-color: $color-safe-zone-green;
-    }
+    --tag-color: #{$color-safe-zone-green};
+    --tag-bg-color: #{$color-safe-zone-green-15};
   }
 
   &--purple {
-    background-color: $color-spam-protection-15;
-  }
-
-  &--purple &__icon {
-    background-color: $color-spam-protection;
+    --tag-color: #{$color-spam-protection};
+    --tag-bg-color: #{$color-spam-protection-15};
   }
 
   &--red {
-    background-color: $color-spirit-rose-15;
+    --tag-color: #{$color-spirit-rose};
+    --tag-bg-color: #{$color-spirit-rose-15};
   }
 
-  &--red &__icon {
-    background-color: $color-spirit-rose;
+  &--primary {
+    background-color: var(--tag-bg-color);
+  }
+
+  &--secondary {
+    background-color: transparent;
+    border: 1px solid var(--tag-color);
+
+    .base-progress-tag__text {
+      color: var(--tag-color);
+    }
   }
 }
 

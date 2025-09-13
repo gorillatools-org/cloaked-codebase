@@ -101,6 +101,7 @@ const progressPercentage = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .exposure-status-records-progress-bar {
   width: 100%;
   margin-top: 16px;

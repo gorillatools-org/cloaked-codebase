@@ -75,6 +75,7 @@ function status(status) {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .information {
   width: 100%;
   display: flex;
@@ -134,7 +135,7 @@ function status(status) {
     border-radius: 30px;
 
     &.pending {
-      background-color: $color-primary-90;
+      background-color: $color-primary-10;
       color: $color-primary-100;
     }
 

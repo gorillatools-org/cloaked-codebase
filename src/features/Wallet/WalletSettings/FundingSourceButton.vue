@@ -36,13 +36,13 @@ const currentCardFundingSource = computed(() => {
   }
 });
 
-const currentCardProvider = computed(() => {
-  return currentCardFundingSource.value?.provider;
+const currentCardType = computed(() => {
+  return currentCardFundingSource.value?.type;
 });
 
 const fundingSourcesFiltered = computed(() => {
   return store.state.cards.fundingSources.results.filter(
-    (source) => source.provider === currentCardProvider.value
+    (source) => source.type === currentCardType.value
   );
 });
 

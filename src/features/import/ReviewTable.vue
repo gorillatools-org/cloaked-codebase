@@ -234,6 +234,7 @@ function onSort(cell) {
     align-items: center;
     cursor: pointer;
     user-select: none;
+    background-color: $color-primary-5;
 
     &:nth-child(2) {
       padding-left: 8px;
@@ -327,6 +328,7 @@ function onSort(cell) {
     z-index: 1;
     display: flex;
     align-items: center;
+    background-color: $color-base-white-100;
 
     &:hover {
       opacity: 1;

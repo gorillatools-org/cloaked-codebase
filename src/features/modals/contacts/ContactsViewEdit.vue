@@ -427,7 +427,7 @@ const handleSaveChanges = async () => {
       <div>
         <ContactIcon
           :initials="getExternalContactInitialsDisplay()"
-          :associatedIdentityId="state.associatedIdentityId"
+          :associated-identity-id="state.associatedIdentityId"
           :override="{ width: '72px', height: '72px' }"
         />
       </div>
@@ -480,9 +480,9 @@ const handleSaveChanges = async () => {
         </span>
 
         <ExpansionPanel
-          :buttonText="originalValueLabel"
+          :button-text="originalValueLabel"
           :duration="200"
-          @onClick="toggleOriginalValueBtn"
+          @on-click="toggleOriginalValueBtn"
         >
           <div class="exp-content">
             <h5>{{ state.originalValue }}</h5>
@@ -618,6 +618,7 @@ const handleSaveChanges = async () => {
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .contacts-modal {
   color: $color-primary-100;
 

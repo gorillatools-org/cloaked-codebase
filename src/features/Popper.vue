@@ -296,6 +296,7 @@ onUpdated(() => {
 </template>
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .popper__content {
   box-shadow:
     -22.9px -8.90123px 26.7037px $color-base-white-5,

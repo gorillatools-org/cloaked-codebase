@@ -12,19 +12,24 @@ import IdentityService from "@/api/actions/identity-service.js";
 
 export const db = new Dexie("dashdb");
 
-db.version(4).stores({
-  cloaks: "id, nickname, email, phone, username, website_url, updated_at", // Primary key and indexed props,
-  properties: "key, value",
-  suggestions: "website_url, nickname, color, logo_url, secondary_color",
-  cache: "key, url, method, payload, expires_at",
-});
+db.version(5)
+  .stores({
+    cloaks: "id, nickname, email, phone, username, website_url, updated_at", // Primary key and indexed props,
+    properties: "key, value",
+    cache: "key, url, method, payload, expires_at",
+  })
+  .upgrade((tx) => {
+    // Clear the deprecated suggestions store if it exists from v4
+    if (tx.storeNames.includes("suggestions")) {
+      return tx.table("suggestions").clear();
+    }
+  });
 
 export const cleanDb = () => {
   return Promise.allSettled([
     db.cache.clear(),
     db.cloaks.clear(),
     db.properties.clear(),
-    db.suggestions.clear(),
   ]);
 };
 export const formatter = (cloak, userId) => {
@@ -175,7 +180,6 @@ export default {
   state: {
     db_cloaks: useObservable(liveQuery(() => db.cloaks.toArray())),
     dbLoaded: false,
-    suggestions: useObservable(liveQuery(() => db.suggestions.toArray())),
     cache: useObservable(liveQuery(() => db.cache.toArray())),
     cloakCount: 0,
   },
@@ -205,9 +209,7 @@ export default {
       await db.cloaks.bulkPut(formattedCloaks);
       return formattedCloaks;
     },
-    updateSuggestions(params, suggestions) {
-      return db.suggestions.bulkPut(suggestions);
-    },
+
     removeCloaks(params, cloaksIds) {
       db.cloaks.bulkDelete(cloaksIds);
     },

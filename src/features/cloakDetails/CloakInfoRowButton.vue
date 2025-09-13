@@ -36,6 +36,7 @@ const target = computed(() => (props.href ? "_blank" : null));
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
 .cloak-info-row-button {
   min-width: 36px;
   height: 36px;

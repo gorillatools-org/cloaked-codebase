@@ -111,13 +111,13 @@ const currentCardFundingSource = computed(() => {
   }
 });
 
-const currentCardProvider = computed(() => {
-  return currentCardFundingSource.value?.provider;
+const currentCardType = computed(() => {
+  return currentCardFundingSource.value?.type;
 });
 
 const fundingSourcesFiltered = computed(() => {
   return store.state.cards.fundingSources.results.filter(
-    (source) => source.provider === currentCardProvider.value
+    (source) => source.type === currentCardType.value
   );
 });
 
@@ -189,21 +189,21 @@ const cardState = computed(() => {
         title="Lock card"
         description="Disable all transactions while card is locked"
         icon="lock-filled"
-        multiLine
+        multi-line
         toggle
-        :toggleStatus="cardState"
+        :toggle-status="cardState"
         :disabled="card.state === 'locked_by_system'"
-        @toggleClicked="toggleCardLock"
+        @toggle-clicked="toggleCardLock"
       />
 
       <DetailSection
         title="Merchant locking"
         description="Lock this card to a single merchant after the first transaction"
         icon="merchant-lock"
-        multiLine
+        multi-line
         toggle
-        :toggleStatus="card.is_merchant_locked"
-        @toggleClicked="toggleMerchantLock"
+        :toggle-status="card.is_merchant_locked"
+        @toggle-clicked="toggleMerchantLock"
       />
 
       <div class="sources">
@@ -213,7 +213,7 @@ const cardState = computed(() => {
           :description="
             currentCardFundingSource?.card_brand + '\n' + subtext || 'Unknown'
           "
-          multiLine
+          multi-line
           title="Funding Source"
           link
           @click="openFundingSources"
@@ -225,7 +225,7 @@ const cardState = computed(() => {
         <DetailSection
           :loading="loading"
           icon="delete"
-          description="Set a self destruct timer for this card"
+          description="Set a self destruct timer for this Virtual Card"
           title="Self-Destruct"
           link
           @click="openSelfDestruct"

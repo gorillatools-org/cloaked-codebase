@@ -253,7 +253,7 @@ function changePasswordV1() {
       <PreferencesParagraph>
         <PasswordStrength
           :password="state.newPassword"
-          @passwordStrengthCheck="setCheck"
+          @password-strength-check="setCheck"
         />
       </PreferencesParagraph>
       <PreferencesInput
@@ -299,6 +299,7 @@ function changePasswordV1() {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .change-password-inputs {
   margin-top: 24px;
 }

@@ -116,23 +116,23 @@ function upgrade() {
   >
     <ESimOfferAnnouncement
       v-if="showESimModalAnnouncementPaid"
-      topTitle="Ultimate security"
-      secondTitle="for calls & texts"
+      top-title="Ultimate security"
+      second-title="for calls & texts"
       subtitle="Cloaked eSIM is the most secure way to communicate from your existing mobile device."
       @close="close"
     />
     <ESimOfferAnnouncement
       v-else-if="showESimModalAnnouncementUnpaid"
-      topTitle="Get Cloaked eSIM for free"
-      secondTitle="when you upgrade"
+      top-title="Get Cloaked eSIM for free"
+      second-title="when you upgrade"
       subtitle="For a limited time, get Cloaked eSIM for free ($115 dollar value) when you subscribe to an annual plan."
-      :highlightFeatures="[
+      :highlight-features="[
         'Data removal & monitoring',
         '$1M identity protection',
         '24/7 customer support',
       ]"
-      buttonLabel="Upgrade now"
-      :buttonAction="upgrade"
+      button-label="Upgrade now"
+      :button-action="upgrade"
       @close="close"
     />
   </AppModal>

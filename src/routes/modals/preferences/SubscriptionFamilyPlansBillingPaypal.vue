@@ -25,7 +25,7 @@ const subscription = computed(() => store.getters["settings/getSubscription"]);
         as="a"
         variant="headline-6-medium"
         class="family-plans-billing-card__link"
-        href="https://www.paypal.com"
+        href="https://www.paypal.com/myaccount/autopay/"
         target="_blank"
       >
         Open PayPal

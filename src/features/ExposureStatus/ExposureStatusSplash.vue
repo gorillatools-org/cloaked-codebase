@@ -9,17 +9,13 @@ import { posthogCapture } from "@/scripts/posthog.js";
 const { openDataDeleteOverlay } = useDataDeleteOverlay();
 
 const props = defineProps({
-  isLoading: {
-    type: Boolean,
-    default: true,
-  },
   isEnrolled: {
     type: Boolean,
     default: false,
   },
 });
 
-const showEnrollCta = computed(() => !props.isLoading && !props.isEnrolled);
+const showEnrollCta = computed(() => !props.isEnrolled);
 
 watch(showEnrollCta, (newVal) => {
   if (newVal) {
@@ -32,8 +28,7 @@ watch(showEnrollCta, (newVal) => {
   <div
     class="exposure-status-splash"
     :class="{
-      'exposure-status-splash--loading': isLoading,
-      'exposure-status-splash--hidden': isEnrolled && !isLoading,
+      'exposure-status-splash--hidden': isEnrolled,
     }"
   >
     <div class="exposure-status-splash__container">
@@ -67,7 +62,7 @@ watch(showEnrollCta, (newVal) => {
         <BaseButton
           variant="primary"
           icon="arrow-right"
-          fullWidth
+          full-width
           class="exposure-status-splash__animate-item exposure-status-splash__animate-item--3"
           @click="openDataDeleteOverlay"
         >
@@ -79,6 +74,7 @@ watch(showEnrollCta, (newVal) => {
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .exposure-status-splash {
   display: flex;
   flex-direction: column;

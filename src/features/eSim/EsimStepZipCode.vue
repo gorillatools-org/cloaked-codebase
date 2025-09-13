@@ -1,8 +1,8 @@
 <script setup>
-import UiHeader from "@/features/onboarding-new/UiHeader.vue";
-import UiButton from "@/features/onboarding-new/UiButton.vue";
-import UiButtonRow from "@/features/onboarding-new/UiButtonRow.vue";
-import UiPageWrapper from "@/features/onboarding-new/UiPageWrapper.vue";
+import UiHeader from "@/features/eSim/UiHeader.vue";
+import UiButton from "@/features/eSim/UiButton.vue";
+import UiButtonRow from "@/features/eSim/UiButtonRow.vue";
+import UiPageWrapper from "@/features/eSim/UiPageWrapper.vue";
 import ESimService from "@/api/actions/esim-service.js";
 import AtomInputInternalLabels from "@/library/AtomInputInternalLabels.vue";
 import { PH_SCREEN_EVENT_ESIM_ONBOARDING_COVERAGE_SCREEN } from "@/scripts/posthogEvents";
@@ -38,14 +38,14 @@ const checkCoverage = async () => {
 </script>
 <template>
   <UiPageWrapper
-    showLogo
+    show-logo
     logo="cloaked-esim-logo"
-    :screenEvent="PH_SCREEN_EVENT_ESIM_ONBOARDING_COVERAGE_SCREEN"
-    :esimStep="1"
+    :screen-event="PH_SCREEN_EVENT_ESIM_ONBOARDING_COVERAGE_SCREEN"
+    :esim-step="1"
   >
     <UiHeader
-      leftAlign
-      maxWidth="450px"
+      left-align
+      max-width="450px"
     >
       <h2>Check for cell coverage</h2>
       <h5>
@@ -55,7 +55,7 @@ const checkCoverage = async () => {
       <h5>Please enter your home ZIP code.</h5>
       <AtomInputInternalLabels
         autofocus
-        :isLoading="state.loading"
+        :is-loading="state.loading"
         :value="state.zipCode"
         label="Zip Code"
         type="number"
@@ -65,7 +65,7 @@ const checkCoverage = async () => {
         :min="0"
         :max="99999"
         :error="state.zipError"
-        errorMessage="Please enter a valid zip code"
+        error-message="Please enter a valid zip code"
         @input="(event) => (state.zipCode = event.target.value)"
         @save="checkCoverage"
         @keydown.enter="checkCoverage"
@@ -76,7 +76,7 @@ const checkCoverage = async () => {
     <UiButtonRow>
       <UiButton
         gradient
-        imgName="arrow-long-right"
+        img-name="arrow-long-right"
         class="device-check-button"
         :loading="state.loading"
         :disabled="state.loading || !state.zipCode"
@@ -87,4 +87,3 @@ const checkCoverage = async () => {
     </UiButtonRow>
   </UiPageWrapper>
 </template>
-<style lang="scss" scoped></style>

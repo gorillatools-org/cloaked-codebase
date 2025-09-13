@@ -1,12 +1,13 @@
 <script setup>
 import { DOWNLOAD_APP_URL } from "@/scripts/constants.js";
-import OnboardingPageHeader from "@/features/onboarding/page/OnboardingPageHeader.vue";
+import BaseButton from "@/library/BaseButton.vue";
 import { onMounted, computed } from "vue";
 import { PH_EVENT_USER_VIEWED_SETUPONBOARDING_DOWNLOAD_APP } from "@/scripts/posthogEvents.js";
 import { logout } from "@/scripts/actions/auth.js";
 import { posthogCapture } from "@/scripts/posthog.js";
 import InlineSvg from "@/features/InlineSvg.vue";
 import BaseText from "@/library/BaseText.vue";
+import CloakedLogo from "@/assets/images/CloakedLogo.svg";
 import store from "@/store";
 
 const props = defineProps({
@@ -33,11 +34,15 @@ onMounted(() => {
 
 <template>
   <div class="download-app">
-    <OnboardingPageHeader
-      class="download-app__header"
-      :buttonLabel="props.buttonLabel"
-      :action="props.action"
-    />
+    <div class="download-app__header">
+      <CloakedLogo class="download-app__logo" />
+      <BaseButton
+        variant="outline"
+        @click="props.action"
+      >
+        {{ props.buttonLabel }}
+      </BaseButton>
+    </div>
     <div class="download-app__content">
       <BaseText
         as="h1"
@@ -96,6 +101,16 @@ onMounted(() => {
 
   &__header {
     padding: 20px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  &__logo {
+    color: $color-primary-100;
+    height: 25px;
   }
 
   &__content {

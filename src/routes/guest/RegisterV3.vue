@@ -72,8 +72,8 @@ onUnmounted(() => {
   <AuthIframe
     id="cloak-iframe"
     source="auth/signup"
-    useV3Route
-    :prevRoute="prevRoute"
+    use-v3-route
+    :prev-route="prevRoute"
   />
 </template>
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->

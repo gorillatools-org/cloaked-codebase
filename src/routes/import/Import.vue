@@ -1,10 +1,8 @@
 <script setup>
-import ModalFull from "@/features/ui/modal-full";
 import Stepper from "@/features/ui/stepper";
 import Back from "@/assets/icons/back-modal-full.svg";
 import UiTooltip from "@/features/ui/ui-tooltip";
 import ModalMissingLabels from "@/features/import/ModalMissingLabels";
-import ModalQuickHelp from "@/features/import/ModalQuickHelp.vue";
 import { IMPORT_OPTION_CSV } from "@/store/modules/accounts-importer/shared.js";
 import {
   NEXT_STATE_UNLABELED_COLUMNS,
@@ -37,13 +35,13 @@ import {
 import router from "@/routes/router";
 import { useRoute } from "vue-router";
 import store from "@/store";
-import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
+import { onBeforeRouteLeave } from "vue-router";
+import { HELP_CENTER_IMPORT_URL } from "@/scripts/constants";
 
 const route = useRoute();
 let previousRoute = null;
 
 const state = reactive({
-  stepTransitionName: "slide-right",
   sourceCache: null,
 });
 onBeforeRouteLeave((to, from, next) => {
@@ -56,11 +54,7 @@ onBeforeRouteLeave((to, from, next) => {
   }
   next();
 });
-onBeforeRouteUpdate(async (to, from, next) => {
-  state.stepTransitionName =
-    to.meta.step > from.meta.step ? "slide-right" : "slide-left";
-  next();
-});
+
 const nextState = computed(() =>
   store.getters["accountsImporter/getNextState"](route.meta.step)
 );
@@ -205,16 +199,7 @@ function onNext() {
 }
 
 function onHelp() {
-  store.dispatch("openModal", {
-    id: "quick-help",
-    customTemplate: {
-      template: markRaw(ModalQuickHelp),
-      params: {
-        id: "quick-help",
-        onGoBack: () => store.dispatch("closeModal"),
-      },
-    },
-  });
+  window.open(`${HELP_CENTER_IMPORT_URL}`, "_blank");
 }
 function checkForEscape(event) {
   if (event?.key?.toLowerCase() === "escape") {
@@ -243,32 +228,30 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <ModalFull @close="onClose">
-    <template
-      v-if="route.meta.step > 0"
-      #header-left
-    >
-      <button
-        class="modal-full__button"
-        @click="onBack"
-      >
-        <Back />
-      </button>
-    </template>
-    <template #header-center>
-      <Stepper
-        :value="route.meta.step"
-        :steps="[
-          'Choose source',
-          'Upload file',
-          'Choose labels',
-          'Review & import',
-        ]"
-        class="import__stepper"
-      />
-    </template>
-    <template #header-right>
-      <span>
+  <div class="page-import">
+    <div class="page-import__header">
+      <div class="page-import__header-left">
+        <button
+          v-if="route.meta.step > 0"
+          class="page-import__button"
+          @click="onBack"
+        >
+          <Back />
+        </button>
+      </div>
+      <div class="page-import__header-center">
+        <Stepper
+          :value="route.meta.step"
+          :steps="[
+            'Choose source',
+            'Upload file',
+            'Choose labels',
+            'Review & import',
+          ]"
+          class="import__stepper"
+        />
+      </div>
+      <div class="page-import__header-right">
         <ImportCheatSheet
           :with-ping="route.meta.step === 2"
           @click="onHelp"
@@ -307,24 +290,84 @@ onUnmounted(() => {
             </template>
           </template>
         </UiTooltip>
-      </span>
-    </template>
-    <div
-      class="page-wrapper"
-      :class="{
-        'slide-right': state.stepTransitionName === 'slide-right',
-        'slide-left-leave': state.stepTransitionName === 'slide-right',
-        'slide-left': state.stepTransitionName === 'slide-left',
-        'slide-right-leave': state.stepTransitionName === 'slide-left',
-      }"
-    >
-      <router-view />
+      </div>
     </div>
-  </ModalFull>
+    <div class="page-import__content">
+      <div class="page-import__wrapper">
+        <router-view />
+      </div>
+    </div>
+  </div>
 </template>
 
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
+/* stylelint-disable */
+.page-import {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 8px) !important;
+  background-color: $color-primary-1;
+  margin: 0 8px 8px 0;
+  border-radius: 20px;
+
+  &__header {
+    height: 84px;
+    border-bottom: 1px solid $color-primary-10;
+    display: grid;
+    grid-template-columns: 1fr minmax(150px, 520px) minmax(290px, 1fr);
+    align-items: center;
+    padding: 0 24px;
+    flex-shrink: 0;
+    background-color: $color-primary-1;
+  }
+
+  &__header-left {
+    justify-self: left;
+  }
+
+  &__header-center {
+    justify-self: center;
+  }
+
+  &__header-right {
+    justify-self: right;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: $color-primary-100;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+
+  &__content {
+    flex: 1;
+    overflow: hidden;
+    padding: 0 24px;
+  }
+
+  &__wrapper {
+    height: 100%;
+    overflow: auto;
+    padding: 24px 0;
+    @include custom-scroll-bar;
+  }
+}
+
 .import {
   &__step-title {
     font-weight: 500;
@@ -363,39 +406,6 @@ onUnmounted(() => {
     &--disabled {
       cursor: not-allowed;
     }
-  }
-}
-
-.slide-right {
-  animation: slide-right-enter 0.2s ease-out;
-}
-
-.slide-right-leave {
-  animation: slide-right-leave 0.2s ease-out;
-}
-.slide-left-leave {
-  animation: slide-right-enter 0.2s ease-out;
-}
-.slide-left {
-  animation: slide-right-leave 0.2s ease-out;
-}
-
-@keyframes slide-right-leave {
-  0% {
-    transform: translateX(100vw);
-  }
-
-  100% {
-    transform: translateX(0vw);
-  }
-}
-@keyframes slide-right-enter {
-  0% {
-    transform: translateX(-100vw);
-  }
-
-  100% {
-    transform: translateX(0vw);
   }
 }
 </style>

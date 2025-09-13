@@ -44,6 +44,7 @@ export default class DataDeleteService {
     age,
     email,
     useArray = false,
+    redactAddress = false,
   }) {
     let query = {
       firstName,
@@ -52,6 +53,7 @@ export default class DataDeleteService {
       age,
       email,
       phone: phoneNumber,
+      redactAddress: redactAddress,
     };
 
     if (useArray) return { data: { results: [] } }; // todo implement array
@@ -191,6 +193,15 @@ export default class DataDeleteService {
       });
   }
 
+  static async updateEnrollmentProfilePatch(payload) {
+    return await api()
+      .patch("/api/v1/data_deletion/enrollment/profile/", payload)
+      .then((resp) => {
+        store.dispatch("dataDelete/setEnrollmentProfile", resp?.data);
+        return resp;
+      });
+  }
+
   // NOTE: cloaked basic mode summary
   static async getBasicModeSummary() {
     return api()
@@ -202,6 +213,16 @@ export default class DataDeleteService {
       .catch((err) => {
         return err;
       });
+  }
+
+  static async getRelatives() {
+    return api().get(`/api/v1/data_deletion/relatives/?page_size=1000`);
+  }
+
+  static async updateRelative(id, isRelative) {
+    return api().patch(`/api/v1/data_deletion/relatives/${id}/`, {
+      is_relative: isRelative,
+    });
   }
 }
 

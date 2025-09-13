@@ -2,10 +2,12 @@
 import { computed, onBeforeMount } from "vue";
 import store from "@/store";
 import MenuItem from "@/features/Settings/SettingsNavigationMenuItem.vue";
-import { isMobileDevice } from "@/scripts/regex";
+import { useDisplay } from "@/composables/useDisplay";
 import SubscriptionService from "@/api/settings/subscription-services";
 import { useEncryptionGate } from "@/composables/useEncryptionGate";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { useBasicMode } from "@/composables/useBasicMode";
+
+const { isMobile } = useDisplay();
 
 onBeforeMount(() => {
   // NOTE: purposefully querying backend every time in case users subscription changes
@@ -19,9 +21,7 @@ const hasDDScan = computed(() => {
 });
 
 const { isEncryptionAvailable } = useEncryptionGate();
-const { featureFlag: isIdentityMonitoringEnabled } = usePostHogFeatureFlag(
-  "identity-monitoring-enabled"
-);
+const { isBasicModeEnabled } = useBasicMode();
 
 const items = computed(() => {
   let items = [
@@ -39,14 +39,9 @@ const items = computed(() => {
     },
   ];
 
-  if (hasDDScan.value && isIdentityMonitoringEnabled.value) {
+  if (hasDDScan.value) {
     items.push({
       name: "Data Removal & Identity Monitoring",
-      to: { name: "settings.dataRemoval" },
-    });
-  } else if (hasDDScan.value) {
-    items.push({
-      name: "Data Removal",
       to: { name: "settings.dataRemoval" },
     });
   }
@@ -88,13 +83,25 @@ const items = computed(() => {
     );
   }
 
+  // Hide identity-related features for Basic Mode users
+  if (isBasicModeEnabled.value) {
+    items = items.filter(
+      (item) => !["Personal information", "Forwarding"].includes(item.name)
+    );
+  }
+
+  items.push({
+    name: "Permissions",
+    to: { name: "settings.permissions" },
+  });
+
   return items;
 });
 </script>
 <template>
   <nav
     class="settings-navigation"
-    :class="{ 'desktop-only': !isMobileDevice }"
+    :class="{ 'desktop-only': !isMobile }"
   >
     <div class="settings-navigation__items">
       <MenuItem

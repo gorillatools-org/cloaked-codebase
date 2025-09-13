@@ -105,8 +105,8 @@ const modalContentStyle = computed(() => ({
           <label class="sharing-modal-create__permissions-all">
             <ReviewToggleAll
               :values="permissionIds"
-              :modelValue="props.sharing.data.map((item) => item.id)"
-              @update:modelValue="
+              :model-value="props.sharing.data.map((item) => item.id)"
+              @update:model-value="
                 ($event) => {
                   $emit('update-sharing', {
                     ...props.sharing,
@@ -160,9 +160,9 @@ const modalContentStyle = computed(() => ({
                   :is-secret="permission.isSecret"
                   :shared-value="permission.sharedValue"
                   :label="permission.label"
-                  :modelValue="props.sharing.data.map((item) => item.id)"
+                  :model-value="props.sharing.data.map((item) => item.id)"
                   class="sharing-modal-create__permissions-custom-list-item"
-                  @update:modelValue="
+                  @update:model-value="
                     $emit('update-sharing', {
                       ...props.sharing,
                       data: props.permissions.filter((item) =>

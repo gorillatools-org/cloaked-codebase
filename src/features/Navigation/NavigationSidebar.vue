@@ -1,9 +1,10 @@
 <script setup>
-import { computed, onMounted, ref, markRaw } from "vue";
+import { computed, onMounted, ref, markRaw, nextTick, onUnmounted } from "vue";
 import store from "@/store";
 import { useBasicMode } from "@/composables/useBasicMode.js";
 import { useFeatures } from "@/composables/useFeatures.js";
 import BaseText from "@/library/BaseText.vue";
+import BaseIcon from "@/library/BaseIcon.vue";
 import NavigationSidebarMenuItem from "@/features/Navigation/NavigationSidebarMenuItem.vue";
 import EsimService from "@/api/actions/esim-service.js";
 import InboxService from "@/api/actions/inbox-service.js";
@@ -15,6 +16,7 @@ import {
   getUserCountry,
   LAUNCHED_COUNTRIES,
 } from "@/scripts/countries/countries";
+import { useNavigationStore } from "@/pinia/navigation";
 
 const {
   hasForYou,
@@ -25,7 +27,7 @@ const {
   hasExposureStatus,
 } = useFeatures();
 
-const { isBasicModeAccessible, isBasicModeEnabled } = useBasicMode();
+const { isBasicModeEnabled } = useBasicMode();
 
 onMounted(async () => {
   if (!basicModeEnabled.value) {
@@ -44,7 +46,7 @@ const subscriptionState = computed(() => {
 });
 
 const basicModeEnabled = computed(() => {
-  return isBasicModeAccessible.value && isBasicModeEnabled.value;
+  return isBasicModeEnabled.value;
 });
 
 const eSimFeatureFlag = computed(() => {
@@ -132,11 +134,99 @@ const filteredNavigationItems = computed(() => {
     }))
     .filter((section) => section.items.length > 0);
 });
+
+const collapse = computed(() => {
+  return useNavigationStore().collapse;
+});
+
+// Tooltip functionality for action buttons
+const newIdentityButtonRef = ref(null);
+const composeButtonRef = ref(null);
+const navigationContainerRef = ref(null);
+const activeTooltip = ref(null); // 'newIdentity' | 'compose' | null
+const tooltipStyle = ref({});
+
+const handleScrollHide = () => {
+  activeTooltip.value = null;
+  removeScrollListeners();
+};
+
+const addScrollListeners = () => {
+  window.addEventListener("scroll", handleScrollHide, { passive: true });
+  document.addEventListener("scroll", handleScrollHide, { passive: true });
+
+  if (navigationContainerRef.value) {
+    navigationContainerRef.value.addEventListener("scroll", handleScrollHide, {
+      passive: true,
+    });
+  }
+};
+
+const removeScrollListeners = () => {
+  window.removeEventListener("scroll", handleScrollHide);
+  document.removeEventListener("scroll", handleScrollHide);
+
+  if (navigationContainerRef.value) {
+    navigationContainerRef.value.removeEventListener(
+      "scroll",
+      handleScrollHide
+    );
+  }
+};
+
+const handleTooltipMouseEnter = async (buttonRef, tooltipType) => {
+  if (!collapse.value || !buttonRef.value) return;
+
+  await nextTick();
+  const element = buttonRef.value.$el || buttonRef.value;
+  if (!element || !element.getBoundingClientRect) return;
+
+  try {
+    const rect = element.getBoundingClientRect();
+    tooltipStyle.value = {
+      left: `${rect.right + 12}px`,
+      top: `${rect.top + rect.height / 2}px`,
+    };
+
+    activeTooltip.value = tooltipType;
+    addScrollListeners();
+  } catch (error) {
+    // Gracefully handle errors - log for debugging but don't break the application
+    console.warn("Error calculating tooltip position:", error);
+    // Don't show tooltip if we can't calculate position
+    activeTooltip.value = null;
+  }
+};
+
+const handleTooltipMouseLeave = () => {
+  activeTooltip.value = null;
+  removeScrollListeners();
+};
+
+// Specific handlers for each button
+const handleNewIdentityMouseEnter = () =>
+  handleTooltipMouseEnter(newIdentityButtonRef, "newIdentity");
+const handleNewIdentityMouseLeave = handleTooltipMouseLeave;
+const handleComposeMouseEnter = () =>
+  handleTooltipMouseEnter(composeButtonRef, "compose");
+const handleComposeMouseLeave = handleTooltipMouseLeave;
+
+onUnmounted(() => {
+  removeScrollListeners();
+});
 </script>
 
 <template>
-  <div class="navigation-left-panel">
-    <div class="navigation-left-panel__navigation">
+  <nav
+    class="navigation-left-panel"
+    :class="{ 'navigation-left-panel--collapsed': collapse }"
+    aria-label="Sidebar navigation"
+  >
+    <div
+      ref="navigationContainerRef"
+      class="navigation-left-panel__navigation"
+      data-navigation-container
+    >
       <div class="navigation-left-panel__navigation-inner">
         <template
           v-for="(section, index) in filteredNavigationItems"
@@ -159,6 +249,7 @@ const filteredNavigationItems = computed(() => {
               :icon="item.icon"
               class="navigation-left-panel__navigation-inner-section-item"
               :count="item.count"
+              :collapse="collapse"
             >
               {{ item.text }}
             </NavigationSidebarMenuItem>
@@ -183,6 +274,7 @@ const filteredNavigationItems = computed(() => {
             :url="`/category/${category.id}`"
             icon="categories"
             class="navigation-left-panel__navigation-inner-section-item"
+            :collapse="collapse"
           >
             {{ category.name }}
           </NavigationSidebarMenuItem>
@@ -190,6 +282,7 @@ const filteredNavigationItems = computed(() => {
           <NavigationSidebarMenuItem
             icon="plus"
             class="navigation-left-panel__navigation-inner-section-item"
+            :collapse="collapse"
             @click="openCategoryAddModal"
           >
             Add new...
@@ -202,16 +295,38 @@ const filteredNavigationItems = computed(() => {
       v-if="subscriptionState !== 'CANCELLED' && !basicModeEnabled"
       class="navigation-left-panel__actions"
     >
+      <!-- Expanded state: Full BaseButton -->
       <BaseButton
+        v-if="!collapse"
+        ref="newIdentityButtonRef"
         variant="primary"
+        size="md"
+        icon="arrow-right"
         tabindex="0"
         class="navigation-left-panel__actions-button"
-        @click="newIdentity()"
+        @click="newIdentity"
       >
         New identity
       </BaseButton>
+
+      <!-- Collapsed state: Custom icon button -->
+      <button
+        v-else
+        ref="newIdentityButtonRef"
+        class="navigation-left-panel__actions-button-icon navigation-left-panel__actions-button-icon--primary"
+        tabindex="0"
+        @click="newIdentity"
+        @mouseenter="handleNewIdentityMouseEnter"
+        @mouseleave="handleNewIdentityMouseLeave"
+      >
+        <BaseIcon name="plus" />
+      </button>
+      <!-- Expanded state: Full BaseButton -->
       <BaseButton
+        v-if="!collapse"
+        ref="composeButtonRef"
         variant="secondary"
+        size="md"
         tabindex="0"
         icon="chatting "
         class="navigation-left-panel__actions-button"
@@ -219,15 +334,56 @@ const filteredNavigationItems = computed(() => {
       >
         Compose message
       </BaseButton>
+
+      <!-- Collapsed state: Custom icon button -->
+      <button
+        v-else
+        ref="composeButtonRef"
+        class="navigation-left-panel__actions-button-icon navigation-left-panel__actions-button-icon--secondary"
+        tabindex="0"
+        @click="openCompose"
+        @mouseenter="handleComposeMouseEnter"
+        @mouseleave="handleComposeMouseLeave"
+      >
+        <BaseIcon name="chatting" />
+      </button>
     </div>
-  </div>
+  </nav>
+
+  <Teleport to="body">
+    <div
+      v-if="collapse && activeTooltip"
+      class="navigation-left-panel__tooltip"
+      :style="tooltipStyle"
+    >
+      <!-- Triangle pointer -->
+      <div class="navigation-left-panel__tooltip-arrow"></div>
+      {{ activeTooltip === "newIdentity" ? "New identity" : "Compose message" }}
+    </div>
+  </Teleport>
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable */
 .navigation-left-panel {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  margin: 0 0 8px 8px;
+  height: calc(100% - 8px);
+
+  &--collapsed {
+    .navigation-left-panel__navigation {
+      padding: 16px 10px;
+    }
+
+    .navigation-left-panel__navigation-inner-section-title {
+      font-size: 0;
+      height: 1px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid $color-primary-20;
+    }
+  }
 
   &__navigation {
     background-color: $color-primary-5;
@@ -251,7 +407,53 @@ const filteredNavigationItems = computed(() => {
       &:last-child {
         margin-bottom: 0;
       }
+
+      &-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.2s ease;
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px $color-foam-blue;
+        }
+
+        &--primary {
+          background-color: $color-primary-100;
+          color: $color-primary-1;
+
+          &:hover {
+            opacity: 0.9;
+          }
+        }
+
+        &--secondary {
+          background-color: transparent;
+          color: $color-primary-100;
+          border-color: $color-primary-100;
+
+          &:hover {
+            background-color: $color-primary-5;
+          }
+        }
+      }
     }
+  }
+
+  &--collapsed &__actions {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
   }
 
   &__navigation-inner-section {
@@ -274,6 +476,42 @@ const filteredNavigationItems = computed(() => {
         margin-top: 0;
       }
     }
+  }
+
+  &__tooltip {
+    position: fixed;
+    transform: translateY(-50%);
+    z-index: 10000;
+    background-color: $color-primary-100;
+    color: $color-primary-1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 500;
+    pointer-events: none;
+    animation: fadeIn 0.2s ease;
+
+    &-arrow {
+      position: absolute;
+      top: 50%;
+      left: -6px;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 6px 6px 6px 0;
+      border-color: transparent $color-primary-100 transparent transparent;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 </style>

@@ -9,6 +9,7 @@ export default class PersonalInfoServices {
       .then(({ data }) => {
         const autofillData = data.results && data.results[0];
         store.commit("insertAutofill", autofillData);
+        return autofillData;
       });
   }
 
@@ -113,11 +114,22 @@ export default class PersonalInfoServices {
       .get(url)
       .then(({ data }) => {
         store.dispatch("setEmailTypeSetting", data.email_domain);
+        store.dispatch("settings/savePermissions", data);
       })
       .catch((err) => {
         if (err?.response?.status === 404) {
           return this.createUserProfileSettings();
         }
+      });
+  }
+
+  static async updateUserProfile(payload) {
+    const url = "/api/v1/settings/user_profile/";
+    return await api()
+      .patch(url, payload)
+      .then(({ data }) => {
+        store.dispatch("setEmailTypeSetting", data.email_domain);
+        store.dispatch("settings/savePermissions", data);
       });
   }
 

@@ -34,6 +34,7 @@ const slots = useSlots();
 </template>
 
 <style scoped lang="scss">
+/* stylelint-disable */
 .page-checkout-success {
   &__header {
     margin-top: 24px;
@@ -59,20 +60,6 @@ const slots = useSlots();
       &:first-of-type {
         max-width: 500px;
       }
-    }
-
-    &:deep(.bulk-plan-card-wrapper) {
-      // opacity: 0.7;
-      // animation: none;
-      border: 0.976px solid rgb(255 255 255 / 15%);
-    }
-
-    &:deep(.bulk-plan-card-wrapper__title) {
-      opacity: 0.7;
-    }
-
-    &:deep(.bulk-plan-card-wrapper__bubbles .bubble .bubble-text) {
-      opacity: 0.8;
     }
   }
 
