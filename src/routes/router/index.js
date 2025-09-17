@@ -244,10 +244,17 @@ const { withEncryptionGate } = useEncryptionGate();
 const { isBasicModeEnabled } = useBasicMode();
 
 const allowOnlyEncryptedUsers = (to, from, next) => {
-  return withEncryptionGate(
-    next,
-    from?.name ? {} : { fallback: () => next({ name: "Home" }) }
-  );
+  // Handle direct entry case first - redirect to home and exit early
+  if (!from?.name) {
+    next({ name: "Home" });
+    return;
+  }
+
+  // For navigation from other routes, use encryption gate
+  withEncryptionGate(() => next()).catch(() => {
+    // If encryption gate is cancelled, redirect to home
+    next({ name: "Home" });
+  });
 };
 
 const allowOnlyAdvancedMode = (to, from, next) => {

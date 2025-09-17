@@ -15,7 +15,7 @@ import { usePriceDiscount } from "@/features/subscribe/composables/usePriceDisco
 import { useIntentPrice } from "@/features/subscribe/composables/useIntentPrice.js";
 import { useSavings } from "@/features/subscribe/composables/useSavings.js";
 import { useRoute } from "vue-router";
-import { useColorScheme } from "@/composables/useColorScheme.js";
+import { useColorScheme } from "@/composables/useColorScheme";
 
 const { setColorScheme } = useColorScheme();
 onBeforeMount(() => setColorScheme("light"));

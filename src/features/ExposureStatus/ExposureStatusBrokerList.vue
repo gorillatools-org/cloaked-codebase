@@ -7,6 +7,7 @@ import ExposureStatusBrokerListSection from "@/features/ExposureStatus/ExposureS
 import { useRelativesApi } from "@/composables/useRelativesApi.js";
 import ShareFeedbackModal from "@/features/feedback/ShareFeedbackModal.vue";
 import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import ExposureStatusLoading from "@/features/ExposureStatus/ExposureStatusLoading.vue";
 
 const openItemIds = ref(new Set());
 
@@ -212,6 +213,7 @@ const shouldShowActionRequired = computed(() => {
     </div>
 
     <div class="page-exposure-status__broker-list-table">
+      <ExposureStatusLoading v-if="brokerList.length === 0" />
       <ExposureStatusBrokerListSection
         v-if="removingBrokers.length > 0"
         title="Removing"

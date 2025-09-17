@@ -1,203 +1,244 @@
 <script setup>
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 import AppModal from "@/features/ui/AppModal.vue";
 import AppModalContent from "@/features/ui/AppModalContent.vue";
-import InlineSvg from "@/features/InlineSvg.vue";
+import BaseText from "@/library/BaseText.vue";
+import BaseMedallion from "@/library/BaseMedallion.vue";
 import BaseButton from "@/library/BaseButton.vue";
+import BaseIcon from "@/library/BaseIcon.vue";
+import { useBasicModeRouting } from "@/composables/useBasicMode";
+import { useEncryptionGate } from "@/composables/useEncryptionGate";
+import { posthogCapture } from "@/scripts/posthog.js";
 
-const props = defineProps({
-  value: {
-    type: Boolean,
-    default: true,
+const router = useRouter();
+const { toggleBasicModeWithRouting } = useBasicModeRouting();
+const { withEncryptionGate, isEncryptionAvailable } = useEncryptionGate();
+
+const isOpen = defineModel({ type: Boolean });
+const isLoading = ref(false);
+
+const emit = defineEmits(["close", "go-to-advanced-mode"]);
+
+const ADVANCED_FEATURES = [
+  {
+    icon: "profile-me",
+    text: "Generate real, anonymous email addresses and phone numbers to protect your real ones.",
   },
-});
+  {
+    icon: "shield-tick",
+    text: "Privately call, text, and email right inside of Cloaked.",
+  },
+  {
+    icon: "lock",
+    text: "Generate, save, and pre-fill passwords.",
+  },
+  {
+    icon: "plus",
+    text: "So much more...",
+  },
+];
 
-const emit = defineEmits(["close", "goToAdvancedMode"]);
+const onStayBasic = () => {
+  if (isLoading.value) return;
+  isOpen.value = false;
+  emit("close");
+};
+
+const onTryAdvanced = async () => {
+  isLoading.value = true;
+
+  // Capture the initial encryption state to use consistently
+  const wasEncryptedInitially = isEncryptionAvailable.value;
+
+  try {
+    posthogCapture("dashboard_user_toggles_advanced_mode");
+
+    // If user needs encryption, close this modal first to avoid overlapping modals
+    if (!wasEncryptedInitially) {
+      isOpen.value = false;
+    }
+
+    await withEncryptionGate(
+      async () => {
+        await toggleBasicModeWithRouting(router);
+
+        // Emit event after successful mode switch (for both encrypted and newly encrypted users)
+        emit("go-to-advanced-mode");
+      },
+      {
+        context: "advanced-mode",
+      }
+    );
+
+    // If user was already encrypted, close modal normally
+    if (wasEncryptedInitially) {
+      isOpen.value = false;
+    }
+  } catch (error) {
+    console.error("Error switching to advanced mode:", error);
+    // On error, reopen modal if we had closed it for encryption
+    if (!wasEncryptedInitially) {
+      isOpen.value = true;
+    }
+  } finally {
+    isLoading.value = false;
+  }
+};
 </script>
 
 <template>
   <AppModal
-    :value="props.value"
-    @close="emit('close')"
+    :value="isOpen"
+    @input="onStayBasic"
   >
-    <AppModalContent
-      class="modal-wrapper"
-      width="779px"
-    >
-      <div class="gradient-orange" />
-      <div
-        class="close"
-        @click="$emit('close')"
+    <AppModalContent class="advanced-mode-modal__content">
+      <header class="advanced-mode-modal__header">
+        <BaseMedallion
+          icon="bolt"
+          size="md"
+          color="cloaked"
+          class="advanced-mode-modal__medallion"
+        />
+      </header>
+      <BaseText
+        as="h2"
+        variant="headline-2-regular"
+        class="advanced-mode-modal__title"
       >
-        <InlineSvg name="modal-x" />
-      </div>
-      <div class="modal-content">
-        <div class="left">
-          <h1>Advanced mode is true privacy power</h1>
-          <h3>Enable incredible advanced privacy features at no cost:</h3>
-        </div>
-        <div class="right">
-          <div class="benefits">
-            <InlineSvg
-              name="user-plus"
-              style="color: #b3d900"
-            />
-            <p>
-              Create new account information directly in your browser with the
-              Chrome and Brave Extension (Safari on mobile).
-            </p>
-          </div>
-          <div class="benefits">
-            <InlineSvg
-              name="key-filled"
-              style="color: #faa542"
-            />
-            <p>Autofill and save password anywhere</p>
-          </div>
-          <div class="benefits">
-            <InlineSvg
-              name="lock-shield-filled"
-              style="color: #ff550c"
-            />
-            <p>Stop data brokers and trackers from gathering info about you</p>
-          </div>
-          <div class="benefits">
-            <InlineSvg name="plus" />
-            <p>So much more - try it out today!</p>
-          </div>
-        </div>
-      </div>
-      <div class="footer">
-        <BaseButton
-          size="lg"
-          variant="cloaked-gradient"
-          @click="$emit('goToAdvancedMode')"
+        Try Cloaked's Powerful Advanced Features
+      </BaseText>
+      <div class="advanced-mode-modal__description">
+        <BaseText
+          variant="headline-4-medium"
+          class="advanced-mode-modal__subtitle"
         >
-          Enable advanced features
-        </BaseButton>
+          Built for Privacy
+        </BaseText>
+        <div class="advanced-mode-modal__features">
+          <div
+            v-for="feature in ADVANCED_FEATURES"
+            :key="feature.icon"
+            class="advanced-mode-modal__feature"
+          >
+            <BaseIcon
+              :name="feature.icon"
+              class="advanced-mode-modal__feature-icon"
+            />
+            <BaseText
+              variant="headline-6-medium"
+              class="advanced-mode-modal__feature-text"
+            >
+              {{ feature.text }}
+            </BaseText>
+          </div>
+        </div>
+        <BaseText
+          variant="body-3-regular"
+          class="advanced-mode-modal__note"
+        >
+          Advanced features also work on mobile. To disable simply toggle the
+          option off from the Settings menu.
+        </BaseText>
       </div>
+      <footer class="advanced-mode-modal__footer">
+        <BaseButton
+          variant="outline"
+          size="lg"
+          :disabled="isLoading"
+          class="advanced-mode-modal__button"
+          @click="onStayBasic"
+        >
+          Stay on Basic
+        </BaseButton>
+        <BaseButton
+          variant="cloaked-gradient-secondary"
+          size="lg"
+          :loading="isLoading"
+          :disabled="isLoading"
+          class="advanced-mode-modal__button"
+          @click="onTryAdvanced"
+        >
+          Try Advanced
+        </BaseButton>
+      </footer>
     </AppModalContent>
   </AppModal>
 </template>
 
-<style lang="scss" scoped>
-/* stylelint-disable */
-.modal-wrapper {
-  position: relative;
-  padding: 48px 36px;
-  border-radius: 24px;
-  text-align: center;
-  background-color: $color-base-white-100-dark;
-  overflow: hidden;
-
-  .gradient-orange {
-    opacity: 0.8;
-    background:
-      linear-gradient(to bottom right, #8dbbff 0%, #ff4949 29%, #ff7a00 50%)
-        bottom right / 50% 50% no-repeat,
-      linear-gradient(to bottom left, #8dbbff 0%, #ff4949 29%, #ff7a00 50%)
-        bottom left / 50% 50% no-repeat,
-      linear-gradient(to top left, #8dbbff 0%, #ff4949 29%, #ff7a00 50%) top
-        left / 50% 50% no-repeat,
-      linear-gradient(to top right, #8dbbff 0%, #ff4949 29%, #ff7a00 50%) top
-        right / 50% 50% no-repeat;
-    filter: blur(146.71080017089844px);
-    position: absolute;
-    left: -414px;
-    top: -98.933px;
-    width: 734.655px;
-    height: 263.109px;
+<style scoped lang="scss">
+.advanced-mode-modal {
+  &__content {
+    padding: 48px 36px;
   }
-}
 
-.close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 20px 28px;
-  color: $color-primary-100-dark;
-  z-index: 1;
-  cursor: pointer;
-  transform: scale(1.3);
-}
-
-.modal-content {
-  position: relative;
-  z-index: 2;
-  color: $color-primary-100-dark;
-  display: flex;
-  gap: 36px;
-  justify-content: space-between;
-  padding-top: 10px;
-
-  .left {
+  &__header {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
-    text-align: start;
-    width: 51%;
-
-    h1 {
-      font-size: 32px;
-      font-weight: 600;
-      line-height: 40px;
-      color: $color-primary-100-dark;
-    }
-
-    h3 {
-      font-size: 15px;
-      font-weight: 600;
-      line-height: 22.5px;
-      color: $color-primary-100-dark;
-    }
+    justify-content: flex-start;
   }
 
-  .right {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    text-align: left;
-    width: 49%;
-
-    .benefits {
-      display: flex;
-      gap: 10px;
-      align-items: start;
-
-      svg {
-        width: 16px;
-        height: 16px;
-        margin: 4px;
-        color: $color-primary-100-dark;
-      }
-
-      p {
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 21px;
-        width: 100%;
-      }
-
-      a {
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 18px;
-        text-decoration-line: underline;
-        cursor: pointer;
-      }
-    }
+  &__title {
+    margin-top: 8px;
   }
-}
 
-.footer {
-  display: flex;
-  justify-content: start;
+  &__description {
+    margin-top: 16px;
+    padding: 24px;
+    background-color: $color-base-white-0;
+    border: 1px solid $color-primary-10;
+    border-radius: 24px;
+  }
 
-  button {
-    color: $white;
-    font-size: 14px;
-    font-style: normal;
+  &__subtitle {
+    margin-top: 0;
     font-weight: 600;
-    line-height: normal;
+  }
+
+  &__features {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+  }
+
+  &__feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+
+    &-icon {
+      font-size: 20px;
+      color: $color-primary-100;
+    }
+
+    &-text {
+      color: $color-primary-70;
+    }
+  }
+
+  &__note {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid $color-primary-10;
+    background-color: $color-primary-5;
+    border-radius: 12px;
+    color: $color-primary-100;
+    display: block;
+    text-align: center;
+  }
+
+  &__footer {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  &__button {
+    flex: 1;
+    width: calc(50% - 6px);
   }
 }
 </style>

@@ -6,7 +6,7 @@ import EnrollmentHeader from "@/features/enrollment/EnrollmentHeader.vue";
 import DataDeleteService from "@/api/actions/data-delete-service.js";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { useToast } from "@/composables/useToast.js";
-import { useColorScheme } from "@/composables/useColorScheme.js";
+import { useColorScheme } from "@/composables/useColorScheme";
 import { useDataDeleteSessionStorage } from "@/features/data-delete/composables/useDataDeleteSessionStorage.js";
 import { useDataDeleteOverlay } from "@/routes/DataDeletion/composables/useDataDeleteOverlay.js";
 import { useMonitoringAutofill } from "@/features/monitoring/useMonitoringAutofill.js";

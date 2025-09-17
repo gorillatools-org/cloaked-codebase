@@ -152,22 +152,27 @@ const unwatch = watch(
     }
   }
 );
+
+const hasBrokers = computed(() => {
+  return store.getters["dataDelete/removalLogData"]?.brokerList?.length > 0;
+});
 </script>
 
 <template>
   <div
     class="page-exposure-status"
-    :class="{ 'page-exposure-status--loading': isLoading }"
+    :class="{ 'page-exposure-status--loading': isLoading || !hasBrokers }"
   >
     <div
       class="page-exposure-status__content"
       :class="{
-        'page-exposure-status__content--full-width': isLoading || !isEnrolled,
+        'page-exposure-status__content--full-width':
+          isLoading || !hasBrokers || !isEnrolled,
       }"
     >
       <router-view
         :is-enrolled="isEnrolled"
-        :is-loading="isLoading"
+        :is-loading="isLoading || !hasBrokers"
       />
     </div>
 
@@ -175,7 +180,7 @@ const unwatch = watch(
       class="page-exposure-status__aside"
       :class="{
         'page-exposure-status__aside--hidden':
-          isLoading || !isEnrolled || route?.meta?.hideAside,
+          isLoading || !hasBrokers || !isEnrolled || route?.meta?.hideAside,
       }"
     >
       <ExposureStatusRecords class="page-exposure-status__aside-item" />

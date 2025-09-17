@@ -11,6 +11,8 @@ import { usePaymentIntent } from "@/composables/usePaymentIntent.js";
 import { useStripeIntentPrefetch } from "@/features/subscribe/composables/useStripeIntentPrefetch.js";
 import store from "@/store";
 import BaseText from "@/library/BaseText.vue";
+import { posthogCapture } from "@/scripts/posthog.js";
+import { logout } from "@/scripts/actions/auth";
 
 const { isPlansModalOpen, allowClose } = usePlansModal();
 
@@ -50,6 +52,23 @@ const isChangingPlan = computed(() => {
 });
 
 const billingCycle = ref("annually");
+function onAlreadyPurchasedSubscription() {
+  posthogCapture("user_clicked_already_have_subscription");
+  store.dispatch("openModal", {
+    header: "Already purchased a subscription?",
+    subheader:
+      "If you have a subscription that isn't reflecting, you may be logged into a duplicate account. Try logging out and back in with a different phone number or email, or chat with us at <a href='https://help.cloaked.app' target='_blank' style='text-decoration: underline;'>help.cloaked.app</a>.",
+    button: {
+      text: "Logout",
+      onClick: () => logout(),
+    },
+    showCancel: true,
+  });
+}
+
+const showAlreadyPurchasedSubscription = computed(() => {
+  return store.getters["settings/isTrial"];
+});
 </script>
 
 <template>
@@ -87,7 +106,20 @@ const billingCycle = ref("annually");
         :billing-cycle="billingCycle"
         @clicked-subscribe="onClickedSubscribe"
         @subscribed="onSubscribed"
-      />
+      >
+        <template #after-cta>
+          <div class="choose-plan-modal__after-cta">
+            <BaseText
+              v-if="showAlreadyPurchasedSubscription"
+              variant="body-3-semibold"
+              as="p"
+              @click="onAlreadyPurchasedSubscription"
+            >
+              Already purchased a subscription?
+            </BaseText>
+          </div>
+        </template>
+      </ChoosePlanPayment>
     </AppModalContent>
   </AppModal>
 </template>
@@ -115,6 +147,12 @@ const billingCycle = ref("annually");
       display: block;
       padding: 32px;
     }
+  }
+
+  &__after-cta {
+    margin-top: 16px;
+    text-align: center;
+    cursor: pointer;
   }
 
   .choose-plan-picker {

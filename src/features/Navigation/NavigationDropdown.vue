@@ -6,30 +6,27 @@ import { posthogCapture } from "@/scripts/posthog.js";
 import { HELP_CENTER_BASE_URL, DOWNLOAD_APP_URL } from "@/scripts/constants";
 import { logout } from "@/scripts/actions/auth";
 
-import { useBasicMode, useBasicModeRouting } from "@/composables/useBasicMode";
-import { useRouter } from "vue-router";
+import { useBasicMode } from "@/composables/useBasicMode";
 import { useColorScheme } from "@/composables/useColorScheme";
-import { useEncryptionGate } from "@/composables/useEncryptionGate";
 import { useDisplay } from "@/composables/useDisplay";
 
 import NavigationDropdownHeader from "@/features/Navigation/NavigationDropdownHeader.vue";
 import NavigationDropdownMenuItem from "@/features/Navigation/NavigationDropdownMenuItem.vue";
 import AdvancedModeModal from "@/features/AdvancedMode/AdvancedModeModal.vue";
+import BasicModeModal from "@/features/AdvancedMode/BasicModeModal.vue";
 import IdentityTheftProtectionModal from "@/features/IdentityTheftProtection/IdentityTheftProtectionModal.vue";
 import ShareFeedbackModal from "@/features/feedback/ShareFeedbackModal.vue";
 import BaseAvatar from "@/library/BaseAvatar.vue";
 import BaseText from "@/library/BaseText.vue";
 
 const { isBasicModeEnabled } = useBasicMode();
-const { toggleBasicModeWithRouting } = useBasicModeRouting();
-const router = useRouter();
 const { colorScheme, setColorScheme } = useColorScheme();
-const { withEncryptionGate } = useEncryptionGate();
 const { isMobile } = useDisplay();
 
 const dropdownOpen = ref(false);
 const dropdownRef = ref(null);
 const isAdvancedModeModalOpen = ref(false);
+const isBasicModeModalOpen = ref(false);
 const username = computed(() => store.getters["authentication/getUsername"]);
 
 onClickOutside(dropdownRef, () => (dropdownOpen.value = false));
@@ -117,32 +114,29 @@ function toggleDownloadAppModal() {
 function openBasicModeModals() {
   dropdownOpen.value = false;
   if (!isBasicModeEnabled.value) {
-    store.dispatch("openModal", {
-      header: "Turn off advanced mode?",
-      paragraphs: [
-        "Everything you do in advanced mode will always be available if you turn it back on, including any Identities you create, emails and messages you send, etc.",
-        "For additional help, you can reach out to support@cloaked.com",
-      ],
-      button: {
-        text: "Yes, go back to basic mode",
-        onClick: changeBasicMode,
-      },
-    });
+    // Use the new BasicModeModal instead of generic modal
+    isBasicModeModalOpen.value = true;
   } else {
+    // Analytics will be handled by the modal when user clicks "Try Advanced"
     isAdvancedModeModalOpen.value = true;
   }
 }
 
-const changeBasicMode = () => {
-  toggleBasicModeWithRouting(router);
-  posthogCapture("users_switch_back_basicmode_cloakedv3");
+const goToAdvancedMode = () => {
+  // Modal handles its own closing and mode switching now
+  // This is just for cleanup in case modal doesn't close itself
+  isAdvancedModeModalOpen.value = false;
 };
 
-const goToAdvancedMode = () => {
-  isAdvancedModeModalOpen.value = false;
-  withEncryptionGate(() => toggleBasicModeWithRouting(router), {
-    context: "advanced-mode",
-  });
+const goToBasicMode = () => {
+  // Modal handles its own closing and mode switching now
+  // This is just for cleanup in case modal doesn't close itself
+  isBasicModeModalOpen.value = false;
+};
+
+const closeBasicModeModal = () => {
+  isBasicModeModalOpen.value = false;
+  posthogCapture("dashboard_user_closes_basic_mode_modal");
 };
 
 const toggleDarkMode = () => {
@@ -284,9 +278,14 @@ const toggleDarkMode = () => {
     </div>
 
     <AdvancedModeModal
-      :value="isAdvancedModeModalOpen"
-      @close="isAdvancedModeModalOpen = false"
+      v-model="isAdvancedModeModalOpen"
       @go-to-advanced-mode="goToAdvancedMode"
+    />
+
+    <BasicModeModal
+      v-model="isBasicModeModalOpen"
+      @close="closeBasicModeModal"
+      @go-to-basic-mode="goToBasicMode"
     />
   </div>
 </template>

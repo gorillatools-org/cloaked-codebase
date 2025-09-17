@@ -383,6 +383,9 @@ const billingCycleLabel = usePlanBilling(selectedPlan);
       class="choose-plan-payment__cta"
       @choose-plan="onChoosePlan"
     />
+
+    <slot name="after-cta" />
+
     <section
       v-show="
         selectedPlanOption?.paypalPlan &&
@@ -597,6 +600,12 @@ const billingCycleLabel = usePlanBilling(selectedPlan);
       pointer-events: none;
       cursor: not-allowed;
     }
+  }
+
+  &__after-cta {
+    margin-top: 16px;
+    text-align: center;
+    cursor: pointer;
   }
 
   .choose-plan-picker-flat {

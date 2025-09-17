@@ -59,7 +59,7 @@ export default class DataDeleteService {
     if (useArray) return { data: { results: [] } }; // todo implement array
 
     return await search()
-      .post("/api/v1/data_report_scan42/search/", query)
+      .post("/api/v1/data_report_scan44/search/", query)
       .catch(async (error) => {
         // if 409, means user has already searched and results are in progress
         if (error.response.status === 409) {
@@ -71,7 +71,7 @@ export default class DataDeleteService {
         }
         // try again if failed and not 409
         return await search()
-          .post("/api/v1/data_report_scan42/search/", query)
+          .post("/api/v1/data_report_scan44/search/", query)
           .catch((error) => {
             // if 409, means user has already searched and results are in progress
             if (error.response.status === 409) {

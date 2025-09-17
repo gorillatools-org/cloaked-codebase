@@ -14,32 +14,40 @@ export const useEncryptionGate = () => {
     callback,
     { fallback, context = "default" } = {}
   ) => {
-    if (toValue(isEncryptionAvailable)) {
-      callback();
-    } else {
-      fallback?.();
-      modalContext.value = context;
-      isModalOpen.value = true;
-
-      const unwatch = watch(
-        () => ({
-          isEncryptionAvailable: isEncryptionAvailable.value,
-          isModalOpen: isModalOpen.value,
-        }),
-        ({ isEncryptionAvailable, isModalOpen }) => {
-          if (isEncryptionAvailable) {
-            nextTick(() => {
-              callback();
-            });
-            unwatch();
-          }
-
-          if (!isModalOpen) {
-            unwatch();
-          }
+    return new Promise((resolve, reject) => {
+      const executeCallback = async () => {
+        try {
+          const result = await callback();
+          resolve(result);
+        } catch (error) {
+          reject(error);
         }
-      );
-    }
+      };
+
+      if (toValue(isEncryptionAvailable)) {
+        executeCallback();
+      } else {
+        fallback?.();
+        modalContext.value = context;
+        isModalOpen.value = true;
+
+        const unwatch = watch(
+          [isEncryptionAvailable, isModalOpen],
+          ([isEncryptionAvailable, modalOpenValue]) => {
+            if (isEncryptionAvailable) {
+              isModalOpen.value = false;
+              nextTick(() => {
+                executeCallback();
+              });
+              unwatch();
+            } else if (!modalOpenValue) {
+              reject(new Error("Encryption gate cancelled by user"));
+              unwatch();
+            }
+          }
+        );
+      }
+    });
   };
 
   return {

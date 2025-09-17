@@ -1,59 +1,44 @@
 <script setup>
 import { ref, computed } from "vue";
 import AdvancedModeModal from "@/features/AdvancedMode/AdvancedModeModal.vue";
-import { useBasicMode, useBasicModeRouting } from "@/composables/useBasicMode";
-import { useRouter } from "vue-router";
-import { useEncryptionGate } from "@/composables/useEncryptionGate";
-import store from "@/store";
+import BasicModeModal from "@/features/AdvancedMode/BasicModeModal.vue";
+import { useBasicMode } from "@/composables/useBasicMode";
 import { posthogCapture } from "@/scripts/posthog.js";
 import BaseIcon from "@/library/BaseIcon.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseToggle from "@/library/BaseToggle.vue";
 
-const { withEncryptionGate } = useEncryptionGate();
 const { isBasicModeEnabled } = useBasicMode();
-const { toggleBasicModeWithRouting } = useBasicModeRouting();
-const router = useRouter();
 
 const isAdvancedModeModalOpen = ref(false);
+const isBasicModeModalOpen = ref(false);
 const toggle = computed(() => !isBasicModeEnabled.value);
 
 const openBasicModeModals = () => {
-  posthogCapture("dashboard_user_toggles_advanced_mode");
-
   if (!isBasicModeEnabled.value) {
-    store.dispatch("openModal", {
-      header: "Turn off advanced mode?",
-      paragraphs: [
-        "Everything you do in advanced mode will always be available if you turn it back on, including any Identities you create, emails and messages you send, etc.",
-        "For additional help, you can reach out to support@cloaked.com",
-      ],
-      button: {
-        text: "Yes, go back to basic mode",
-        onClick: changeBasicMode,
-      },
-    });
+    // Use the new BasicModeModal instead of generic modal
+    isBasicModeModalOpen.value = true;
   } else {
+    // Analytics will be handled by the modal when user clicks "Try Advanced"
     isAdvancedModeModalOpen.value = true;
   }
 };
 
-const changeBasicMode = () => {
-  toggleBasicModeWithRouting(router);
-  posthogCapture("dashboard_user_toggles_basic_mode");
-};
-
 const goToAdvancedMode = () => {
+  // Modal handles its own closing and mode switching now
+  // This is just for cleanup in case modal doesn't close itself
   isAdvancedModeModalOpen.value = false;
-  withEncryptionGate(() => toggleBasicModeWithRouting(router), {
-    context: "advanced-mode",
-  });
-  posthogCapture("dashboard_user_toggles_advanced_mode");
 };
 
-const closeAdvancedModeModal = () => {
-  isAdvancedModeModalOpen.value = false;
-  posthogCapture("dashboard_user_closes_advanced_mode_modal");
+const goToBasicMode = () => {
+  // Modal handles its own closing and mode switching now
+  // This is just for cleanup in case modal doesn't close itself
+  isBasicModeModalOpen.value = false;
+};
+
+const closeBasicModeModal = () => {
+  isBasicModeModalOpen.value = false;
+  posthogCapture("dashboard_user_closes_basic_mode_modal");
 };
 </script>
 
@@ -78,9 +63,15 @@ const closeAdvancedModeModal = () => {
     </button>
 
     <AdvancedModeModal
-      :value="isAdvancedModeModalOpen"
-      @close="closeAdvancedModeModal"
+      v-model="isAdvancedModeModalOpen"
+      @close="() => posthogCapture('dashboard_user_closes_advanced_mode_modal')"
       @go-to-advanced-mode="goToAdvancedMode"
+    />
+
+    <BasicModeModal
+      v-model="isBasicModeModalOpen"
+      @close="closeBasicModeModal"
+      @go-to-basic-mode="goToBasicMode"
     />
   </div>
 </template>

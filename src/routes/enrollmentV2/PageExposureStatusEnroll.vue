@@ -1,20 +1,37 @@
 <script setup>
 import { useMonitoringAutofill } from "@/features/monitoring/useMonitoringAutofill.js";
-import { onBeforeMount, ref, computed, onMounted, toValue } from "vue";
+import {
+  onBeforeMount,
+  ref,
+  computed,
+  onMounted,
+  toValue,
+  onBeforeUnmount,
+} from "vue";
 import { HAS_EXITED_DELETE_FLOW } from "@/scripts/userFlags";
 import store from "@/store";
 import { PH_EVENT_USER_VIEWED_DD_SUBMISSION_FORM } from "@/scripts/posthogEvents.js";
 import { useColorScheme } from "@/composables/useColorScheme";
 import { posthogCapture } from "@/scripts/posthog.js";
 import EnrollmentCardHeader from "@/features/enrollment/EnrollmentCardHeader.vue";
-
+import { getPosthog } from "@/scripts/posthog.js";
 const { colorScheme } = useColorScheme();
 
-onMounted(() =>
+onMounted(() => {
   posthogCapture(PH_EVENT_USER_VIEWED_DD_SUBMISSION_FORM, {
     theme: colorScheme.value,
-  })
-);
+  });
+
+  getPosthog().then((postHog) => {
+    postHog?.startSessionRecording();
+  });
+});
+
+onBeforeUnmount(() => {
+  getPosthog().then((postHog) => {
+    postHog?.stopSessionRecording();
+  });
+});
 
 const props = defineProps({
   isLoading: {
