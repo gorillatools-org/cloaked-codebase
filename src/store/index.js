@@ -22,8 +22,10 @@ import dataDelete from "./modules/data-delete.js";
 import breaches from "./modules/breaches.js";
 import esim from "./modules/esim.js";
 import features from "./modules/features.js";
+import cloakedPayOnboarding from "./modules/cloaked-pay-onboarding.js";
 import { extensionMessaging } from "@/scripts/messaging";
 import waitlist from "./modules/waitlist.js";
+import errors from "./modules/errors.js";
 
 const defaultState = () => {
   return {
@@ -411,6 +413,8 @@ export default new Vuex.Store({
     waitlist,
     callGuard,
     features,
+    cloakedPayOnboarding,
+    errors,
   },
   plugins: [
     createPersistedState({

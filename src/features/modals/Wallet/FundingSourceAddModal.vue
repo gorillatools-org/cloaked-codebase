@@ -105,8 +105,7 @@ const handleOptionClick = (type: FundingSourceType) => {
           variant="body-3-bold"
           class="fs-add-modal__header-description"
         >
-          This is how you’ll pay for your Virtual Card transactions. Choose your
-          most-used funding source.
+          This is how you’ll pay for your Virtual Card transactions.
         </BaseText>
       </header>
       <div

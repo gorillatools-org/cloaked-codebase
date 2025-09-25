@@ -17,8 +17,7 @@ defineProps({
   </div>
 </template>
 
-<!-- eslint-disable-next-line vue/enforce-style-attribute -->
-<style lang="scss">
+<style lang="scss" scoped>
 .data-delete-card {
   border-radius: 16px;
   background-blend-mode: screen;

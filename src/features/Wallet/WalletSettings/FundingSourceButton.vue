@@ -1,12 +1,16 @@
 <script setup>
-import { computed, markRaw } from "vue";
+import { computed } from "vue";
 import Button from "./WalletSettingsButton";
 import { useRoute } from "vue-router";
 import store from "@/store";
-import PatchCurrentFundingSource from "@/features/modals/Wallet/PatchCurrentFundingSource.vue";
-import router from "@/routes/router/index.js";
+import useVirtualCard from "@/composables/Wallet/useVirtualCard";
+import useFundingSource from "@/composables/Wallet/useFundingSource";
 
 const route = useRoute();
+const { openFundingSourcePatchModal, cardFundingSource } = useVirtualCard(
+  () => currentCard
+);
+const { fundingSources } = useFundingSource();
 
 const currentCard = computed(() => {
   if (route.params.id && store.state.cards.cards.results) {
@@ -18,41 +22,13 @@ const currentCard = computed(() => {
   }
 });
 
-const fundingSources = computed(() => {
-  return store.state.cards.fundingSources.results;
-});
-
-const hasFundingSources = computed(() => {
-  return (store.state.cards.fundingSources?.results?.length ?? 0) > 0;
-});
-
-const currentCardFundingSource = computed(() => {
-  if (hasFundingSources.value && currentCard.value?.funding_source) {
-    return fundingSources.value.find(
-      (source) => source.id === currentCard.value.funding_source
-    );
-  } else {
-    return null;
-  }
-});
-
-const currentCardType = computed(() => {
-  return currentCardFundingSource.value?.type;
-});
-
-const fundingSourcesFiltered = computed(() => {
-  return store.state.cards.fundingSources.results.filter(
-    (source) => source.type === currentCardType.value
-  );
-});
-
 const subtext = computed(() => {
   const pan = "•••• " + lastFourDigits();
-  const note = currentCardFundingSource.value?.note;
+  const note = cardFundingSource.value?.note;
 
   if (pan && note) {
     return `${pan} • ${note}`;
-  } else if (currentCardFundingSource.value?.pan_last_four) {
+  } else if (cardFundingSource.value?.pan_last_four) {
     return pan;
   } else {
     return null;
@@ -60,36 +36,17 @@ const subtext = computed(() => {
 });
 
 const loading = computed(() => {
-  return !currentCardFundingSource.value && hasFundingSources.value;
+  return !cardFundingSource.value || !fundingSources.value?.length;
 });
 
 function lastFourDigits() {
-  const pan = currentCardFundingSource.value?.pan_last_four;
+  const pan = cardFundingSource.value?.pan_last_four;
   if (pan) {
     return pan.slice(-4);
   } else {
     return null;
   }
 }
-
-const openFundingSources = () => {
-  if (!hasFundingSources.value) {
-    router.push("/settings/cloaked-cards");
-    return;
-  }
-
-  store.dispatch("openModal", {
-    customTemplate: {
-      template: markRaw(PatchCurrentFundingSource),
-      props: {
-        isVisible: true,
-        sources: fundingSourcesFiltered.value,
-        currentSource: currentCardFundingSource.value,
-        currentCardID: currentCard.value.id,
-      },
-    },
-  });
-};
 </script>
 
 <template>
@@ -97,8 +54,8 @@ const openFundingSources = () => {
     :loading="loading"
     icon="bank"
     text="Funding source"
-    :title="currentCardFundingSource?.card_brand || 'Unknown'"
+    :title="cardFundingSource?.card_brand || 'Unknown'"
     :subtext="subtext || 'Unknown'"
-    @click="openFundingSources"
+    @click="openFundingSourcePatchModal"
   />
 </template>

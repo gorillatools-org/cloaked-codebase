@@ -65,6 +65,11 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  planProduct: {
+    type: String,
+    required: true,
+    validator: (value) => value === "cloaked_pay" || value === "all",
+  },
 });
 
 const paymentMethod = defineModel("paymentMethod", {
@@ -76,11 +81,12 @@ const route = useRoute();
 const promoCode = route.query["promo-code"] ?? "";
 const isPromoCodeInputVisible = ref(!!promoCode);
 
-const { activePlan } = usePlans();
+const { activePlan } = usePlans(toRef(() => props.planProduct));
 
 const { selectedPlanOption, selectedPlan, selectedPaypalPlan } = usePlanOptions(
   {
     selectedBillingCycle: toRef(() => props.billingCycle),
+    planProduct: toRef(() => props.planProduct),
   }
 );
 

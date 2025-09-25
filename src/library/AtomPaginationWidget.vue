@@ -34,6 +34,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isMobile: {
+    type: Boolean,
+    default: false,
+  },
 });
 const state = reactive({
   currentPage: 1,
@@ -67,7 +71,10 @@ const pages = computed(() => {
     ];
   };
 
-  return pagination(props.resultsPerPage)(10, totalPages.value);
+  if (props.isMobile) {
+    return pagination(6)(state.currentPage, totalPages.value);
+  }
+  return pagination(props.resultsPerPage)(state.currentPage, totalPages.value);
 });
 
 const toggleShowNavPopup = (e, buttonId) => {

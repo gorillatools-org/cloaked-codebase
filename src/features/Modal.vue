@@ -147,13 +147,12 @@ function renameEvents(customTemplate) {
               v-if="modal.subheader"
               v-html="modal.subheader"
             />
-            <!-- eslint-enable vue/no-v-html -->
             <p
               v-for="paragraph in modal.paragraphs"
               :key="paragraph"
-            >
-              {{ paragraph }}
-            </p>
+              v-html="paragraph"
+            />
+            <!-- eslint-enable vue/no-v-html -->
           </div>
         </template>
 

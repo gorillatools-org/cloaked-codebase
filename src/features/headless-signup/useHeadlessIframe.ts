@@ -1,9 +1,4 @@
-import {
-  type ComponentPublicInstance,
-  computed,
-  ref,
-  useTemplateRef,
-} from "vue";
+import { ref, type TemplateRef } from "vue";
 import { generatePkceRequirements } from "@/scripts/actions/auth";
 import { headlessParams } from "@/api/api";
 import { useRoute } from "vue-router";
@@ -38,22 +33,22 @@ export const parseHeadlessUserError = (error: unknown) => {
 };
 
 export const useHeadlessIframe = () => {
-  const iframeRef = useTemplateRef<
-    HTMLIFrameElement | ComponentPublicInstance<HTMLIFrameElement>
-  >("headlessIframeRef");
-
   const codeVerifier = ref<string | null>(null);
   const codeChallenge = ref<string | null>(null);
+  const iframe = ref<HTMLIFrameElement | null>(null);
 
   const route = useRoute();
   const { withTrackingParams } = useTrackingQueryParameters();
 
-  const iframeElement = computed<HTMLIFrameElement>(() => {
-    const iframe = toValue(iframeRef);
-    return iframe !== null && "$el" in iframe ? iframe.$el : iframe;
-  });
+  const mountIframe = async (elementRef: TemplateRef<HTMLIFrameElement>) => {
+    const element = toValue(elementRef);
 
-  const mountIframe = async () => {
+    if (!element) {
+      return;
+    }
+
+    iframe.value = element;
+
     const [verifier, challenge] = await generatePkceRequirements();
     codeVerifier.value = verifier;
     codeChallenge.value = challenge;
@@ -76,7 +71,7 @@ export const useHeadlessIframe = () => {
       params.append("vpn_customer", "true");
     }
 
-    toValue(iframeElement).src = withTrackingParams(
+    element.src = withTrackingParams(
       `${
         import.meta.env.VITE_API
       }auth/headless-create-user/?${params.toString()}`
@@ -131,7 +126,7 @@ export const useHeadlessIframe = () => {
           metaData: { requestId },
         };
 
-        toValue(iframeElement)?.contentWindow?.postMessage(
+        toValue(iframe)?.contentWindow?.postMessage(
           request,
           import.meta.env.VITE_API ?? ""
         );
@@ -141,7 +136,6 @@ export const useHeadlessIframe = () => {
     });
 
   return {
-    iframeRef,
     mountIframe,
     codeVerifier,
     codeChallenge,

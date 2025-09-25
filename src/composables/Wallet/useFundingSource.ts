@@ -1,6 +1,6 @@
 import store from "@/store";
 import type { FundingSource } from "@/types/Wallet/funding-source";
-import { computed, markRaw, type CSSProperties } from "vue";
+import { computed, markRaw, reactive, type CSSProperties } from "vue";
 import FundingSourceListModal from "@/features/modals/Wallet/FundingSourceListModal.vue";
 import CardsServices from "@/api/actions/cards-services";
 import { useToast } from "@/composables/useToast";
@@ -10,6 +10,8 @@ import { posthogCapture } from "@/scripts/posthog";
 import { CARD_PROVIDER_TYPE, constants } from "@/scripts/constants";
 import AddCreditCard from "@/features/modals/Wallet/AddCreditCard.vue";
 import FundingSourceEditModal from "@/features/modals/Wallet/FundingSourceEditModal.vue";
+import FundingSourceSelectModal from "@/features/modals/Wallet/FundingSourceSelectModal.vue";
+import { formattedPrice } from "@/features/subscribe/composables/utils";
 
 export type FundingSourceType =
   | (typeof constants.CARD_TYPE)[keyof typeof constants.CARD_TYPE]
@@ -43,6 +45,18 @@ export default function useFundingSource() {
 
   const refetchFundingSources = () => {
     return CardsServices.getFundingSources();
+  };
+
+  const getFundingSourcesByType = (
+    type: FundingSourceType,
+    exceptionId?: string
+  ) => {
+    return (
+      fundingSources.value?.filter(
+        (fundingSource) =>
+          fundingSource.type === type && fundingSource.id !== exceptionId
+      ) || []
+    );
   };
 
   const generateCardNameBasedOnFundingSource = (fundingSourceId: string) => {
@@ -166,7 +180,7 @@ export default function useFundingSource() {
     });
   };
 
-  const openDeleteModal = (fundingSourceId: string) => {
+  const openDeleteModal = async (fundingSourceId: string) => {
     const fundingSource = fundingSources.value?.find(
       (fundingSource) => fundingSource.id === fundingSourceId
     );
@@ -175,48 +189,76 @@ export default function useFundingSource() {
       return;
     }
 
+    const isDefault = fundingSource.primary;
+    const isLast = fundingSources.value?.length === 1;
+    const isLastOrDefault = isDefault || isLast;
+
+    const fundingSourcesByType = getFundingSourcesByType(
+      fundingSource.type as FundingSourceType,
+      fundingSourceId
+    );
+
+    // Avoid loading all cards linked to the funding source if there are no other funding sources of the same type or if it's the last or default funding source
+    const cardsLinkedToFundingSourceLength =
+      !isLastOrDefault && fundingSourcesByType.length > 0
+        ? await CardsServices.getFundingSourceCards(fundingSourceId).then(
+            (response) => response.results?.length
+          )
+        : 0;
+    const canSwitchFundingSource =
+      !isLastOrDefault &&
+      fundingSourcesByType.length > 0 &&
+      cardsLinkedToFundingSourceLength > 0;
+
     const modalProps = {
-      title: "Remove this funding source?",
-      description:
-        "Are you sure you want to delete this funding source? Activity from this funding source will remain on the dashboard.",
-      primaryButtonText: "Yes, Remove",
-      secondaryButtonText: "Cancel",
+      title: canSwitchFundingSource
+        ? "Remove or switch this funding source?"
+        : "Remove this funding source?",
+      description: canSwitchFundingSource
+        ? "Removing the funding source will delete all linked cards. <br/> <br/> If you switch to another funding source of the same type, your cards will stay active and be updated to use the new source."
+        : "If you remove this funding source, all cards linked to it will also be deleted. Your past activity will remain visible on your dashboard.",
+      primaryButtonText: "Remove",
+      secondaryButtonText: canSwitchFundingSource ? "Switch source" : "Cancel",
+      showCloseInHeader: canSwitchFundingSource,
       primaryButtonColor: "danger",
       secondaryButtonColor: "outline",
+      hideSecondaryButton: false,
       primaryButtonStyle: {} as CSSProperties,
       secondaryButtonStyle: {} as CSSProperties,
       onConfirm: () => {
         _delete(fundingSourceId);
       },
+      onCancel: () => {
+        if (!canSwitchFundingSource) return;
+        _openSwitchAndDeleteFundingSourceModal(fundingSource);
+      },
     };
 
-    if (fundingSource.primary) {
-      modalProps.title = "Are you sure you want to remove this funding source?";
+    if (isLast) {
+      modalProps.title = "At least one funding source required";
       modalProps.description =
-        "Virtual cards linked to this funding source may be removed. If applicable, we will update your default funding source.";
-      modalProps.onConfirm = () => {
-        _delete(fundingSourceId).then(() => {
-          refetchFundingSources();
-          posthogCapture(
-            "dashboard_pay_wallet_update_funding_source_remove_default"
-          );
-        });
-      };
-    }
-
-    if (fundingSources.value?.length === 1) {
-      modalProps.title = "You need at least one funding source";
-      modalProps.description =
-        "To remove this one, please link another source first.";
-      modalProps.primaryButtonText = "Link New Funding Source";
+        "Link another funding source before removing this one.";
+      modalProps.primaryButtonText = "Link new funding source";
       modalProps.secondaryButtonText = "Cancel";
       modalProps.primaryButtonColor = "primary";
       modalProps.secondaryButtonColor = "outline";
+      modalProps.showCloseInHeader = false;
       modalProps.secondaryButtonStyle = { width: "170px", flex: "unset" };
       modalProps.primaryButtonStyle = { flexGrow: 1, flex: 1 };
       modalProps.onConfirm = () => {
         openAddModal();
       };
+    }
+
+    if (isDefault && !isLast) {
+      modalProps.title = "Default funding source required";
+      modalProps.description =
+        "Please select a new default before removing your current funding source.";
+      modalProps.primaryButtonColor = "primary";
+      modalProps.primaryButtonText = "Got it";
+      modalProps.primaryButtonStyle = { width: "150px", flex: "unset" };
+      modalProps.hideSecondaryButton = true;
+      modalProps.onConfirm = () => {};
     }
 
     store.dispatch("openModal", {
@@ -225,6 +267,69 @@ export default function useFundingSource() {
         props: {
           ...modalProps,
         },
+      },
+    });
+  };
+
+  const _openSwitchAndDeleteFundingSourceModal = async (
+    fundingSource: FundingSource,
+    onSuccess?: () => void
+  ) => {
+    const deleteAndReplaceFundingSource = (
+      replacementFundingSource: FundingSource
+    ) => {
+      modalProps.isSaving = true;
+      _switchAndDelete(fundingSource.id, replacementFundingSource.id)
+        .then(() => {
+          if (onSuccess) {
+            onSuccess();
+          }
+          store.dispatch("closeModal");
+        })
+        .finally(() => {
+          modalProps.isSaving = false;
+        });
+    };
+
+    const modalProps = reactive({
+      title: "Choose a new funding source",
+      description:
+        "Switch this card’s funding source to another of the same type. All linked cards will be updated to use the new source.",
+      extraDescription: "",
+      fundingSources: getFundingSourcesByType(
+        fundingSource.type as FundingSourceType,
+        fundingSource.id
+      ),
+      filterBySameType: true,
+      isSaving: false,
+      isLoadingExtraDescription: false,
+      saveButtonText: "Confirm",
+      onSave: deleteAndReplaceFundingSource,
+      onSelect: ({
+        fundingSource: selectedFundingSource,
+      }: {
+        fundingSource: FundingSource;
+        isCurrentFundingSource: boolean;
+      }) => {
+        modalProps.isLoadingExtraDescription = true;
+        getLightningCheckAmount(fundingSource.id, selectedFundingSource.id)
+          .then(({ lightning_check_amount }) => {
+            if (lightning_check_amount > 0) {
+              modalProps.extraDescription = `We will issue a <strong>${formattedPrice(lightning_check_amount / 100)}</strong> hold on the selected account to verify funds. This will be released automatically.`;
+            } else {
+              modalProps.extraDescription = "";
+            }
+          })
+          .finally(() => {
+            modalProps.isLoadingExtraDescription = false;
+          });
+      },
+    });
+
+    store.dispatch("openModal", {
+      customTemplate: {
+        template: markRaw(FundingSourceSelectModal),
+        props: modalProps,
       },
     });
   };
@@ -337,6 +442,16 @@ export default function useFundingSource() {
     });
   };
 
+  const getLightningCheckAmount = async (
+    fundingSourceId: string,
+    replacementFundingSourceId?: string
+  ) => {
+    return CardsServices.getLightningCheckAmount(
+      fundingSourceId,
+      replacementFundingSourceId
+    ).then((response) => response as { lightning_check_amount: number });
+  };
+
   /**
    * Actions
    */
@@ -361,6 +476,34 @@ export default function useFundingSource() {
         store.dispatch("fundingSourcesList", tempFundingSources);
         posthogCapture(
           "dashboard_pay_wallet_add_funding_source_modal_funding_source_removal_failed"
+        );
+      });
+  };
+
+  const _switchAndDelete = (
+    fundingSourceId: string,
+    replacementFundingSourceId: string
+  ) => {
+    return CardsServices.switchFundingSource(
+      fundingSourceId,
+      replacementFundingSourceId
+    )
+      .then(() => {
+        CardsServices.getCardList();
+        refetchFundingSources();
+        toast.success("Funding source switched and deleted");
+        posthogCapture(
+          "dashboard_pay_wallet_add_funding_source_modal_funding_source_switch_and_delete_success"
+        );
+      })
+      .catch((error) => {
+        toast.error(
+          error.response.data.message ||
+            error.message ||
+            "Failed to switch and delete funding source"
+        );
+        posthogCapture(
+          "dashboard_pay_wallet_add_funding_source_modal_funding_source_switch_and_delete_failed"
         );
       });
   };
@@ -436,6 +579,7 @@ export default function useFundingSource() {
     fundingSources,
     cardFundingSourceVersion,
     enabledFundingSourceTypes,
+    getFundingSourcesByType,
     refetchFundingSources,
     openListModal,
     openAddPopup,

@@ -7,7 +7,9 @@ import BaseIcon from "@/library/BaseIcon.vue";
 import VirtualCardsApplicationPlanSelectTabs from "@/features/VirtualCards/Subscription/application/VirtualCardsApplicationPlanSelectTabs.vue";
 import SubscriptionPlanOfferCard from "@/features/Subscription/SubscriptionPlanOfferCard.vue";
 import type { Plan } from "@/features/subscribe/types";
+import type { Feature } from "@/features/Subscription/SubscriptionPlanOfferCard.vue";
 import { type PlanPriceAs } from "@/features/subscribe/composables/usePlanPrice";
+import { useDevice } from "@/composables/useDevice";
 
 const emit = defineEmits<{
   (e: "close"): void;
@@ -26,6 +28,8 @@ type Props = {
   shouldApplyIndividualMonthlyDiscount?: boolean;
   originalPriceAs?: PlanPriceAs;
   finalPriceAs?: PlanPriceAs;
+  features?: Feature[];
+  ctaText?: string;
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -40,12 +44,15 @@ const props = withDefaults(defineProps<Props>(), {
   shouldApplyIndividualMonthlyDiscount: false,
   originalPriceAs: "per-member-monthly",
   finalPriceAs: "per-member-monthly",
+  features: undefined,
+  ctaText: "Upgrade",
 });
 
+const { isMobile } = useDevice();
 const activeTab = ref(0);
 
 const labels = computed(() => {
-  const annualLabel = `Annually ${props.saveUpToAnnually > 0 ? `(Save up to ${props.saveUpToAnnually}%)` : ""}`;
+  const annualLabel = `Annually ${props.saveUpToAnnually > 0 && !isMobile.value ? `(Save up to ${props.saveUpToAnnually}%)` : ""}`;
   if (props.hideMonthlyPlans) {
     return [annualLabel];
   }
@@ -102,7 +109,7 @@ function closeModal() {
             v-model="activeTab"
             class="vc-subscription-select-plan-modal__tabs"
             :full-width="false"
-            :width="'450px'"
+            :width="isMobile ? '100%' : '450px'"
             :skeleton="isLoading"
             :hide-track-when-one-tab="hideMonthlyPlans"
             :labels="labels"
@@ -128,11 +135,12 @@ function closeModal() {
                         ? 'Per member per month, billed annually'
                         : 'Per month, billed annually'
                     "
-                    :cta-text="'Upgrade'"
+                    :cta-text="ctaText"
                     :is-primary="primaryAnnualPlanId === plan.product_id"
                     :discount-percentage="discountPercentage"
                     :original-price-as="originalPriceAs"
                     :final-price-as="finalPriceAs"
+                    :features="features"
                     @cta-click="emit('selectPlan', plan)"
                   />
                 </template>
@@ -163,7 +171,8 @@ function closeModal() {
                         ? 'Per member, billed monthly'
                         : 'Billed monthly'
                     "
-                    :cta-text="'Upgrade'"
+                    :cta-text="ctaText"
+                    :features="features"
                     :loading="isLoading"
                     :show-original-price="shouldApplyIndividualMonthlyDiscount"
                     :discount-percentage="discountPercentage"

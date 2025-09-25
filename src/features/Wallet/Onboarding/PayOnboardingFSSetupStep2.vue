@@ -138,7 +138,7 @@ watch(fundingSources, () => {
       variant="headline-6-medium"
       class="pay-onboarding-fs-setup-step-2__description"
     >
-      Protect your most-used
+      Protect your
       <UiTooltip
         class="pay-onboarding-fs-setup-step-2__description-tooltip"
         :max-width="300"
@@ -146,11 +146,12 @@ watch(fundingSources, () => {
         :title="tooltipTitle"
       >
         <span class="pay-onboarding-fs-setup-step-2__description--underline">
-          card or bank account
-          <BaseIcon
+          <!-- eslint-disable-next-line -->
+          card or bank account<BaseIcon
             class="pay-onboarding-fs-setup-step-2__description-icon"
             name="info"
           />
+          <!-- eslint-enable-next-line -->
         </span>
       </UiTooltip>
     </BaseText>

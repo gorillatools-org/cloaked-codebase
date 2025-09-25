@@ -22,12 +22,11 @@ const planType = computed(() =>
 );
 
 const onAcceptInvite = () => {
-  store.dispatch("authentication/handleAcceptInvite", route.params.id);
-
   if (username.value) {
+    store.dispatch("authentication/handleAcceptInvite", route.params.id);
     router.push({ name: "settings.subscription" });
   } else {
-    router.push({ name: "signup" });
+    router.push({ name: "signup", query: { invite_code: route.params.id } });
   }
 };
 

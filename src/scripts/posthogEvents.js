@@ -151,6 +151,14 @@ export const PH_EVENT_USER_SUBMITTED_DD_SCAN_EMAIL_MODAL_CAPTURE =
 export const PH_EVENT_USER_VIEWED_DD_SCAN_EMAIL_MODAL =
   "user_viewed_data_delete_scan_email_modal";
 
+// Email breach search events
+export const PH_EVENT_EMAIL_BREACH_SEARCH_STARTED =
+  "email_breach_search_started";
+export const PH_EVENT_EMAIL_BREACH_RESULTS_VIEWED =
+  "email_breach_results_viewed";
+export const PH_EVENT_EMAIL_BREACH_PASSWORD_REVEALED =
+  "email_breach_password_revealed";
+
 // New onboarding screen events
 export const PH_SCREEN_EVENT_ONBOARDING_INTRO_FIRST_SCREEN =
   "dd_onboarding_intro_1st_screen";
@@ -270,3 +278,11 @@ export const PH_FEATURE_FLAG_CHECKOUT_MINIMAL_COPY_MODE =
 
 // Checkout New Baseline Experiment
 export const PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE = "checkout-new-baseline";
+
+// Tiered Pricing Experiment
+export const PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1 =
+  "tiered_pricing_experiment_1";
+
+// Cloaked Pay Enable Subscription
+export const PH_FEATURE_FLAG_CLOAKED_PAY_ENABLE_SUBSCRIPTION =
+  "cloaked_pay_enable_subscription";

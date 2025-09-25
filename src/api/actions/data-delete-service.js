@@ -224,6 +224,12 @@ export default class DataDeleteService {
       is_relative: isRelative,
     });
   }
+
+  static async getEmailBreachReport(email, page = 1, pageSize = 10) {
+    return api().get(
+      `/api/v1/breach/report/email/?email=${encodeURIComponent(email)}&page=${page}&page_size=${pageSize}`
+    );
+  }
 }
 
 // MOCKS

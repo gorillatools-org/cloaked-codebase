@@ -5,6 +5,7 @@ import { AUTH_V3_ROUTES_ENABLED } from "@/scripts/featureFlags";
 import { logout } from "@/scripts/actions/auth";
 import { useToast } from "@/composables/useToast.js";
 import { useBasicMode } from "@/composables/useBasicMode.js";
+
 const toast = useToast();
 
 // general
@@ -24,6 +25,7 @@ import Cards from "@/routes/CloakedCards/Cards.vue";
 import WalletPage from "@/routes/WalletPage.vue";
 import WalletWaitlistPage from "@/routes/WalletWaitlistPage.vue";
 import Transactions from "@/routes/CloakedCards/Transactions.vue";
+import CloakedPaySubscriptionOnboardingPage from "@/routes/CloakedPay/CloakedPaySubscriptionOnboardingPage.vue";
 
 // identities
 import All from "@/routes/your-cloaks/All.vue";
@@ -120,6 +122,11 @@ import PageMonitoringSettingsNames from "@/routes/monitoring/PageMonitoringSetti
 import PageMonitoringSettingsAddress from "@/routes/monitoring/PageMonitoringSettingsAddress.vue";
 import PageMonitoringStatus from "@/routes/monitoring/PageMonitoringStatus.vue";
 import PageMonitoringEvent from "@/routes/monitoring/PageMonitoringEvent.vue";
+
+// checkout
+import PageCheckout from "@/routes/checkout/PageCheckout.vue";
+import PageCheckoutPlans from "@/routes/checkout/PageCheckoutPlans.vue";
+import PageCheckoutPayment from "@/routes/checkout/PageCheckoutPayment.vue";
 
 // mobile checkout
 import NativeCheckout from "@/routes/NativeCheckout.vue";
@@ -244,13 +251,6 @@ const { withEncryptionGate } = useEncryptionGate();
 const { isBasicModeEnabled } = useBasicMode();
 
 const allowOnlyEncryptedUsers = (to, from, next) => {
-  // Handle direct entry case first - redirect to home and exit early
-  if (!from?.name) {
-    next({ name: "Home" });
-    return;
-  }
-
-  // For navigation from other routes, use encryption gate
   withEncryptionGate(() => next()).catch(() => {
     // If encryption gate is cancelled, redirect to home
     next({ name: "Home" });
@@ -284,6 +284,14 @@ const allowOnlyPayDisabledUsers = (to, from, next) => {
   return next();
 };
 
+const allowOnlyPayOnboardingEnabled = (to, from, next) => {
+  if (!store.getters["cloakedPayOnboarding/isOnboardingEnabled"]) {
+    return next({ name: "VirtualCardsIndex" });
+  }
+
+  return next();
+};
+
 const allowOnlyAdvancedModeInSettings = (to, from, next) => {
   if (isBasicModeEnabled.value) {
     return next({ name: "settings.account" });
@@ -311,6 +319,26 @@ const routes = [
     component: Cards,
     meta: { title: "Cards" },
     beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+  },
+  {
+    path: "/cloaked-pay",
+    name: "CloakedPay",
+    meta: { title: "Cloaked Pay", icon: "credit-card" },
+    redirect: { name: "VirtualCardsIndex" },
+    beforeEnter: [beforeEnterActivity],
+    children: [
+      {
+        path: "/cloaked-pay/subscription-onboarding",
+        name: "CloakedPaySubscriptionOnboarding",
+        component: CloakedPaySubscriptionOnboardingPage,
+        meta: { title: "Cloaked Pay Onboarding", icon: "credit-card" },
+        beforeEnter: [
+          clearGuestToken,
+          allowOnlyAuthenticatedUsers,
+          allowOnlyPayOnboardingEnabled,
+        ],
+      },
+    ],
   },
   {
     path: "/virtual-cards",
@@ -1030,6 +1058,29 @@ const routes = [
     component: SubscribeNow,
     meta: { title: "Subscribe Now" },
     beforeEnter: allowOnlyGuests,
+  },
+  {
+    path: "/checkout",
+    name: "Checkout",
+    component: PageCheckout,
+    meta: { title: "Checkout" },
+    beforeEnter: allowOnlyGuests,
+    children: [
+      {
+        path: "",
+        name: "CheckoutPlans",
+        component: PageCheckoutPlans,
+        meta: { title: "Select plan" },
+        beforeEnter: allowOnlyGuests,
+      },
+      {
+        path: ":tier/:billing",
+        name: "CheckoutPayment",
+        component: PageCheckoutPayment,
+        meta: { title: "Payment" },
+        beforeEnter: allowOnlyGuests,
+      },
+    ],
   },
   {
     path: "/download-app",

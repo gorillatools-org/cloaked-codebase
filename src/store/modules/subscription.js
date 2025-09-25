@@ -14,12 +14,14 @@ export default {
   state: {
     stripe: null,
     plans: [],
+    payPlans: [],
     invitations: [],
     subscriptionDetails: null,
   },
   mutations: {
     SET_STRIPE: (state, payload) => (state.stripe = payload),
     SET_PLANS: (state, payload) => (state.plans = payload),
+    SET_PAY_PLANS: (state, payload) => (state.payPlans = payload),
     SET_INVITATIONS: (state, payload) => (state.invitations = payload),
     SET_SUBSCRIPTION_DETAILS: (state, payload) =>
       (state.subscriptionDetails = payload),
@@ -33,6 +35,13 @@ export default {
     async fetchPlans({ commit }, type = null) {
       const plans = await SubscriptionService.getSubscriptionPlans(type);
       commit("SET_PLANS", plans);
+      return plans;
+    },
+    async fetchCloakedPayPlans({ commit }) {
+      const plans = await SubscriptionService.getSubscriptionPlans({
+        product_label: "cloaked_pay",
+      });
+      commit("SET_PAY_PLANS", plans);
       return plans;
     },
     async fetchInvitations({ commit }) {
@@ -109,6 +118,7 @@ export default {
         Promise.all([
           dispatch("loadStripe"),
           dispatch("fetchPlans"),
+          dispatch("fetchCloakedPayPlans"),
           dispatch("fetchInvitations"),
         ]);
 
@@ -167,6 +177,7 @@ export default {
   getters: {
     getStripe: (state) => state.stripe,
     getPlans: (state) => state.plans,
+    getPayPlans: (state) => state.payPlans,
     getInvitations: (state) => state.invitations,
     getSubscriptionDetails: (state) => state.subscriptionDetails,
   },

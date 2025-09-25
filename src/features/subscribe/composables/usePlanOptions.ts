@@ -5,16 +5,21 @@ import {
   type PlanBilling,
   type Plan,
   type PlanOption,
+  type PlanProduct,
 } from "@/features/subscribe/types.ts";
 
 const selectedPlanOptionId = ref<Plan["product_id"] | null>(null);
 
 type Options = {
   selectedBillingCycle: MaybeRefOrGetter<PlanBilling>;
+  planProduct: MaybeRefOrGetter<PlanProduct>;
 };
 
-export const usePlanOptions = ({ selectedBillingCycle }: Options) => {
-  const { allPlans } = usePlans();
+export const usePlanOptions = ({
+  selectedBillingCycle,
+  planProduct = "all",
+}: Options) => {
+  const { allPlans } = usePlans(planProduct);
 
   const allOptions = computed<PlanOption[]>(() =>
     allPlans.value
@@ -49,22 +54,6 @@ export const usePlanOptions = ({ selectedBillingCycle }: Options) => {
     () => selectedPlanOption.value?.paypalPlan ?? null
   );
 
-  watch(
-    () => allOptions.value,
-    (newValue) => {
-      if (newValue && !selectedPlanOptionId.value) {
-        selectedPlanOptionId.value =
-          newValue?.find(
-            (option) =>
-              option?.stripePlan?.recurring_interval ===
-                toValue(selectedBillingCycle) &&
-              option?.stripePlan?.max_members === 1
-          )?.id ?? null;
-      }
-    },
-    { immediate: true }
-  );
-
   const billingCycleOptions = computed(() =>
     allOptions.value.filter(
       (option) =>
@@ -72,20 +61,36 @@ export const usePlanOptions = ({ selectedBillingCycle }: Options) => {
     )
   );
 
+  // If the options or billing cycle changes, update the selected plan option id to the same max members and billing cycle in the new options
   watch(
-    () => toValue(selectedBillingCycle),
-    (newBillingCycle) => {
-      const newOption = allOptions.value.find(
-        (option) =>
-          option.stripePlan?.max_members ===
-            selectedPlanOption.value?.stripePlan?.max_members &&
-          option.stripePlan?.recurring_interval === newBillingCycle
-      );
+    [() => allOptions.value, () => toValue(selectedBillingCycle)],
+    ([options, billingCycle]) => {
+      if (options && billingCycle) {
+        // Store the current selection details before updating to avoid circular dependency
+        const currentSelection = selectedPlanOptionId.value;
+        const currentOption = allOptions.value.find(
+          (option) => option.id === currentSelection
+        );
+        const currentMaxMembers = currentOption?.stripePlan?.max_members || 1;
 
-      if (newOption) {
-        selectedPlanOptionId.value = newOption.id;
+        // Find a matching option with the same max_members and new billing cycle
+        const matchingOption = allOptions.value.find(
+          (option) =>
+            option?.stripePlan?.recurring_interval === billingCycle &&
+            option?.stripePlan?.max_members === currentMaxMembers
+        );
+
+        // Only update if we found a match, otherwise preserve current selection
+        if (matchingOption) {
+          selectedPlanOptionId.value = matchingOption.id;
+        } else if (!currentSelection) {
+          // Only set to null if there was no previous selection
+          selectedPlanOptionId.value = null;
+        }
+        // If no match found but there was a previous selection, keep the current selection
       }
-    }
+    },
+    { immediate: true }
   );
 
   return {

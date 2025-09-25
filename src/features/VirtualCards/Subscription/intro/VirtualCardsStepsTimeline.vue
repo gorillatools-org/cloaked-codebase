@@ -18,13 +18,21 @@ const getDurationColorClass = (color?: StepDurationColor) => {
   return `vc-steps-timeline__item-duration--${color || "spam-protection"}`;
 };
 
-defineProps<{ steps: TimelineStepItem[] }>();
+withDefaults(
+  defineProps<{ steps: TimelineStepItem[]; initialDelay?: number }>(),
+  {
+    initialDelay: 0.2,
+  }
+);
 </script>
 
 <template>
   <div
     class="vc-steps-timeline"
-    :style="{ '--steps-count': String(steps.length) }"
+    :style="{
+      '--steps-count': String(steps.length),
+      '--initial-delay': String(initialDelay) + 's',
+    }"
   >
     <ul class="vc-steps-timeline__list">
       <li
@@ -78,6 +86,7 @@ defineProps<{ steps: TimelineStepItem[] }>();
             ]"
           >
             <BaseIcon
+              v-if="!step.isCompleted"
               name="clock"
               class="vc-steps-timeline__item-duration-icon"
             />
@@ -91,6 +100,7 @@ defineProps<{ steps: TimelineStepItem[] }>();
         </div>
       </li>
     </ul>
+    <slot name="footer" />
   </div>
 </template>
 
@@ -109,7 +119,7 @@ $spring-ease: cubic-bezier(0.68, -1.3, 0.32, 1.3);
   gap: 8px;
 
   /* Local animation variables */
-  --initial-delay: 0.2s;
+  --initial-delay: var(--initial-delay, 0.2s);
   --fade-duration: 0.24s;
   --text-gap: 0.06s;
   --line-duration: 0.25s;
@@ -217,10 +227,15 @@ $spring-ease: cubic-bezier(0.68, -1.3, 0.32, 1.3);
 
     &-title {
       animation-delay: var(--title-delay);
+
+      .vc-steps-timeline__item--completed & {
+        color: $color-primary-70;
+      }
     }
 
     &-description {
       animation-delay: var(--description-delay);
+      color: $color-primary-70;
     }
 
     &-duration {

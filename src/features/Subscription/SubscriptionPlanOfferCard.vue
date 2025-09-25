@@ -10,6 +10,12 @@ import {
 } from "@/features/subscribe/composables/usePlanPrice";
 import { computed } from "vue";
 import { usePriceDiscount } from "@/features/subscribe/composables/usePriceDiscount";
+import { usePriceAnchor } from "../subscribe/composables/usePriceAnchor";
+
+export type Feature = {
+  label: string;
+  new: boolean;
+};
 
 const emit = defineEmits<{
   (e: "ctaClick"): void;
@@ -22,7 +28,7 @@ const props = withDefaults(
     isPrimary?: boolean;
     ctaText?: string;
     primaryBadgeText?: string;
-    features?: { label: string; new: boolean }[];
+    features?: Feature[];
     loading?: boolean;
     discountPercentage?: number;
     showOriginalPrice?: boolean;
@@ -57,7 +63,8 @@ const originalPrice = computed(() => {
   }
 
   if (props.discountPercentage > 0) {
-    return usePlanPrice(props.plan, props.originalPriceAs).value;
+    const perMemberPrice = usePlanPrice(props.plan, props.originalPriceAs);
+    return usePriceAnchor(perMemberPrice, props.discountPercentage).value;
   }
 
   return (
@@ -261,7 +268,10 @@ $component-name: "subs-plan-offer-card";
       align-items: center;
       gap: 8px;
       position: relative;
-      padding-right: 110px;
+
+      .#{$component-name}--primary & {
+        padding-right: 110px;
+      }
     }
 
     &-recommended-badge {

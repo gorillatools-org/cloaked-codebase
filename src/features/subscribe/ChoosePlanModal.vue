@@ -14,7 +14,11 @@ import BaseText from "@/library/BaseText.vue";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { logout } from "@/scripts/actions/auth";
 
-const { isPlansModalOpen, allowClose } = usePlansModal();
+const {
+  isPlansModalOpen,
+  allowClose,
+  onSubscribed: onSubscribedCallback,
+} = usePlansModal();
 
 const { prefetchIntents } = useStripeIntentPrefetch();
 
@@ -29,12 +33,17 @@ watch(isPlansModalOpen, (isOpen) => {
 });
 
 const onSubscribed = (plan) => {
-  if (["couple", "family"].includes(plan.type)) {
-    router.push("/settings/subscription");
+  if (onSubscribedCallback.value) {
+    onSubscribedCallback.value(plan);
+  } else {
+    if (["couple", "family"].includes(plan.type)) {
+      router.push("/settings/subscription");
+    }
   }
 
   isPlansModalOpen.value = false;
   allowClose.value = true;
+  onSubscribedCallback.value = null;
 };
 
 const { promoDiscount } = usePaymentIntent();
@@ -51,13 +60,28 @@ const isChangingPlan = computed(() => {
   return store.getters["settings/isSubscribed"];
 });
 
+const ERROR_CODE = "13.17.05";
+const errorCode131705 = computed(() => {
+  return store.getters["errors/getErrorCodesByCode"](ERROR_CODE);
+});
+
+const subscriptionState = computed(() => {
+  return store.getters["settings/getSubscription"]?.state;
+});
+
 const billingCycle = ref("annually");
 function onAlreadyPurchasedSubscription() {
-  posthogCapture("user_clicked_already_have_subscription");
+  posthogCapture("user_clicked_already_have_subscription", {
+    errorCode: ERROR_CODE,
+    subscriptionState: subscriptionState.value,
+  });
+
   store.dispatch("openModal", {
-    header: "Already purchased a subscription?",
-    subheader:
-      "If you have a subscription that isn't reflecting, you may be logged into a duplicate account. Try logging out and back in with a different phone number or email, or chat with us at <a href='https://help.cloaked.app' target='_blank' style='text-decoration: underline;'>help.cloaked.app</a>.",
+    header: "Already have a subscription?",
+    paragraphs: [
+      errorCode131705.value.long + ` CODE: ${ERROR_CODE}`,
+      "<a href='https://help.cloaked.app' target='_blank' style='text-decoration: underline;'>Contact support</a>",
+    ],
     button: {
       text: "Logout",
       onClick: () => logout(),
@@ -115,7 +139,7 @@ const showAlreadyPurchasedSubscription = computed(() => {
               as="p"
               @click="onAlreadyPurchasedSubscription"
             >
-              Already purchased a subscription?
+              Already have a subscription?
             </BaseText>
           </div>
         </template>

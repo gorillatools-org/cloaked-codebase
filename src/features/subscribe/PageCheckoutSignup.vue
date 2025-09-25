@@ -1,5 +1,13 @@
 <script setup>
-import { computed, ref, toRef, onMounted, onBeforeUnmount } from "vue";
+import {
+  computed,
+  ref,
+  toRef,
+  onMounted,
+  onBeforeUnmount,
+  reactive,
+  watch,
+} from "vue";
 import store from "@/store";
 import ChoosePlanPayment from "@/features/subscribe/ChoosePlanPayment.vue";
 import ChoosePlanDiscountBanner from "@/features/subscribe/ChoosePlanDiscountBanner.vue";
@@ -18,16 +26,23 @@ import { usePaymentIntent } from "@/composables/usePaymentIntent.js";
 import ChoosePlanSignup from "@/features/subscribe/ChoosePlanSignup.vue";
 import TrustLogos from "@/features/subscribe/TrustLogos.vue";
 import PageCheckoutFeatureVpn from "./PageCheckoutFeatureVpn.vue";
+import PageCheckoutFeatureCloakedPay from "./PageCheckoutFeatureCloakedPay.vue";
 import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 import {
   PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT,
   PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE,
+  PH_FEATURE_FLAG_CLOAKED_PAY_ENABLE_SUBSCRIPTION,
 } from "@/scripts/posthogEvents";
 import { posthogCapture } from "@/scripts/posthog.js";
 
 const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
   PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
 );
+
+const {
+  featureFlag: cloakedPayEnableSubscription,
+  hasLoadedFeatureFlag: cloakedPayEnableSubscriptionLoaded,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_CLOAKED_PAY_ENABLE_SUBSCRIPTION);
 
 const showFeatureVpn = computed(
   () =>
@@ -67,6 +82,12 @@ const props = defineProps({
 });
 
 const checkoutRef = ref(null);
+const cloakedPay = reactive({
+  isCloakedPayAd: false,
+  showBanner: false,
+  showPlansToggle: false,
+  isShowingPlans: false,
+});
 
 defineExpose({
   checkoutRef,
@@ -86,15 +107,18 @@ onBeforeUnmount(() => {
 
 const billingCycle = ref("annually");
 
-const {
-  featureFlag: flagPlanPricing,
-  hasLoadedFeatureFlag: hasLoadedFlagPlanPricing,
-} = usePostHogFeatureFlag("monthly_plan_experiment");
+const flagPlanPricing = ref(null);
+
+watch(
+  () => props.headlessUser,
+  () => {
+    flagPlanPricing.value =
+      props.headlessUser?.flags?.monthly_plan_experiment ?? null;
+  }
+);
 
 const hasDiscountedAnnualPlans = computed(
-  () =>
-    hasLoadedFlagPlanPricing.value &&
-    flagPlanPricing.value === "discounted-annual-plans"
+  () => flagPlanPricing.value === "discounted-annual-plans"
 );
 
 const discountSize = computed(() =>
@@ -113,7 +137,6 @@ const isSubscribed = computed(() => store.getters["settings/isSubscribed"]);
 const emit = defineEmits(["set-user", "subscribed"]);
 
 const signup = ref();
-
 const onSubscribed = (plan) => {
   emit("subscribed", plan);
 };
@@ -152,6 +175,22 @@ const isRealUser = computed(
     !!store.state.authentication.user &&
     store.state.authentication.user?.account_version >= 2
 );
+
+watch(
+  () => ({
+    flagLoaded: cloakedPayEnableSubscriptionLoaded.value,
+    flagValue: cloakedPayEnableSubscription.value,
+  }),
+  ({ flagLoaded, flagValue }) => {
+    if (!flagLoaded) return;
+
+    if (!!flagValue && route.query.pay_customer) {
+      cloakedPay.showBanner = false;
+      cloakedPay.showPlansToggle = true;
+      cloakedPay.isShowingPlans = true;
+    }
+  }
+);
 </script>
 
 <template>
@@ -165,11 +204,14 @@ const isRealUser = computed(
     }"
   >
     <PageCheckoutFeatureVpn v-if="showFeatureVpn" />
+    <PageCheckoutFeatureCloakedPay v-if="cloakedPay.showBanner" />
     <ChoosePlanPickerFlat
       v-model:billing-cycle="billingCycle"
+      v-model:show-cloaked-pay-plans="cloakedPay.isShowingPlans"
       :anchor="timeLimitedDiscount"
       :discount="paymentMethod === 'Card' ? promoDiscount : null"
       :disabled="isSubscribed"
+      :show-cloaked-pay-plans-toggle="cloakedPay.showPlansToggle"
       class="page-checkout-signup__plans"
     />
     <ChoosePlanDiscountBanner
@@ -218,6 +260,7 @@ const isRealUser = computed(
             :disabled="!signup?.isFormValid"
             :is-loading="isLoading"
             :billing-cycle="billingCycle"
+            :plan-product="cloakedPay.isShowingPlans ? 'cloaked_pay' : 'all'"
             @subscribed="onSubscribed"
             @clicked-subscribe="onClickedSubscribe"
           >

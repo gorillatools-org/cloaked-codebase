@@ -80,7 +80,12 @@ const handleSelection = (fundingSource: FundingSource) => {
 };
 
 const handleRemove = (fundingSource: FundingSource) => {
-  openDeleteModal(fundingSource.id);
+  if (loadingFundingSourceId.value) return;
+
+  loadingFundingSourceId.value = fundingSource.id;
+  openDeleteModal(fundingSource.id).finally(() => {
+    loadingFundingSourceId.value = undefined;
+  });
 };
 </script>
 

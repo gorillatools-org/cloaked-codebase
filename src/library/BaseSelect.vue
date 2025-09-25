@@ -61,6 +61,8 @@ const model = defineModel({ type: String });
       <option
         value=""
         class="base-select__option"
+        disabled
+        hidden
       >
         {{ placeholder }}
       </option>

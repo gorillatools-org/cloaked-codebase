@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { ref, reactive, computed, nextTick, watch } from "vue";
+import {
+  ref,
+  reactive,
+  computed,
+  nextTick,
+  watch,
+  onUnmounted,
+  onMounted,
+} from "vue";
 import BaseInput from "@/library/BaseInput.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseInputFeedback from "@/library/BaseInputFeedback.vue";
@@ -32,6 +40,8 @@ const props = withDefaults(
     allowedSearchCountries?: string[];
     dobSupportText?: string;
     nameSupportText?: string;
+    usOnly?: boolean;
+    showSuiteField?: boolean;
   }>(),
   {
     scrollContainerId: undefined,
@@ -39,6 +49,8 @@ const props = withDefaults(
     allowedSearchCountries: () => ["us", "ca"],
     dobSupportText: undefined,
     nameSupportText: undefined,
+    usOnly: true,
+    showSuiteField: false,
   }
 );
 
@@ -54,6 +66,8 @@ const emit = defineEmits<{
       country: string;
     }
   ): void;
+  (e: "input-focus"): void;
+  (e: "input-blur"): void;
 }>();
 
 const formRootRef = ref<HTMLElement | null>(null);
@@ -93,6 +107,16 @@ const dobTouched = ref(false);
 const addressSearchTouched = ref(false);
 const phoneTouched = ref(false);
 const emailTouched = ref(false);
+
+onMounted(() => {
+  formRootRef.value?.addEventListener("focusin", onInputFocus);
+  formRootRef.value?.addEventListener("focusout", onInputBlur);
+});
+
+onUnmounted(() => {
+  formRootRef.value?.removeEventListener("focusin", onInputFocus);
+  formRootRef.value?.removeEventListener("focusout", onInputBlur);
+});
 
 const dobForValidation = computed(() => data.dob.split("/").join("-"));
 
@@ -194,6 +218,14 @@ const {
     return null;
   }
 );
+
+function onInputFocus() {
+  emit("input-focus");
+}
+
+function onInputBlur() {
+  emit("input-blur");
+}
 
 function formatAutofillDob(input?: string) {
   if (!input) return "";
@@ -702,21 +734,23 @@ function validate(): boolean {
   return addressesValid && othersValid;
 }
 
-function submit(): boolean {
+function submit(shouldFocusFirstInvalidInput: boolean = true): boolean {
   markAllTouched();
   const valid = validate();
   if (valid) return true;
-  nextTick(() => {
-    if (
-      showManualAddress.value &&
-      manualAddressFormRef.value &&
-      !manualAddressFormRef.value.validate?.()
-    ) {
-      manualAddressFormRef.value.focusFirstInvalidInput?.();
-    } else {
-      focusFirstInvalidInput();
-    }
-  });
+  if (shouldFocusFirstInvalidInput) {
+    nextTick(() => {
+      if (
+        showManualAddress.value &&
+        manualAddressFormRef.value &&
+        !manualAddressFormRef.value.validate?.()
+      ) {
+        manualAddressFormRef.value.focusFirstInvalidInput?.();
+      } else {
+        focusFirstInvalidInput();
+      }
+    });
+  }
   return false;
 }
 
@@ -1004,8 +1038,8 @@ defineExpose({
               <VirtualCardsProfileManualAddressForm
                 ref="manualAddressFormRef"
                 :is-loading="props.isLoading"
-                :us-only="true"
-                :show-suite-field="false"
+                :us-only="props.usOnly"
+                :show-suite-field="props.showSuiteField"
               />
             </div>
           </Transition>
@@ -1091,6 +1125,7 @@ defineExpose({
           </BaseInput>
         </div>
       </div>
+      <slot name="additional-fields" />
     </div>
   </div>
 </template>

@@ -1,13 +1,25 @@
-import { computed } from "vue";
+import { computed, type MaybeRefOrGetter } from "vue";
+import { toValue } from "@vueuse/core";
 import store from "@/store";
-import { type Plan, type Subscription } from "@/features/subscribe/types.ts";
+import {
+  type Plan,
+  type Subscription,
+  type PlanProduct,
+} from "@/features/subscribe/types.ts";
 
-export const usePlans = () => {
-  const allPlans = computed<Plan[]>(() =>
-    ((store.getters["subscription/getPlans"] ?? []) as Plan[]).sort(
+export const usePlans = (
+  planProduct: MaybeRefOrGetter<PlanProduct> = "all"
+) => {
+  const allPlans = computed<Plan[]>(() => {
+    const plans =
+      toValue(planProduct) === "cloaked_pay"
+        ? store.getters["subscription/getPayPlans"]
+        : store.getters["subscription/getPlans"];
+
+    return ((plans ?? []) as Plan[]).sort(
       (a, b) => a.max_members - b.max_members
-    )
-  );
+    );
+  });
 
   const isLoadingPlans = computed(() => !allPlans.value?.length);
 

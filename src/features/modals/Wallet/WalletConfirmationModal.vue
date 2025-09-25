@@ -20,6 +20,10 @@ const props = defineProps({
     type: String,
     default: "trash",
   },
+  showCloseInHeader: {
+    type: Boolean,
+    default: false,
+  },
   primaryButtonText: {
     type: String,
     default: "Yes, Confirm",
@@ -27,6 +31,10 @@ const props = defineProps({
   secondaryButtonText: {
     type: String,
     default: "Cancel",
+  },
+  hideSecondaryButton: {
+    type: Boolean,
+    default: false,
   },
   primaryButtonColor: {
     type: String,
@@ -67,6 +75,20 @@ function handleSecondaryButtonClick() {
     @close="closeModal"
   >
     <template #header>
+      <!-- Close button-->
+      <span
+        v-if="props.showCloseInHeader"
+        role="button"
+        tabindex="0"
+        class="wallet-confirmation-modal__close-btn"
+        @click="closeModal"
+      >
+        <BaseIcon
+          class="wallet-confirmation-modal__close-btn-icon"
+          name="close"
+        />
+      </span>
+
       <div class="wallet-confirmation-modal__icon-container">
         <div class="wallet-confirmation-modal__icon-background">
           <BaseIcon
@@ -99,7 +121,10 @@ function handleSecondaryButtonClick() {
       <div class="wallet-confirmation-modal__footer">
         <div
           class="wallet-confirmation-modal__footer-button-container"
-          :style="props.secondaryButtonStyle"
+          :style="{
+            ...props.secondaryButtonStyle,
+            visibility: props.hideSecondaryButton ? 'hidden' : 'visible',
+          }"
         >
           <BaseButton
             :variant="props.secondaryButtonColor"
@@ -129,6 +154,29 @@ function handleSecondaryButtonClick() {
 $component-name: "wallet-confirmation-modal";
 
 .#{$component-name} {
+  &__close-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: $color-base-black-5;
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: $color-base-black-10;
+    }
+
+    &-icon {
+      font-size: 16px;
+      color: $color-base-black-100;
+    }
+  }
+
   &__icon {
     font-size: 18px;
     color: #fff;

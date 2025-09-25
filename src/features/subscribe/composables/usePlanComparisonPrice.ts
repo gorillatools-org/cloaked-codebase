@@ -1,9 +1,11 @@
 import { computed, toValue, type MaybeRefOrGetter } from "vue";
 import { usePlans } from "@/features/subscribe/composables/usePlans";
 import { usePlanPrice } from "@/features/subscribe/composables/usePlanPrice.js";
-import type { Plan, PlanBilling } from "@/features/subscribe/types.ts";
-
-const { allPlans } = usePlans();
+import type {
+  Plan,
+  PlanBilling,
+  PlanProduct,
+} from "@/features/subscribe/types.ts";
 
 // assuming plan with the least max_members is the most expensive
 const findMostExpensivePlan = (plans: Plan[], billing: PlanBilling) =>
@@ -14,10 +16,13 @@ const findMostExpensivePlan = (plans: Plan[], billing: PlanBilling) =>
     );
 
 export const usePlanComparisonPrice = (
-  plans: MaybeRefOrGetter<Plan[]> = allPlans
+  plans?: MaybeRefOrGetter<Plan[]>,
+  planProduct: MaybeRefOrGetter<PlanProduct> = "all"
 ) => {
+  const { allPlans } = usePlans(planProduct);
+
   const planToCompareAgainst = computed(() => {
-    const plansToCompareAgainst = toValue(plans);
+    const plansToCompareAgainst = toValue(plans ?? allPlans);
     return (
       findMostExpensivePlan(plansToCompareAgainst, "monthly") ??
       findMostExpensivePlan(plansToCompareAgainst, "annually") ??

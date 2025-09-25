@@ -26,8 +26,9 @@ import {
 
 import { getPosthog } from "@/scripts/posthog";
 import BannerDowntime from "@/features/banners/BannerDowntime.vue";
-import { useScreen } from "@/composables/useScreen";
+import { useScreen, SCREEN } from "@/composables/useScreen";
 import { useScreenRouting } from "@/composables/useScreenRouting";
+import DownloadApp from "@/features/onboarding/DownloadApp.vue";
 import UserService from "@/api/actions/user-service";
 
 const hasLoaded = ref(false);
@@ -271,10 +272,16 @@ useScreenRouting(screen);
 <template>
   <div class="app">
     <BannerDowntime />
-    <User
-      v-if="hasLoaded && dbLoaded && isScreenLoaded"
-      class="app-div"
-    />
+    <template v-if="hasLoaded && dbLoaded && isScreenLoaded">
+      <DownloadApp
+        v-if="screen === SCREEN.DOWNLOAD_MOBILE_APP"
+        class="app-div"
+      />
+      <User
+        v-else
+        class="app-div"
+      />
+    </template>
     <Loading v-else />
   </div>
 </template>

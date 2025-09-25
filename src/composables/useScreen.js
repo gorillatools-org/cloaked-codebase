@@ -1,8 +1,6 @@
 import { computed } from "vue";
 import { toValue } from "@vueuse/core/index";
 import { useRoute } from "vue-router";
-import { useWindowSize } from "@vueuse/core";
-import { useDisplay } from "@/composables/useDisplay";
 import { useUserProperty } from "@/composables/useUserProperty";
 import { useUserFlag } from "@/composables/useUserFlag";
 import { useOnboardingFlag } from "@/composables/useOnboardingFlag";
@@ -25,8 +23,6 @@ export const SCREEN = {
  */
 export const useScreen = () => {
   const route = useRoute();
-  const { width } = useWindowSize();
-  const { isMobile } = useDisplay();
   // Load all flag states
   const [, hasLoadedUserProperties] = useUserProperty(null);
   const [, hasLoadedUserFlags] = useUserFlag(null);
@@ -66,20 +62,43 @@ export const useScreen = () => {
   );
 
   /**
+   * Detect if user is on mobile device with robust browser-guarded checks
+   * Uses modern userAgentData API when available, falls back to legacy methods
+   */
+  const isMobileDevice = computed(() => {
+    // Guard for non-browser contexts
+    if (typeof window === "undefined" || typeof navigator === "undefined") {
+      return false;
+    }
+
+    // Method 1: Modern userAgentData API (preferred when available)
+    if (navigator.userAgentData?.mobile !== undefined) {
+      return navigator.userAgentData.mobile;
+    }
+
+    // Method 2: Legacy user agent regex detection
+    const userAgent = navigator.userAgent;
+    const isLegacyMobileDevice =
+      /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        userAgent
+      );
+
+    // Method 3: iPadOS heuristic - Macintosh UA with touch support
+    const isMacintoshWithTouch =
+      /Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 0;
+
+    return isLegacyMobileDevice || isMacintoshWithTouch;
+  });
+
+  /**
    * Check if we should show the mobile app download screen
    */
   const shouldShowMobileAppDownload = computed(() => {
-    const isMobileDevice = toValue(isMobile);
-    const isNarrowScreen = toValue(width) <= 760;
+    const isMobile = toValue(isMobileDevice);
     const isNotSubscriptionPage = route.path !== "/settings/subscription";
     const isNotInvitationPage = !route.path.includes("/invitation/");
 
-    return (
-      isMobileDevice &&
-      isNarrowScreen &&
-      isNotSubscriptionPage &&
-      isNotInvitationPage
-    );
+    return isMobile && isNotSubscriptionPage && isNotInvitationPage;
   });
 
   /**

@@ -5,10 +5,11 @@ import BaseSelect from "@/library/BaseSelect.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
 import BaseInputFeedback from "@/library/BaseInputFeedback.vue";
 import { useZipCodeValidation } from "@/composables/validation/useZipCodeValidation";
-import { useValidation } from "@/composables/validation/useValidation";
 import { countryConfig } from "@/scripts/countries/countries.js";
 import { useCountryValidation } from "@/composables/validation/useCountryValidation.js";
 import { useStateValidation } from "@/composables/validation/useStateValidation.js";
+import { useCityValidation } from "@/composables/validation/useCityValidation";
+import { useStreetValidation } from "@/composables/validation/useStreetValidation";
 
 const props = withDefaults(
   defineProps<{
@@ -59,15 +60,9 @@ const stateOptions = computed(() =>
 const { error: countryError, validateDebounced: validateCountryDebounced } =
   useCountryValidation(country, { debounceTimeout: 100 });
 
-const { error: streetError, validate: validateStreet } = useValidation(
+const { error: streetError, validate: validateStreet } = useStreetValidation(
   () => street.value,
-  { debounceTimeout: 100, isRequired: true },
-  (value, { isRequired }) => {
-    if (!isRequired && !value) return null;
-    if (!value || String(value).trim().length === 0)
-      return "Physical address is required";
-    return null;
-  }
+  { debounceTimeout: 100, isRequired: true }
 );
 
 const { error: postalCodeError, validate: validatePostcode } =
@@ -76,13 +71,9 @@ const { error: postalCodeError, validate: validatePostcode } =
     isRequired: true,
   });
 
-const { error: cityError, validate: validateCity } = useValidation(
+const { error: cityError, validate: validateCity } = useCityValidation(
   () => city.value,
-  { debounceTimeout: 100, isRequired: true },
-  (value) => {
-    if (!value || String(value).trim().length === 0) return "City is required";
-    return null;
-  }
+  { debounceTimeout: 100, isRequired: true }
 );
 
 const {

@@ -3,20 +3,31 @@ import WalletSupportContact from "@/features/Wallet/WalletSupportContact.vue";
 import CardExampleGroup from "@/features/Wallet/CardExampleGroup.vue";
 import { posthogCapture } from "@/scripts/posthog";
 import ListStatements from "@/features/modals/Wallet/ListStatements.vue";
-import { markRaw } from "vue";
+import { markRaw, ref } from "vue";
 import store from "@/store";
+import CardsServices from "@/api/actions/cards-services";
+import Button from "@/features/Button.vue";
 
-function viewStatements() {
-  posthogCapture(`dashboard_pay_offboarded_user_statements_viewed`);
+const isFetchingStatements = ref(false);
 
-  store.dispatch("openModal", {
-    customTemplate: {
-      template: markRaw(ListStatements),
-      props: {
-        isVisible: true,
-      },
-    },
-  });
+async function viewStatements() {
+  isFetchingStatements.value = true;
+  CardsServices.getStatements()
+    .then(() => {
+      posthogCapture(`dashboard_pay_offboarded_user_statements_viewed`);
+
+      store.dispatch("openModal", {
+        customTemplate: {
+          template: markRaw(ListStatements),
+          props: {
+            isVisible: true,
+          },
+        },
+      });
+    })
+    .finally(() => {
+      isFetchingStatements.value = false;
+    });
 }
 
 function sendSupportEmailEvent() {
@@ -43,7 +54,14 @@ function sendSupportEmailEvent() {
       </template>
       <template #footer-content>
         <div class="vc-offboarded-user-section__button">
-          <button @click="viewStatements()">View statements</button>
+          <Button
+            variant="outline"
+            :disabled="isFetchingStatements"
+            :loading="isFetchingStatements"
+            @click="viewStatements()"
+          >
+            View statements
+          </Button>
         </div>
       </template>
     </WalletSupportContact>

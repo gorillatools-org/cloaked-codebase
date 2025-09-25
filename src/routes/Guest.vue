@@ -11,6 +11,7 @@ onMounted(() => {
     !route.path.includes("data-delete") &&
     !route.path.includes("data-remove-graph") &&
     !route.path.includes("subscribe-now") &&
+    !route.path.includes("checkout") &&
     !route.path.includes("native-checkout") &&
     !route.path.includes("invitation") &&
     !route.path.includes("mobile")

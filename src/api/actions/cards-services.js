@@ -11,6 +11,10 @@ export default class CardsServices {
     return api().post("/api/v1/kyc/", values);
   }
 
+  static async submitKYC(values) {
+    return api().post("/api/v2/kyc/", values);
+  }
+
   static async submitVirtualCardApplication(values) {
     return api().post("/api/v1/kyc-with-subscription/", values);
   }
@@ -26,6 +30,44 @@ export default class CardsServices {
 
   static async deleteFundingSource(id) {
     return await api().delete(`/api/v1/card/${id}/?force=true`);
+  }
+
+  /**
+   * Switch the funding source of a card or all cards linked to the funding source
+   * If no cardId is provided, all cards linked to the funding source will be switched and the funding source will be deleted
+   * @param {string} fundingSourceId - The ID of the funding source to switch
+   * @param {string} replacementFundingSourceId - The ID of the replacement funding source
+   * @param {string} [cardId] - The ID of the card that is linked to the funding source
+   * @returns {Promise<void>}
+   */
+  static async switchFundingSource(
+    fundingSourceId,
+    replacementFundingSourceId,
+    cardId
+  ) {
+    return api().post("/api/v1/card/switch/", {
+      funding_source: fundingSourceId,
+      replacement_funding_source: replacementFundingSourceId,
+      vcn: cardId,
+    });
+  }
+
+  static async getLightningCheckAmount(
+    fundingSourceId,
+    replacementFundingSourceId,
+    cardId
+  ) {
+    return await api()
+      .get(`/api/v1/card/lightning-check/`, {
+        params: {
+          funding_source: fundingSourceId,
+          replacement_funding_source: replacementFundingSourceId,
+          virtual_card: cardId,
+        },
+      })
+      .then((response) => {
+        return response.data;
+      });
   }
 
   static async deleteCard(identityId, cardId) {
@@ -81,6 +123,14 @@ export default class CardsServices {
 
   static async getSingleCard(id) {
     return await api().get(`/api/v1/cloaked/card/${id}/`);
+  }
+
+  static async getFundingSourceCards(fundingSourceId) {
+    return await api()
+      .get(`/api/v1/cloaked/card?funding_source=${fundingSourceId}`)
+      .then((response) => {
+        return response.data;
+      });
   }
 
   static async getCancelCardList() {

@@ -23,12 +23,7 @@ const isPasswordlessSignupCredentials = (
   !("password" in credentials) || !credentials.password;
 
 export const useHeadlessUser = () => {
-  const {
-    iframeRef: headlessIframeRef,
-    mountIframe: mountHeadlessIframe,
-    codeVerifier,
-    sendIframeRequest,
-  } = useHeadlessIframe();
+  const { mountIframe, codeVerifier, sendIframeRequest } = useHeadlessIframe();
 
   const headlessUser = computed(() => store.getters["authentication/user"]);
   const isHeadlessUserSubscribed = computed(
@@ -242,8 +237,7 @@ export const useHeadlessUser = () => {
     isEncryptingHeadlessUser,
     encryptHeadlessUserError,
     encryptHeadlessUser,
-    headlessIframeRef,
-    mountHeadlessIframe,
+    mountIframe,
     headlessUser,
     isHeadlessUserSubscribed,
     verifyCode: verifyCodeFromOTP,

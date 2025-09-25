@@ -12,6 +12,7 @@ import {
 } from "@/features/subscribe/composables/usePlanPrice";
 import { usePlanBilling } from "../subscribe/composables/usePlanBilling";
 import { usePriceDiscount } from "../subscribe/composables/usePriceDiscount";
+import { usePriceAnchor } from "../subscribe/composables/usePriceAnchor";
 
 interface Props {
   plan?: Plan | null;
@@ -48,7 +49,8 @@ const originalPrice = computed(() => {
   }
 
   if (props.discountPercentage > 0) {
-    return usePlanPrice(props.plan, props.originalPriceAs).value;
+    const perMemberPrice = usePlanPrice(props.plan, props.originalPriceAs);
+    return usePriceAnchor(perMemberPrice, props.discountPercentage).value;
   }
 
   return (
@@ -235,6 +237,12 @@ $component-name: "subs-plan-card";
     background-color: rgba($color-safe-zone-green, 0.3);
     border-radius: 50px;
     padding: 4px;
+
+    &-text {
+      @media screen and (width <= $screen-md) {
+        font-size: 11px;
+      }
+    }
   }
 
   &__skeleton {

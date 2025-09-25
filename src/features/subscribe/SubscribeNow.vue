@@ -1,6 +1,6 @@
 <script setup>
 import store from "@/store";
-import { onMounted, ref, onBeforeMount, computed } from "vue";
+import { ref, computed, useTemplateRef, watch, nextTick } from "vue";
 import PageCheckout from "@/features/subscribe/PageCheckout.vue";
 import SubscriptionService from "@/api/settings/subscription-services";
 import PageCheckoutSuccessSignup from "@/features/subscribe/PageCheckoutSuccessSignup.vue";
@@ -18,21 +18,84 @@ import {
   CAME_FROM_BUY_CLOAKED,
   FROM_SUBSCRIBE_NOW,
 } from "@/scripts/userFlags";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag";
+import {
+  PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1,
+  PH_FEATURE_FLAG_CLOAKED_PAY_ENABLE_SUBSCRIPTION,
+} from "@/scripts/posthogEvents";
+
+// Guard flag to prevent double initialization
+let didInit = false;
 
 const route = useRoute();
+const router = useRouter();
 
 useThemeQueryParameter();
 usePostHogFunnelTracking();
+
+// Load PostHog feature flag for tiered pricing experiment
+const {
+  featureFlag: tieredPricingExperiment,
+  hasLoadedFeatureFlag: hasTieredPricingFlagLoaded,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1);
+
+const {
+  featureFlag: cloakedPayEnableSubscription,
+  hasLoadedFeatureFlag: cloakedPayEnableSubscriptionLoaded,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_CLOAKED_PAY_ENABLE_SUBSCRIPTION);
 
 const { prefetchIntents } = useStripeIntentPrefetch();
 
 const { step, setStep } = useFunnel(FUNNEL_STEP.PAYMENT);
 
-onBeforeMount(() => {
-  store.dispatch("authentication/setGuestToken", null);
-  store.commit("authentication/setUser", null);
-});
+// Watch for PostHog feature flag to either redirect or initialize based on variant
+watch(
+  () => ({
+    flagLoaded: hasTieredPricingFlagLoaded.value,
+    flagValue: tieredPricingExperiment.value,
+    cloakedPaySubscriptionFlagLoaded: cloakedPayEnableSubscriptionLoaded.value,
+    cloakedPaySubscriptionFlagValue: cloakedPayEnableSubscription.value,
+  }),
+  async ({
+    flagLoaded,
+    flagValue,
+    cloakedPaySubscriptionFlagLoaded,
+    cloakedPaySubscriptionFlagValue,
+  }) => {
+    if (!flagLoaded || !cloakedPaySubscriptionFlagLoaded) return;
+
+    // Treat falsy/missing flag values as control branch
+    if (
+      (route.query.pay_customer && cloakedPaySubscriptionFlagValue) ||
+      flagValue === "control" ||
+      flagValue === false ||
+      flagValue == null
+    ) {
+      // Wait for template refs to be mounted and check if already initialized
+      await nextTick();
+      if (didInit) return;
+
+      // Initialize for control variant (includes "control", false, and null/undefined)
+      await initializeControlFlow();
+      didInit = true;
+    } else {
+      // Redirect immediately for explicit test variants only
+      router.replace({
+        name: "CheckoutPlans",
+        query: route.query,
+      });
+      return;
+    }
+  },
+  { immediate: true, flush: "post" }
+);
+
+// Auth reset moved to initializeControlFlow to only run for control variant
+// onBeforeMount(() => {
+//   store.dispatch("authentication/setGuestToken", null);
+//   store.commit("authentication/setUser", null);
+// });
 
 const {
   createHeadlessUserError,
@@ -41,21 +104,51 @@ const {
   updateHeadlessUserError,
   updateHeadlessUser,
   encryptHeadlessUser,
-  headlessIframeRef,
-  mountHeadlessIframe,
+  mountIframe,
   headlessUser,
   loginHeadlessUser,
 } = useHeadlessUser();
 
-const cloudflareCaptcha = ref(null);
+const headlessIframe = useTemplateRef("headlessIframe");
+const cloudflareCaptcha = useTemplateRef("cloudflareCaptcha");
 
-onMounted(async () => {
-  const mountIframePromise = mountHeadlessIframe();
-  const cloudflareToken = await cloudflareCaptcha.value.verify();
+// Initialize control flow - only called for control variant after flag is loaded
+const initializeControlFlow = async () => {
+  // Reset authentication state for control flow only
+  store.dispatch("authentication/setGuestToken", null);
+  store.commit("authentication/setUser", null);
 
+  // Wait for template refs to be fully available
+  await nextTick();
+
+  // Defensive guards for template refs
+  if (!headlessIframe.value || !cloudflareCaptcha.value) {
+    console.error("Required template refs not available");
+    return;
+  }
+
+  // Guard iframe element access
+  if (!headlessIframe.value.$el) {
+    console.error("Headless iframe element not available");
+    return;
+  }
+
+  // Mount iframe with element guard
+  const mountIframePromise = mountIframe(headlessIframe.value.$el);
+
+  // Guard Cloudflare captcha verification
+  let cloudflareToken;
+  try {
+    cloudflareToken = await cloudflareCaptcha.value.verify();
+  } catch (error) {
+    console.error("Cloudflare captcha verification failed:", error);
+    return;
+  }
+
+  // Only await mount promise after confirming element exists
   await mountIframePromise;
   await createUser(cloudflareToken);
-});
+};
 
 const createUser = async (cloudflareToken) => {
   await createHeadlessUser({ captcha: cloudflareToken });
@@ -167,7 +260,7 @@ const checkoutRef = ref(null);
       :account="account"
     />
     <CloudflareCaptcha ref="cloudflareCaptcha" />
-    <HeadlessSignup ref="headlessIframeRef" />
+    <HeadlessSignup ref="headlessIframe" />
   </div>
 </template>
 

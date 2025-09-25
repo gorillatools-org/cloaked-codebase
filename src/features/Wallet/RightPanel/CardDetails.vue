@@ -7,12 +7,12 @@ import InformationHeader from "./InformationHeader.vue";
 import DetailSection from "./DetailSection.vue";
 import CardsServices from "@/api/actions/cards-services";
 import IdentityService from "@/api/actions/identity-service";
-import PatchCurrentFundingSource from "@/features/modals/Wallet/PatchCurrentFundingSource.vue";
 import PatchSelfDestructModal from "@/features/modals/Wallet/PatchSelfDestructModal.vue";
+import useVirtualCard from "@/composables/Wallet/useVirtualCard";
 
 const route = useRoute();
-
 const toast = useToast();
+const { openFundingSourcePatchModal } = useVirtualCard(() => card);
 
 const card = computed(() => {
   if (route.params.id && store.state.cards?.cards?.results) {
@@ -111,30 +111,6 @@ const currentCardFundingSource = computed(() => {
   }
 });
 
-const currentCardType = computed(() => {
-  return currentCardFundingSource.value?.type;
-});
-
-const fundingSourcesFiltered = computed(() => {
-  return store.state.cards.fundingSources.results.filter(
-    (source) => source.type === currentCardType.value
-  );
-});
-
-const openFundingSources = () => {
-  store.dispatch("openModal", {
-    customTemplate: {
-      template: markRaw(PatchCurrentFundingSource),
-      props: {
-        isVisible: true,
-        sources: fundingSourcesFiltered.value,
-        currentSource: currentCardFundingSource.value,
-        currentCardID: currentCard.value.id,
-      },
-    },
-  });
-};
-
 const openSelfDestruct = () => {
   store.dispatch("openModal", {
     customTemplate: {
@@ -216,7 +192,7 @@ const cardState = computed(() => {
           multi-line
           title="Funding Source"
           link
-          @click="openFundingSources"
+          @click="openFundingSourcePatchModal"
         />
       </div>
 

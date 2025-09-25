@@ -3,7 +3,6 @@ import PageCheckoutSuccess from "@/features/subscribe/PageCheckoutSuccess.vue";
 import RecoveryKeyCard from "@/features/subscribe/RecoveryKeyCard.vue";
 import ConcentricWave from "@/features/subscribe/ConcentricWave.vue";
 import { ref } from "vue";
-import { useRouter } from "vue-router";
 import { createPDF } from "@/scripts/tools";
 import BulkPlanCard from "@/features/subscribe/BulkPlanCard.vue";
 import BaseButton from "@/library/BaseButton.vue";
@@ -13,6 +12,8 @@ import { useDisplay } from "@/composables/useDisplay.js";
 
 const hasDownloadedRecoveryKey = ref(false);
 
+const emit = defineEmits(["continue"]);
+
 const props = defineProps({
   account: {
     type: Object,
@@ -20,15 +21,9 @@ const props = defineProps({
   },
 });
 
-const router = useRouter();
-
 const onDownload = () => {
   hasDownloadedRecoveryKey.value = true;
   createPDF(props.account.recovery, null, props.account.username);
-};
-
-const onContinue = async () => {
-  await router.push({ name: "Home" });
 };
 
 const { isMobile } = useDisplay();
@@ -95,7 +90,7 @@ const { isMobile } = useDisplay();
           icon="arrow-right"
           class="recovery-key-card__cta"
           :full-width="isMobile"
-          @click="onContinue"
+          @click="emit('continue')"
         >
           Continue
         </BaseButton>

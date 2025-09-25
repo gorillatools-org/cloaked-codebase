@@ -19,8 +19,11 @@ import {
 import type { WalletStatusSectionProps } from "@/features/Wallet/WalletStatusSection.vue";
 import store from "@/store";
 import { posthogCapture } from "@/scripts/posthog";
+import { useRoute, useRouter } from "vue-router";
 
 const totalSteps = 5;
+const route = useRoute();
+const router = useRouter();
 const { fundingSources } = useFundingSource();
 const toast = useToast();
 const generatedCardAmount = ref<string | null>(null);
@@ -39,6 +42,14 @@ const fundingSource = computed(() => {
 onMounted(() => {
   // Step 1 event
   posthogCapture("dashboard_pay_post_kyc_onboarding_approved");
+
+  if (route.query?.skipWelcome === "true") {
+    if (currentStep.value === 1) {
+      moveToNextStep();
+    }
+
+    router.replace({ query: {} });
+  }
 });
 
 const handleStatusSecondaryBtnClick = () => {

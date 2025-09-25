@@ -14,6 +14,7 @@ export type KYCState =
   | "LOADING"
   | "PENDING"
   | "MAX_ATTEMPTS_REACHED"
+  | "REJECT_KYC"
   | "MANUAL_REVIEW"
   | "RETRY_KYC"
   | "PAYMENT_PROCESSING"
@@ -116,6 +117,8 @@ export function useKYC(flow: KYCFlowEnum = KYCFlowEnum.DEFAULT) {
     const isExistingUserSubscription =
       flow === KYCFlowEnum.EXISTING_USER_SUBSCRIPTION;
 
+    const isNewUserSubscription = flow === KYCFlowEnum.NEW_USER_SUBSCRIPTION;
+
     const defaultPendingDescription =
       "We're reviewing your information. We'll notify you by email once verification is complete.";
     const pendingDescription = isExistingUserSubscription
@@ -142,11 +145,20 @@ export function useKYC(flow: KYCFlowEnum = KYCFlowEnum.DEFAULT) {
           title: "We're reviewing your information",
           description: pendingDescription,
           medallion: pendingMedallion,
-          primaryButtonText: emailSupportButton.text,
-          secondaryButtonText: backButton.text,
+          primaryButtonIcon: isNewUserSubscription ? "arrow-right" : undefined,
+          primaryButtonText: isNewUserSubscription
+            ? "Finish profile"
+            : emailSupportButton.text,
+          secondaryButtonText: isNewUserSubscription
+            ? emailSupportButton.text
+            : backButton.text,
         },
-        primaryButtonAction: emailSupportButton.action,
-        secondaryButtonAction: backButton.action,
+        primaryButtonAction: isNewUserSubscription
+          ? "close"
+          : emailSupportButton.action,
+        secondaryButtonAction: isNewUserSubscription
+          ? emailSupportButton.action
+          : backButton.action,
       },
       MANUAL_REVIEW: {
         statusSectionProps: {
@@ -154,6 +166,17 @@ export function useKYC(flow: KYCFlowEnum = KYCFlowEnum.DEFAULT) {
         },
       },
       MAX_ATTEMPTS_REACHED: {
+        statusSectionProps: {
+          title: "We weren't able to verify your identity",
+          description: "You're no longer eligible for Cloaked Pay.",
+          medallion: errorMedallion,
+          primaryButtonText: emailSupportButton.text,
+          secondaryButtonText: backButton.text,
+        },
+        primaryButtonAction: emailSupportButton.action,
+        secondaryButtonAction: backButton.action,
+      },
+      REJECT_KYC: {
         statusSectionProps: {
           title: "We weren't able to verify your identity",
           description: "You're no longer eligible for Cloaked Pay.",
@@ -240,6 +263,14 @@ export function useKYC(flow: KYCFlowEnum = KYCFlowEnum.DEFAULT) {
       return {
         state: "MANUAL_REVIEW",
         ...statusConfigs.MANUAL_REVIEW,
+      };
+    }
+
+    // KYC rejected
+    if (behavior === EDDBehaviorEnum.REJECT_KYC) {
+      return {
+        state: "REJECT_KYC",
+        ...statusConfigs.REJECT_KYC,
       };
     }
 

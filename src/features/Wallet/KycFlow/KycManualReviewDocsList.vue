@@ -110,14 +110,22 @@ const copyEmail = async () => {
         business days. If you do not have the required documents, contact
         Cloaked Support for further assistance.
       </BaseText>
-      <BaseButton
-        variant="primary"
-        icon="email"
-        class="kyc-manual-review-docs__footer-button"
-        @click="emailDocuments"
-      >
-        Email Documents
-      </BaseButton>
+      <div class="kyc-manual-review-docs__footer-actions-container">
+        <BaseButton
+          variant="primary"
+          icon="email"
+          class="kyc-manual-review-docs__footer-button"
+          @click="emailDocuments"
+        >
+          Email Documents
+        </BaseButton>
+        <div
+          v-if="$slots['extra-actions']"
+          class="kyc-manual-review-docs__footer-extra-actions"
+        >
+          <slot name="extra-actions" />
+        </div>
+      </div>
       <div
         class="kyc-manual-review-docs__copy-section"
         @click="copyEmail"
@@ -148,7 +156,12 @@ $component-name: "kyc-manual-review-docs";
   justify-content: center;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  padding-bottom: 24px;
+
+  @media screen and (min-width: $screen-md) {
+    padding-bottom: 0;
+    height: 100%;
+  }
 
   &__header {
     max-width: 900px;
@@ -170,10 +183,14 @@ $component-name: "kyc-manual-review-docs";
     &-list {
       margin-top: 36px;
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       gap: 20px;
       width: 100%;
       max-width: 900px;
+
+      @media screen and (min-width: $screen-md) {
+        flex-direction: row;
+      }
     }
 
     &-item {
@@ -238,7 +255,21 @@ $component-name: "kyc-manual-review-docs";
       text-align: center;
     }
 
+    &-actions-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+    }
+
     &-button {
+      width: 100%;
+      max-width: 305px;
+    }
+
+    &-extra-actions {
       width: 100%;
       max-width: 305px;
     }

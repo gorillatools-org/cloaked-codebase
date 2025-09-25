@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import BaseMedallion from "@/library/BaseMedallion.vue";
 import type { BaseMedallionProps } from "@/library/BaseMedallion.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
-import BaseIcon from "@/library/BaseIcon.vue";
 import type { BaseIconName } from "@/library/baseIconTypes";
-import { SUPPORT_EMAIL } from "@/scripts/constants";
-import { tools } from "@/scripts/tools";
 import { safe_html } from "@/scripts/sanitize";
+import VCBaseCopySupportEmail from "@/features/VirtualCards/base/VCBaseCopySupportEmail.vue";
 
 export type WalletStatusSectionProps = {
   medallion?: BaseMedallionProps;
@@ -19,6 +17,7 @@ export type WalletStatusSectionProps = {
   secondaryButtonText?: string;
   showCopySupportEmail?: boolean;
   descriptionMaxWidth?: number;
+  fullHeightContent?: boolean;
 };
 
 const emit = defineEmits<{
@@ -28,8 +27,6 @@ const emit = defineEmits<{
 }>();
 
 const props = defineProps<WalletStatusSectionProps>();
-
-const isEmailCopied = ref(false);
 
 // Computed keys that change when content changes to trigger animations
 const headerKey = computed(() => JSON.stringify(props.medallion));
@@ -41,23 +38,6 @@ const footerKey = computed(
 const sanitizedDescription = computed(() =>
   props.description ? safe_html(props.description) : ""
 );
-
-const copyEmail = async () => {
-  if (isEmailCopied.value) return;
-
-  try {
-    await tools.copyToClipboard(SUPPORT_EMAIL);
-    isEmailCopied.value = true;
-
-    emit("supportEmailCopied");
-
-    setTimeout(() => {
-      isEmailCopied.value = false;
-    }, 2000);
-  } catch (error) {
-    console.error("Failed to copy email:", error);
-  }
-};
 </script>
 
 <template>
@@ -84,6 +64,9 @@ const copyEmail = async () => {
         v-if="contentKey"
         :key="contentKey"
         class="wallet-status-section__content"
+        :class="{
+          'wallet-status-section__content--full-height': fullHeightContent,
+        }"
       >
         <slot name="content">
           <BaseText
@@ -123,7 +106,7 @@ const copyEmail = async () => {
             v-if="primaryButtonText"
             variant="primary"
             size="md"
-            icon="refresh"
+            :icon="primaryButtonIcon || 'refresh'"
             class="wallet-status-section__footer-button btn-primary"
             @click="emit('primaryButtonClick')"
           >
@@ -138,23 +121,11 @@ const copyEmail = async () => {
           >
             {{ secondaryButtonText }}
           </BaseButton>
-          <div
+          <VCBaseCopySupportEmail
             v-if="showCopySupportEmail"
-            class="wallet-status-section__copy-section"
-            @click="copyEmail"
-          >
-            <BaseText
-              variant="body-3-semibold"
-              class="wallet-status-section__copy-email"
-              :title="isEmailCopied ? 'Copied!' : 'Copy support email'"
-            >
-              {{ SUPPORT_EMAIL }}
-            </BaseText>
-            <BaseIcon
-              :name="isEmailCopied ? 'check-square' : 'copy'"
-              class="wallet-status-section__copy-icon"
-            />
-          </div>
+            class="wallet-status-section__copy"
+            @copied="emit('supportEmailCopied')"
+          />
         </slot>
       </footer>
     </Transition>
@@ -177,6 +148,10 @@ $component: "wallet-status-section";
     flex-direction: column;
     gap: 12px;
     width: 100%;
+
+    &--full-height {
+      height: 100%;
+    }
   }
 
   &__title {
@@ -209,19 +184,6 @@ $component: "wallet-status-section";
     &-button {
       width: 100%;
       max-width: 305px;
-    }
-  }
-
-  &__copy {
-    &-section {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-
-      &:hover {
-        color: $color-primary-90;
-      }
     }
   }
 }

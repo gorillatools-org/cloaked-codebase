@@ -199,4 +199,41 @@ export default class SubscriptionService {
         return err;
       });
   }
+
+  static getTiers() {
+    return api()
+      .get("/api/v1/billing/tiers/")
+      .then(({ data }) => {
+        return data;
+      });
+  }
+
+  static getTierSubscription() {
+    return api()
+      .get("/api/v1/billing/subscription/")
+      .then(({ data }) => {
+        return data;
+      });
+  }
+
+  static getTierSetupIntent(forceRefresh = false) {
+    const payload = forceRefresh ? { force_refresh: true } : {};
+
+    return api()
+      .post("/api/v1/billing/subscription/stripe/create-setup-intent/", payload)
+      .then(({ data }) => {
+        return data;
+      });
+  }
+
+  static subscribeToTier({ tier, billing }) {
+    return api()
+      .post("/api/v1/billing/subscription/subscribe/", {
+        tier_code: tier,
+        billing_interval: billing === "yearly" ? "year" : "month",
+      })
+      .then(({ data }) => {
+        return data;
+      });
+  }
 }

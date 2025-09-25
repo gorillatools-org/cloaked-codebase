@@ -25,12 +25,9 @@ import InboxService from "@/api/actions/inbox-service";
 import ChoosePlanModal from "@/features/subscribe/ChoosePlanModal.vue";
 import AppLayoutDefault from "@/features/AppLayoutDefault.vue";
 import { usePlansModal } from "@/features/subscribe/composables/usePlansModal";
-import DownloadApp from "@/features/onboarding/DownloadApp.vue";
 import CreateEncryptionModal from "@/features/encryption/CreateEncryptionModal.vue";
 import { constants } from "@/scripts/constants";
-import { useBasicMode } from "@/composables/useBasicMode";
 import { useEncryptionGate } from "@/composables/useEncryptionGate";
-import { useDisplay } from "@/composables/useDisplay";
 import MonitoringActivateModal from "@/features/monitoring/MonitoringActivateModal.vue";
 import { useMonitoringModal } from "@/features/monitoring/useMonitoringModal.js";
 import { initializeExtensionMessaging } from "@/scripts/messaging";
@@ -250,12 +247,6 @@ watch(
   { deep: true, immediate: true }
 );
 
-const { isBasicModeEnabled } = useBasicMode();
-
-const basicModeEnabled = computed(() => {
-  return isBasicModeEnabled.value;
-});
-
 function showPayModal() {
   if (state.enablePay) {
     const newQuery = { ...route.query };
@@ -403,8 +394,6 @@ const {
 
 const { isMonitoringModalOpen } = useMonitoringModal();
 
-const { isMobile } = useDisplay();
-
 const hasNeverPaid = computed(() => {
   return store.getters["settings/isTrial"];
 });
@@ -439,13 +428,6 @@ watch(
     <ChoosePlanModal
       :value="isPlansModalOpen"
       @input="isPlansModalOpen = $event"
-    />
-    <DownloadApp
-      v-if="
-        isMobile &&
-        !basicModeEnabled &&
-        route.fullPath !== '/settings/subscription'
-      "
     />
     <CreateEncryptionModal
       :value="isEncryptionModalOpen && !isEncryptionAvailable"

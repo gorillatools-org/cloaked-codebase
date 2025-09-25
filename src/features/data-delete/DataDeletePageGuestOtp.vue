@@ -9,6 +9,7 @@ import {
   reactive,
   nextTick,
   toValue,
+  useTemplateRef,
 } from "vue";
 
 import store from "@/store";
@@ -33,6 +34,7 @@ import { PH_EVENT_USER_CLICKED_DATA_DELETION_SETUP_ACCOUNT_BUTTON } from "@/scri
 import DataDeletePageOtp from "@/features/data-delete/DataDeletePageOtp.vue";
 import DataDeletePageOtpBrave from "@/features/data-delete/DataDeletePageOtpBrave.vue";
 import DataDeletePageResults from "@/features/data-delete/DataDeletePageResults.vue";
+import DataDeletePageEmailResults from "@/features/data-delete/DataDeletePageEmailResults.vue";
 import DataDeletePageAdditionalSearch from "@/features/data-delete/DataDeletePageAdditionalSearch.vue";
 import DataDeletePageLoader from "@/features/data-delete/DataDeletePageLoader.vue";
 import { useRoute } from "vue-router";
@@ -40,6 +42,7 @@ import router from "@/routes/router";
 import { useToast } from "@/composables/useToast.js";
 import { useDisplay } from "@/composables/useDisplay";
 import { fetchFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1 } from "@/scripts/posthogEvents";
 
 const toast = useToast();
 
@@ -71,7 +74,10 @@ const { dataDeleteInputForm } = useDataDeleteInput();
 const { formattedPhoneNumber, formattedUserName } =
   useDataDeleteFormatting(dataDeleteInputForm);
 
-const { step, setStep } = useFunnel(FUNNEL_STEP.OTP);
+const initialStep = route.query?.email
+  ? FUNNEL_STEP.EMAIL_RESULTS
+  : FUNNEL_STEP.OTP;
+const { step, setStep } = useFunnel(initialStep);
 
 const hasSearchError = ref(false);
 const searchStep = ref("initial");
@@ -221,14 +227,26 @@ const storeSearchProgressInSessionStorage = () => {
   });
 };
 
-function setSetup() {
+async function setSetup() {
   handOffSearchResultsToNativeMobileApp();
   storeSearchProgressInSessionStorage();
 
-  router.push({
-    name: "SubscribeNow",
-    query: route.query,
-  });
+  // Use PostHog feature flag instead of backend user flags for consistency
+  const { value: tieredPricingExperiment } = await fetchFeatureFlag(
+    PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1
+  );
+
+  if (tieredPricingExperiment && tieredPricingExperiment !== "control") {
+    router.push({
+      name: "CheckoutPlans",
+      query: route.query,
+    });
+  } else {
+    router.push({
+      name: "SubscribeNow",
+      query: route.query,
+    });
+  }
 }
 
 function setSearchStep(value) {
@@ -265,29 +283,34 @@ watch(searchResults, () => {
   }
 });
 
+const headlessIframe = useTemplateRef("headlessIframe");
+const cloudflareCaptcha = useTemplateRef("cloudflareCaptcha");
+
 onMounted(async () => {
   const sourceFromUrl = route.query?.source;
   const source = sourceFromUrl ?? getPersistedSource();
 
   if (source) persistSource(source);
-
   isBraveOtp.value = source === "brave";
 
-  const mountIframePromise = mountHeadlessIframe();
+  const mountIframePromise = mountIframe(headlessIframe.value.$el);
   const cloudflareToken = await cloudflareCaptcha.value.verify();
 
   await mountIframePromise;
   await createUser(cloudflareToken);
 
-  router.replace({ ...route, query: { phone: route?.query?.phone } });
+  const queryToKeep = { phone: route?.query?.phone };
+  if (route?.query?.email) {
+    queryToKeep.email = route.query.email;
+  }
+  router.replace({ ...route, query: queryToKeep });
 });
 
 const {
   createHeadlessUserError,
   createHeadlessUser,
   fetchHeadlessUser,
-  headlessIframeRef,
-  mountHeadlessIframe,
+  mountIframe,
   headlessUser,
   verifyCode,
   isVerifyingCode,
@@ -300,8 +323,6 @@ async function verifyOTPCode({ phone_number, code }) {
   verifiedUserInfo.value = await verifyCode({ phone_number, code });
   return verifiedUserInfo.value;
 }
-
-const cloudflareCaptcha = ref(null);
 
 const createUser = async (cloudflareToken) => {
   const initUserResponse = await createHeadlessUser({
@@ -374,6 +395,19 @@ async function loginPasswordlessUser({ phone, code }) {
         class="data-delete__page"
         @set-step="setStep(FUNNEL_STEP.RESULTS)"
       />
+
+      <DataDeletePageAdditionalSearch
+        v-else-if="step === FUNNEL_STEP.NOT_YOU"
+        :value="dataDeleteInputForm"
+        :is-fetching="isFetching"
+        :search-step="searchStep"
+        :is-forcing-new-search="isForcingNewSearch"
+        class="data-delete__page"
+        @input="dataDeleteInputForm = $event"
+        @set-search-step="setSearchStep"
+        @search-public-records="searchPublicRecords"
+      />
+
       <DataDeletePageResults
         v-else-if="step === FUNNEL_STEP.RESULTS"
         :phone="dataDeleteInputForm.phone"
@@ -387,19 +421,15 @@ async function loginPasswordlessUser({ phone, code }) {
         @setup="setSetup"
         @complete="setSetup"
       />
-      <DataDeletePageAdditionalSearch
-        v-else-if="step === FUNNEL_STEP.NOT_YOU"
-        :value="dataDeleteInputForm"
-        :is-fetching="isFetching"
-        :search-step="searchStep"
-        :is-forcing-new-search="isForcingNewSearch"
+
+      <DataDeletePageEmailResults
+        v-else-if="step === FUNNEL_STEP.EMAIL_RESULTS"
         class="data-delete__page"
-        @input="dataDeleteInputForm = $event"
-        @set-search-step="setSearchStep"
-        @search-public-records="searchPublicRecords"
+        @setup="setSetup"
+        @force-new-search="forceNewSearch"
       />
     </template>
     <CloudflareCaptcha ref="cloudflareCaptcha" />
-    <HeadlessSignup ref="headlessIframeRef" />
+    <HeadlessSignup ref="headlessIframe" />
   </DataDeletePage>
 </template>

@@ -6,19 +6,48 @@ import CreditCardBlack from "@/assets/images/pay-onboarding/credit-card-black.pn
 import CreditCardWhite from "@/assets/images/pay-onboarding/credit-card-white.png";
 import ConfettiExplosion from "@/features/ConfettiExplosion.vue";
 import { posthogCapture } from "@/scripts/posthog";
-import { ref } from "vue";
+import { ref, withDefaults, defineProps, defineEmits } from "vue";
+
+type Props = {
+  title?: string;
+  description?: string;
+  btnBackgroundColor?: string;
+  btnText?: string;
+  btnEvent?: string | null;
+  secondaryBtnText?: string;
+};
 
 const emit = defineEmits<{
   (e: "continue"): void;
+  (e: "secondary-btn-click"): void;
 }>();
+
+const props = withDefaults(defineProps<Props>(), {
+  title: "You're approved for Cloaked Pay",
+  description:
+    "In just a few minutes, link your funding source to create your first card.",
+  btnBackgroundColor: "purple-gradient",
+  btnText: "Set Up Your First Card",
+  btnEvent: "dashboard_pay_post_kyc_onboarding_setup_card_clicked",
+  secondaryBtnText: undefined,
+});
 
 const isLeaving = ref(false);
 
 const handleSetupBtnClick = () => {
   isLeaving.value = true;
   setTimeout(() => {
-    posthogCapture("dashboard_pay_post_kyc_onboarding_setup_card_clicked");
+    if (props.btnEvent !== null && !!props.btnEvent) {
+      posthogCapture(props.btnEvent);
+    }
     emit("continue");
+  }, 300);
+};
+
+const handleSecondaryBtnClick = () => {
+  isLeaving.value = true;
+  setTimeout(() => {
+    emit("secondary-btn-click");
   }, 300);
 };
 </script>
@@ -36,21 +65,29 @@ const handleSetupBtnClick = () => {
       variant="headline-2-semibold"
       class="pay-onboarding-welcome-step-1__title"
     >
-      You're approved for Cloaked Pay
+      {{ title }}
     </BaseText>
     <BaseText
       variant="headline-6-medium"
       class="pay-onboarding-welcome-step-1__description"
     >
-      In just a few minutes, link your funding source to create your first card.
+      {{ description }}
     </BaseText>
     <BaseButton
       variant="primary"
-      background-color="purple-gradient"
+      :background-color="btnBackgroundColor"
       class="pay-onboarding-welcome-step-1__button"
       @click="handleSetupBtnClick"
     >
-      Set Up Your First Card
+      {{ btnText }}
+    </BaseButton>
+    <BaseButton
+      v-if="secondaryBtnText"
+      variant="secondary"
+      class="pay-onboarding-welcome-step-1__button pay-onboarding-welcome-step-1__button--secondary"
+      @click="handleSecondaryBtnClick"
+    >
+      {{ secondaryBtnText }}
     </BaseButton>
     <div class="pay-onboarding-welcome-step-1__animated-container">
       <div class="pay-onboarding-welcome-step-1__animated-card-black">
@@ -91,6 +128,11 @@ $component-name: "pay-onboarding-welcome-step-1";
   height: 100%;
   position: relative;
   overflow: hidden;
+  padding-inline: 16px;
+
+  @media screen and (min-width: $screen-md) {
+    padding-inline: 0;
+  }
 
   &__title {
     text-align: center;
@@ -109,6 +151,11 @@ $component-name: "pay-onboarding-welcome-step-1";
     margin-top: 24px;
     position: relative;
     z-index: 2;
+  }
+
+  &__button--secondary {
+    width: 345px;
+    margin-top: 8px;
   }
 
   &__confetti {

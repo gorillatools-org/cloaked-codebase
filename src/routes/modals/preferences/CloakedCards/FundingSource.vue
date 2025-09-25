@@ -1,10 +1,11 @@
-<script setup>
-import { computed, onMounted, onUnmounted } from "vue";
+<script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import store from "@/store";
 import ValueDisplay from "@/features/ui/value-display.vue";
 import BaseText from "@/library/BaseText.vue";
 import useFundingSource from "@/composables/Wallet/useFundingSource.ts";
 import FundingSourceListItem from "@/features/Wallet/FundingSource/FundingSourceListItem.vue";
+import type { FundingSource } from "@/types/Wallet/funding-source";
 
 const {
   fundingSources,
@@ -13,6 +14,7 @@ const {
   openDeleteModal,
   openEditModal,
 } = useFundingSource();
+const loadingFundingSourceId = ref<string>();
 
 const kycValidated = computed(() => {
   return store.state.authentication?.user?.cloaked_card_kyc_configured;
@@ -25,6 +27,15 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("focus", refetchFundingSources);
 });
+
+const handleRemove = (fundingSource: FundingSource) => {
+  if (loadingFundingSourceId.value) return;
+
+  loadingFundingSourceId.value = fundingSource.id;
+  openDeleteModal(fundingSource.id).finally(() => {
+    loadingFundingSourceId.value = undefined;
+  });
+};
 </script>
 
 <template>
@@ -70,8 +81,12 @@ onUnmounted(() => {
               :show-default-badge="(fundingSources || []).length > 1"
               :show-actions="true"
               :is-select-mode="false"
+              :is-disabled="
+                !!loadingFundingSourceId &&
+                fundingSource.id !== loadingFundingSourceId
+              "
               :is-selected="fundingSource.primary"
-              @remove="openDeleteModal(fundingSource.id)"
+              @remove="handleRemove(fundingSource)"
               @edit="openEditModal(fundingSource.id)"
             />
           </div>
