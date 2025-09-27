@@ -1,0 +1,22 @@
+{
+  "command": "python3",
+  "args": [
+    "-m",
+    "sourcemapper",
+    "--output",
+    "{{outputDir}}"
+  ],
+  "targetDir": "./",
+  "stateFile": "./.sourcemap-state.json",
+  "intervalHours": 24,
+  "exclude": [
+    "App.vue",
+    "main.js"
+  ],
+  "changeThreshold": 10,
+  "publishedUrl": "https://www.cloaked.com",
+  "indexBaseUrl": "https://my.cloaked.com",
+  "requestHeaders": {
+    "User-Agent": "Cloaked-Updater ;)(</>)"
+  }
+}
