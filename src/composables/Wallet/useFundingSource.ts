@@ -1,0 +1,602 @@
+import store from "@/store";
+import type { FundingSource } from "@/types/Wallet/funding-source";
+import { computed, markRaw, reactive, type CSSProperties } from "vue";
+import FundingSourceListModal from "@/features/modals/Wallet/FundingSourceListModal.vue";
+import CardsServices from "@/api/actions/cards-services";
+import { useToast } from "@/composables/useToast";
+import WalletConfirmationModal from "@/features/modals/Wallet/WalletConfirmationModal.vue";
+import FundingSourceAddModal from "@/features/modals/Wallet/FundingSourceAddModal.vue";
+import { posthogCapture } from "@/scripts/posthog";
+import { CARD_PROVIDER_TYPE, constants } from "@/scripts/constants";
+import AddCreditCard from "@/features/modals/Wallet/AddCreditCard.vue";
+import FundingSourceEditModal from "@/features/modals/Wallet/FundingSourceEditModal.vue";
+import FundingSourceSelectModal from "@/features/modals/Wallet/FundingSourceSelectModal.vue";
+import { formattedPrice } from "@/features/subscribe/composables/utils";
+
+export type FundingSourceType =
+  | (typeof constants.CARD_TYPE)[keyof typeof constants.CARD_TYPE]
+  | "ach";
+
+export type CardProviderType =
+  (typeof CARD_PROVIDER_TYPE)[keyof typeof CARD_PROVIDER_TYPE];
+
+export default function useFundingSource() {
+  const toast = useToast();
+
+  const fundingSources = computed(() => {
+    return store.state.cards.fundingSources?.results as
+      | FundingSource[]
+      | undefined;
+  });
+
+  const defaultFundingSource = computed(() => {
+    return fundingSources.value?.find((source) => source.primary) || undefined;
+  });
+
+  const cardFundingSourceVersion = computed(() => {
+    return store.state.authentication?.user?.card_fs_version;
+  });
+
+  const enabledFundingSourceTypes = computed(() => {
+    const allowDebitAch =
+      store.state.authentication?.user?.allow_debit_ach_only;
+    return {
+      credit_card: true,
+      debit_card: !!allowDebitAch,
+      ach: !!allowDebitAch,
+    };
+  });
+
+  const refetchFundingSources = () => {
+    return CardsServices.getFundingSources();
+  };
+
+  const getFundingSourcesByType = (
+    type: FundingSourceType,
+    exceptionId?: string
+  ) => {
+    return (
+      fundingSources.value?.filter(
+        (fundingSource) =>
+          fundingSource.type === type && fundingSource.id !== exceptionId
+      ) || []
+    );
+  };
+
+  const generateCardNameBasedOnFundingSource = (fundingSourceId: string) => {
+    const sourceCardBrand = fundingSources.value?.find(
+      (source) => source.id === fundingSourceId
+    )?.card_brand;
+
+    if (!sourceCardBrand) {
+      return "Unknown";
+    }
+
+    const capitalizedSourceCardBrand =
+      sourceCardBrand?.charAt(0)?.toUpperCase() + sourceCardBrand?.slice(1);
+
+    const cardsNames =
+      store.state.cards.cards?.results?.map(
+        (card: any) => card.identity_name
+      ) || [];
+
+    let generatedCardName = `${capitalizedSourceCardBrand}`;
+
+    let i = 1;
+    do {
+      generatedCardName = `${capitalizedSourceCardBrand} ${i}`;
+      i++;
+    } while (cardsNames.includes(generatedCardName));
+
+    return generatedCardName;
+  };
+
+  const getCardBrandImgURL = (cardBrand: string) => {
+    switch (cardBrand.toLowerCase()) {
+      case "mastercard":
+        return new URL(
+          "@/assets/images/card-brands/mastercard-logo.jpeg",
+          import.meta.url
+        ).href;
+      case "visa":
+        return new URL(
+          "@/assets/images/card-brands/visa-logo.png",
+          import.meta.url
+        ).href;
+      case "unionpay":
+        return new URL(
+          "@/assets/images/card-brands/unionpay-logo.png",
+          import.meta.url
+        ).href;
+      case "discover":
+        return new URL(
+          "@/assets/images/card-brands/discover-logo.jpeg",
+          import.meta.url
+        ).href;
+      case "amex":
+        return new URL(
+          "@/assets/images/card-brands/amex-logo.png",
+          import.meta.url
+        ).href;
+      default:
+        return undefined;
+    }
+  };
+
+  const getProviderIcon = (
+    provider?: CardProviderType | FundingSourceType | "ach"
+  ) => {
+    switch (provider) {
+      case CARD_PROVIDER_TYPE.CHECKOUT_FLOW_ACH:
+      case CARD_PROVIDER_TYPE.PLAID_STRIPE_FLOW_ACH:
+      case "ach":
+        return "bank";
+      case CARD_PROVIDER_TYPE.CHECKOUT_FLOW_CREDIT:
+      case CARD_PROVIDER_TYPE.STRIPE_FLOW_CREDIT:
+      case "credit_card":
+        return "wallet";
+      case CARD_PROVIDER_TYPE.CHECKOUT_FLOW_DEBIT:
+      case CARD_PROVIDER_TYPE.STRIPE_FLOW_DEBIT:
+      case "debit_card":
+      default:
+        return "card-pos";
+    }
+  };
+
+  /**
+   * Modals
+   */
+
+  const openListModal = (isSelectMode: boolean = false) => {
+    store.dispatch("openModal", {
+      customTemplate: {
+        template: markRaw(FundingSourceListModal),
+        props: {
+          isSelectMode: isSelectMode,
+        },
+      },
+    });
+  };
+
+  const openAddModal = (onAddSuccess?: () => void) => {
+    store.dispatch("openModal", {
+      customTemplate: {
+        template: markRaw(FundingSourceAddModal),
+        props: {
+          onAddSuccess: () => {
+            if (onAddSuccess) {
+              onAddSuccess();
+            }
+          },
+        },
+      },
+    });
+  };
+
+  const openEditModal = (fundingSourceId: string) => {
+    store.dispatch("openModal", {
+      customTemplate: {
+        template: markRaw(FundingSourceEditModal),
+        props: {
+          fundingSourceId,
+        },
+      },
+    });
+  };
+
+  const openDeleteModal = async (fundingSourceId: string) => {
+    const fundingSource = fundingSources.value?.find(
+      (fundingSource) => fundingSource.id === fundingSourceId
+    );
+
+    if (!fundingSource) {
+      return;
+    }
+
+    const isDefault = fundingSource.primary;
+    const isLast = fundingSources.value?.length === 1;
+    const isLastOrDefault = isDefault || isLast;
+
+    const fundingSourcesByType = getFundingSourcesByType(
+      fundingSource.type as FundingSourceType,
+      fundingSourceId
+    );
+
+    // Avoid loading all cards linked to the funding source if there are no other funding sources of the same type or if it's the last or default funding source
+    const cardsLinkedToFundingSourceLength =
+      !isLastOrDefault && fundingSourcesByType.length > 0
+        ? await CardsServices.getFundingSourceCards(fundingSourceId).then(
+            (response) => response.results?.length
+          )
+        : 0;
+    const canSwitchFundingSource =
+      !isLastOrDefault &&
+      fundingSourcesByType.length > 0 &&
+      cardsLinkedToFundingSourceLength > 0;
+
+    const modalProps = {
+      title: canSwitchFundingSource
+        ? "Remove or switch this funding source?"
+        : "Remove this funding source?",
+      description: canSwitchFundingSource
+        ? "Removing the funding source will delete all linked cards. <br/> <br/> If you switch to another funding source of the same type, your cards will stay active and be updated to use the new source."
+        : "If you remove this funding source, all cards linked to it will also be deleted. Your past activity will remain visible on your dashboard.",
+      primaryButtonText: "Remove",
+      secondaryButtonText: canSwitchFundingSource ? "Switch source" : "Cancel",
+      showCloseInHeader: canSwitchFundingSource,
+      primaryButtonColor: "danger",
+      secondaryButtonColor: "outline",
+      hideSecondaryButton: false,
+      primaryButtonStyle: {} as CSSProperties,
+      secondaryButtonStyle: {} as CSSProperties,
+      onConfirm: () => {
+        _delete(fundingSourceId);
+      },
+      onCancel: () => {
+        if (!canSwitchFundingSource) return;
+        _openSwitchAndDeleteFundingSourceModal(fundingSource);
+      },
+    };
+
+    if (isLast) {
+      modalProps.title = "At least one funding source required";
+      modalProps.description =
+        "Link another funding source before removing this one.";
+      modalProps.primaryButtonText = "Link new funding source";
+      modalProps.secondaryButtonText = "Cancel";
+      modalProps.primaryButtonColor = "primary";
+      modalProps.secondaryButtonColor = "outline";
+      modalProps.showCloseInHeader = false;
+      modalProps.secondaryButtonStyle = { width: "170px", flex: "unset" };
+      modalProps.primaryButtonStyle = { flexGrow: 1, flex: 1 };
+      modalProps.onConfirm = () => {
+        openAddModal();
+      };
+    }
+
+    if (isDefault && !isLast) {
+      modalProps.title = "Default funding source required";
+      modalProps.description =
+        "Please select a new default before removing your current funding source.";
+      modalProps.primaryButtonColor = "primary";
+      modalProps.primaryButtonText = "Got it";
+      modalProps.primaryButtonStyle = { width: "150px", flex: "unset" };
+      modalProps.hideSecondaryButton = true;
+      modalProps.onConfirm = () => {};
+    }
+
+    store.dispatch("openModal", {
+      customTemplate: {
+        template: markRaw(WalletConfirmationModal),
+        props: {
+          ...modalProps,
+        },
+      },
+    });
+  };
+
+  const _openSwitchAndDeleteFundingSourceModal = async (
+    fundingSource: FundingSource,
+    onSuccess?: () => void
+  ) => {
+    const deleteAndReplaceFundingSource = (
+      replacementFundingSource: FundingSource
+    ) => {
+      modalProps.isSaving = true;
+      _switchAndDelete(fundingSource.id, replacementFundingSource.id)
+        .then(() => {
+          if (onSuccess) {
+            onSuccess();
+          }
+          store.dispatch("closeModal");
+        })
+        .finally(() => {
+          modalProps.isSaving = false;
+        });
+    };
+
+    const modalProps = reactive({
+      title: "Choose a new funding source",
+      description:
+        "Switch this card’s funding source to another of the same type. All linked cards will be updated to use the new source.",
+      extraDescription: "",
+      fundingSources: getFundingSourcesByType(
+        fundingSource.type as FundingSourceType,
+        fundingSource.id
+      ),
+      filterBySameType: true,
+      isSaving: false,
+      isLoadingExtraDescription: false,
+      saveButtonText: "Confirm",
+      onSave: deleteAndReplaceFundingSource,
+      onSelect: ({
+        fundingSource: selectedFundingSource,
+      }: {
+        fundingSource: FundingSource;
+        isCurrentFundingSource: boolean;
+      }) => {
+        modalProps.isLoadingExtraDescription = true;
+        getLightningCheckAmount(fundingSource.id, selectedFundingSource.id)
+          .then(({ lightning_check_amount }) => {
+            if (lightning_check_amount > 0) {
+              modalProps.extraDescription = `We will issue a <strong>${formattedPrice(lightning_check_amount / 100)}</strong> hold on the selected account to verify funds. This will be released automatically.`;
+            } else {
+              modalProps.extraDescription = "";
+            }
+          })
+          .finally(() => {
+            modalProps.isLoadingExtraDescription = false;
+          });
+      },
+    });
+
+    store.dispatch("openModal", {
+      customTemplate: {
+        template: markRaw(FundingSourceSelectModal),
+        props: modalProps,
+      },
+    });
+  };
+
+  const openAddPopup = (type: FundingSourceType, onAddSuccess?: () => void) => {
+    function openPopup(flowUrl: string) {
+      const popup = window.open(
+        flowUrl,
+        "",
+        "resizable=1,width=500,height=580,top=80,left=50"
+      );
+      popup?.focus();
+
+      // Poll to detect when popup closes and refetch funding sources
+      if (popup) {
+        const checkClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkClosed);
+            URL.revokeObjectURL(flowUrl);
+
+            // After the popup closes, refetch and check if a new funding source was added
+            const tempFsListLength = fundingSources.value?.length || 0;
+            refetchFundingSources().then(() => {
+              if ((fundingSources.value?.length || 0) > tempFsListLength) {
+                // New fs
+                onAddSuccess?.();
+              }
+            });
+          }
+        }, 1000);
+      }
+    }
+
+    if (
+      cardFundingSourceVersion.value === constants.CARD_FS_VERSION_OWN_CARD &&
+      type !== "ach"
+    ) {
+      store.dispatch("closeModal"); // Closes the current modal
+      posthogCapture("dashboard_pay_wallet_add_funding_source_viewed");
+      openAddCreditCardModal(type, onAddSuccess);
+      return;
+    }
+
+    return CardsServices.postCreateAPaymentSource({ flow: type })
+      .then(({ data }) => {
+        posthogCapture("dashboard_pay_wallet_add_funding_source_modal_viewed");
+        if (data?.flow_url) {
+          openPopup(data.flow_url);
+        } else {
+          const blob = new Blob([data], { type: "text/html" });
+          const flowUrl = URL.createObjectURL(blob);
+          openPopup(flowUrl);
+        }
+      })
+      .catch((err) => {
+        posthogCapture("dashboard_pay_wallet_add_funding_source_modal_failed");
+        toast.error(
+          err?.response?.data?.detail ||
+            "Oops! We could not process your request."
+        );
+      });
+  };
+
+  function openAddCreditCardModal(
+    type: FundingSourceType | "ach",
+    onAddSuccess?: () => void
+  ) {
+    store.dispatch("openModal", {
+      customTemplate: {
+        template: markRaw(AddCreditCard),
+        props: {
+          isVisible: true,
+          cardType: type,
+          onClose: () => {},
+          onAddSuccess: () => {
+            // Refetch and check if a new funding source was added
+            const tempFsListLength = fundingSources.value?.length || 0;
+            refetchFundingSources().then(() => {
+              if ((fundingSources.value?.length || 0) > tempFsListLength) {
+                // New fs
+                if (onAddSuccess) {
+                  onAddSuccess();
+                }
+              }
+            });
+          },
+        },
+      },
+    });
+  }
+
+  const openAutoPayOffConfirmationModal = (fundingSourceId: string) => {
+    store.dispatch("openModal", {
+      customTemplate: {
+        template: markRaw(WalletConfirmationModal),
+        props: {
+          title: "Turn off Autopay?",
+          description:
+            "AutoPay keeps your Virtual Card balance paid, and turning it off may cause you to lose rewards from your linked payment method.",
+          icon: "no-sync",
+          primaryButtonText: "Keep AutoPay On",
+          secondaryButtonText: "Turn Off AutoPay",
+          primaryButtonColor: "primary",
+          secondaryButtonColor: "outline",
+          onCancel: () => {
+            updateAutoPay(fundingSourceId, false);
+          },
+        },
+      },
+    });
+  };
+
+  const getLightningCheckAmount = async (
+    fundingSourceId: string,
+    replacementFundingSourceId?: string
+  ) => {
+    return CardsServices.getLightningCheckAmount(
+      fundingSourceId,
+      replacementFundingSourceId
+    ).then((response) => response as { lightning_check_amount: number });
+  };
+
+  /**
+   * Actions
+   */
+
+  const _delete = (fundingSourceId: string) => {
+    // Used for optimistic update in case of rollback
+    const tempFundingSources = { ...store.state.cards.fundingSources };
+
+    // Optimistically remove funding source from the list
+    store.dispatch("removeFundingSource", fundingSourceId);
+
+    return CardsServices.deleteFundingSource(fundingSourceId)
+      .then(() => {
+        CardsServices.getCardList();
+        toast.success("Funding source removed");
+        posthogCapture(
+          "dashboard_pay_wallet_add_funding_source_modal_funding_source_removed"
+        );
+      })
+      .catch(() => {
+        toast.error("Failed to remove funding source");
+        store.dispatch("fundingSourcesList", tempFundingSources);
+        posthogCapture(
+          "dashboard_pay_wallet_add_funding_source_modal_funding_source_removal_failed"
+        );
+      });
+  };
+
+  const _switchAndDelete = (
+    fundingSourceId: string,
+    replacementFundingSourceId: string
+  ) => {
+    return CardsServices.switchFundingSource(
+      fundingSourceId,
+      replacementFundingSourceId
+    )
+      .then(() => {
+        CardsServices.getCardList();
+        refetchFundingSources();
+        toast.success("Funding source switched and deleted");
+        posthogCapture(
+          "dashboard_pay_wallet_add_funding_source_modal_funding_source_switch_and_delete_success"
+        );
+      })
+      .catch((error) => {
+        toast.error(
+          error.response.data.message ||
+            error.message ||
+            "Failed to switch and delete funding source"
+        );
+        posthogCapture(
+          "dashboard_pay_wallet_add_funding_source_modal_funding_source_switch_and_delete_failed"
+        );
+      });
+  };
+
+  const updateAutoPay = (fundingSourceId: string, enabled: boolean) => {
+    // Used for optimistic update in case of rollback
+    const tempFundingSources = { ...store.state.cards.fundingSources };
+
+    // Optimistically update funding source auto pay
+    store.dispatch("switchFundingSourceAutoPay", { fundingSourceId, enabled });
+
+    return CardsServices.patchUpdateCardDetails(fundingSourceId, {
+      auto_debit: enabled,
+    })
+      .then(() => {
+        CardsServices.getCardList();
+        toast.success("Autopay turned " + (enabled ? "on" : "off"));
+        posthogCapture(
+          "dashboard_pay_wallet_funding_source_auto_pay_turned_" +
+            (enabled ? "on" : "off")
+        );
+      })
+      .catch(() => {
+        toast.error("Failed to turn " + (enabled ? "on" : "off") + " autopay");
+        store.dispatch("fundingSourcesList", tempFundingSources);
+        posthogCapture(
+          "dashboard_pay_wallet_funding_source_auto_pay_turned_" +
+            (enabled ? "on" : "off") +
+            "_failed"
+        );
+      });
+  };
+
+  const updateNickname = (fundingSourceId: string, nickname: string) => {
+    return CardsServices.patchUpdateCardDetails(fundingSourceId, {
+      nickname,
+    })
+      .then(() => {
+        toast.success("Funding source updated");
+        posthogCapture("dashboard_pay_wallet_update_funding_source_nickname");
+        return CardsServices.getFundingSources();
+      })
+      .catch((error) => {
+        toast.error(
+          error.message || "Oops! We could not process your request."
+        );
+        posthogCapture(
+          "dashboard_pay_wallet_update_funding_source_nickname_failed"
+        );
+      });
+  };
+
+  const setDefault = (fundingSourceId: string) => {
+    return CardsServices.patchUpdateCardDetails(fundingSourceId, {
+      primary: true,
+    })
+      .then(() => {
+        toast.success("This funding source is now the default one.");
+        posthogCapture(
+          "dashboard_pay_wallet_update_funding_source_set_default"
+        );
+        return CardsServices.getFundingSources();
+      })
+      .catch((error) => {
+        toast.error(error || "Oops! We could not process your request.");
+        posthogCapture(
+          "dashboard_pay_wallet_update_funding_source_set_default_failed"
+        );
+      });
+  };
+
+  return {
+    fundingSources,
+    defaultFundingSource,
+    cardFundingSourceVersion,
+    enabledFundingSourceTypes,
+    getFundingSourcesByType,
+    refetchFundingSources,
+    openListModal,
+    openAddPopup,
+    openAddModal,
+    openEditModal,
+    openDeleteModal,
+    updateNickname,
+    setDefault,
+    getProviderIcon,
+    getCardBrandImgURL,
+    openAutoPayOffConfirmationModal,
+    updateAutoPay,
+    generateCardNameBasedOnFundingSource,
+  };
+}

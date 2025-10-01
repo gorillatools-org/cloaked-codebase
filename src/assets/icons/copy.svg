@@ -1,0 +1,19 @@
+import { createElementVNode as _createElementVNode, openBlock as _openBlock, createElementBlock as _createElementBlock } from "vue"
+
+const _hoisted_1 = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "16",
+  height: "16",
+  fill: "none",
+  viewBox: "0 0 16 16"
+}
+
+export function render(_ctx, _cache) {
+  return (_openBlock(), _createElementBlock("svg", _hoisted_1, _cache[0] || (_cache[0] = [
+    _createElementVNode("path", {
+      fill: "currentColor",
+      d: "M2.56 12.268c-1.586 0-2.366-.77-2.366-2.329V2.573C.194 1.015.974.245 2.56.245h7.292c1.577 0 2.366.77 2.366 2.328v1.16h1.16c1.577 0 2.365.77 2.365 2.329v7.366c0 1.558-.788 2.328-2.366 2.328H6.085c-1.586 0-2.365-.77-2.365-2.328v-1.16zm.019-1.336h1.14v-4.87c0-1.56.78-2.33 2.366-2.33h4.797V2.648c0-.705-.38-1.066-1.048-1.066H2.579c-.668 0-1.049.361-1.049 1.066v7.218c0 .705.38 1.067 1.049 1.067m3.525 3.488h7.255c.668 0 1.048-.361 1.048-1.066V6.136c0-.705-.38-1.067-1.048-1.067H6.104c-.668 0-1.048.362-1.048 1.067v7.218c0 .705.38 1.066 1.048 1.066"
+    }, null, -1)
+  ])))
+}
+export default { render: render }
