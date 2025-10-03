@@ -357,7 +357,30 @@ export default new Vuex.Store({
       commit("setEmailTypeSetting", value);
     },
     logout({ commit, dispatch }) {
+      // Reset all modules that have logout/reset actions
       dispatch("authentication/logout");
+      dispatch("resetRightPanelStore", null, { root: true }).catch(() => {});
+      dispatch("subscription/reset", null, { root: true }).catch(() => {});
+      dispatch("resetModalStore", null, { root: true }).catch(() => {});
+      dispatch("resetCardsStore", null, { root: true }).catch(() => {});
+      dispatch("media/reset", null, { root: true }).catch(() => {});
+      dispatch("reuse/reset", null, { root: true }).catch(() => {});
+      dispatch("getStarted/reset", null, { root: true }).catch(() => {});
+      dispatch("accountsImporter/reset", null, { root: true }).catch(() => {});
+      dispatch("recentlyImported/reset", null, { root: true }).catch(() => {});
+      dispatch("browser/reset", null, { root: true }).catch(() => {});
+      dispatch("inbox/reset", null, { root: true }).catch(() => {});
+      dispatch("resetLocalDBStore", null, { root: true }).catch(() => {});
+      dispatch("settings/reset", null, { root: true }).catch(() => {});
+      dispatch("dataDelete/reset", null, { root: true }).catch(() => {});
+      dispatch("breaches/reset", null, { root: true }).catch(() => {});
+      dispatch("esim/reset", null, { root: true }).catch(() => {});
+      dispatch("resetFeaturesStore", null, { root: true }).catch(() => {});
+      dispatch("resetWaitlistStore", null, { root: true }).catch(() => {});
+      dispatch("callGuard/reset", null, { root: true }).catch(() => {});
+      dispatch("navigation/reset", null, { root: true }).catch(() => {});
+      // NOTE: do not need to reset errors store because it is not user specific
+      // Reset root state last
       commit("logout");
     },
     async init({ dispatch }) {

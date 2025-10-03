@@ -3,7 +3,6 @@ import ConcentricWave from "@/features/subscribe/ConcentricWave.vue";
 import PasswordlessCard from "@/features/subscribe/PasswordlessCard.vue";
 import BulkPlanCard from "@/features/subscribe/BulkPlanCard.vue";
 import PageCheckoutHeader from "@/features/subscribe/PageCheckoutHeader.vue";
-import { useRouter } from "vue-router";
 import BaseButton from "@/library/BaseButton.vue";
 import { SUPPORT_EMAIL } from "@/scripts/constants";
 import BaseText from "@/library/BaseText.vue";
@@ -16,10 +15,10 @@ defineProps({
   },
 });
 
-const router = useRouter();
+const emit = defineEmits(["continue"]);
 
-const onContinue = async () => {
-  await router.push({ name: "Home" });
+const onContinue = () => {
+  emit("continue");
 };
 
 const { isMobile } = useDisplay();

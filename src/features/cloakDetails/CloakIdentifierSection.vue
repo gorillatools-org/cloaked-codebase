@@ -7,6 +7,7 @@ import { emailCheck } from "@/scripts/regex";
 import moment from "moment";
 import CloakGenerateEmailFlyout from "@/features/cloakDetails/CloakGenerateEmailFlyout.vue";
 import CloakInfoRow from "@/features/cloakDetails/CloakInfoRow.vue";
+import CloakedAddressSection from "@/features/cloakDetails/CloakedAddressSection.vue";
 import { createPassword } from "@/scripts/actions/crypto.js";
 import UiTooltip from "@/features/ui/ui-tooltip.vue";
 import { phone as phone_standard } from "phone";
@@ -24,6 +25,9 @@ import { DEFAULT_PASSWORD_SETTINGS } from "@/scripts/constants.js";
 import SubscriptionService from "@/api/settings/subscription-services.js";
 import InlineSvg from "@/features/InlineSvg.vue";
 import { cloakHelpers } from "@/scripts/cloakHelpers";
+import { toValue } from "vue";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag";
+import { PH_FEATURE_FLAG_CLOAKED_ADDRESSES_ENABLED } from "@/scripts/posthogEvents.js";
 
 const toast = useToast();
 
@@ -38,6 +42,15 @@ const props = defineProps({
 const featureFlag = computed(
   () => store.state.authentication?.user?.flags.hibp_dashboard_v1
 );
+
+const {
+  featureFlag: addressFlagEnabled,
+  hasLoadedFeatureFlag: addressFlagLoaded,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_CLOAKED_ADDRESSES_ENABLED);
+
+const cloakedAddressEnabled = computed(() => {
+  return toValue(addressFlagLoaded) && toValue(addressFlagEnabled);
+});
 
 const state = reactive({
   fetching: {
@@ -658,6 +671,12 @@ watch(
       >
         <span>Your email has been breached! 🤯</span>
       </div>
+
+      <CloakedAddressSection
+        v-if="cloakedAddressEnabled"
+        :cloak="cloak"
+        :read-only="props.readOnly"
+      />
 
       <CloakInfoRow
         field="username"

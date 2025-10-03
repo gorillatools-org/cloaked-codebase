@@ -13,6 +13,8 @@ const {
   openAddModal,
   openDeleteModal,
   openEditModal,
+  openUpdateModal,
+  setDefault,
 } = useFundingSource();
 const loadingFundingSourceId = ref<string>();
 
@@ -33,6 +35,15 @@ const handleRemove = (fundingSource: FundingSource) => {
 
   loadingFundingSourceId.value = fundingSource.id;
   openDeleteModal(fundingSource.id).finally(() => {
+    loadingFundingSourceId.value = undefined;
+  });
+};
+
+const handleSetDefault = (fundingSource: FundingSource) => {
+  if (loadingFundingSourceId.value || fundingSource.primary) return;
+
+  loadingFundingSourceId.value = fundingSource.id;
+  setDefault(fundingSource.id).finally(() => {
     loadingFundingSourceId.value = undefined;
   });
 };
@@ -81,13 +92,15 @@ const handleRemove = (fundingSource: FundingSource) => {
               :show-default-badge="(fundingSources || []).length > 1"
               :show-actions="true"
               :is-select-mode="false"
+              :is-loading="fundingSource.id === loadingFundingSourceId"
               :is-disabled="
                 !!loadingFundingSourceId &&
                 fundingSource.id !== loadingFundingSourceId
               "
-              :is-selected="fundingSource.primary"
               @remove="handleRemove(fundingSource)"
-              @edit="openEditModal(fundingSource.id)"
+              @settings="openEditModal(fundingSource.id)"
+              @update="openUpdateModal(fundingSource.id)"
+              @set-default="handleSetDefault(fundingSource)"
             />
           </div>
         </TransitionGroup>

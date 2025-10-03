@@ -1,12 +1,14 @@
+const defaultState = () => ({
+  active: false,
+  cloakCreate: false,
+  cloakDetails: false,
+  cloak: null,
+  prevRoute: "/",
+  cardPanel: false,
+});
+
 export default {
-  state: {
-    active: false,
-    cloakCreate: false,
-    cloakDetails: false,
-    cloak: null,
-    prevRoute: "/",
-    cardPanel: false,
-  },
+  state: defaultState(),
 
   mutations: {
     openCardPanel: (state) => {
@@ -46,6 +48,9 @@ export default {
     },
     updateCloakDetails: (state, cloak) => {
       state.cloak = cloak;
+    },
+    resetState(state) {
+      Object.assign(state, defaultState());
     },
   },
 
@@ -96,6 +101,9 @@ export default {
       if (cloakIds.inlcudes(state.cloak.id)) {
         commit("setCloseRightPanel");
       }
+    },
+    resetRightPanelStore({ commit }) {
+      commit("resetState");
     },
   },
 };

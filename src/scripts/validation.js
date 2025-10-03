@@ -76,11 +76,6 @@ export const ssn = (value) => {
   return !!rules.exec(value);
 };
 
-export const bankCardNumber = (value) => {
-  const rules = new RegExp(/^\d{4}\s\d{4}\s\d{4}\s\d{4}$/, "i");
-  return rules.exec(value);
-};
-
 export const bankCardExpiresAt = (value) => {
   const rules = new RegExp(/^\d{2}\/\d{2}$/, "i");
   return rules.exec(value);
@@ -102,7 +97,6 @@ export const validation = {
   maxPayload,
   formatMultiplePillEntries,
   ssn,
-  bankCardNumber,
   bankCardExpiresAt,
   bankCardExpiresAtInFuture,
   FILE_SIZE_LIMIT,

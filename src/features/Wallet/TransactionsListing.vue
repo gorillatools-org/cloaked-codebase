@@ -111,7 +111,9 @@ onMounted(() => {
 watch(
   route,
   () => {
-    getTransactions();
+    if (route.name !== "VirtualCardsFundingSourceUpdate") {
+      getTransactions();
+    }
   },
   { deep: true }
 );

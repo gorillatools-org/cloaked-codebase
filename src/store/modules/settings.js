@@ -1,19 +1,24 @@
 import { humanize } from "@/scripts/timestamp_format";
 import { SUBSCRIPTION_STORES } from "@/scripts/constants";
 
+const defaultState = () => ({
+  prevRouteName: "All",
+  personalEmails: [],
+  personalPhones: [],
+  subscription: null,
+  limits: null,
+  stripe: null,
+  permissions: {},
+});
+
 export default {
   namespaced: true,
-  state: {
-    prevRouteName: "All",
-    personalEmails: [],
-    personalPhones: [],
-    subscription: null,
-    limits: null,
-    stripe: null,
-    permissions: {},
-  },
+  state: defaultState(),
 
   mutations: {
+    reset(state) {
+      Object.assign(state, defaultState());
+    },
     setPermissions: (state, permissions) => {
       state.permissions = permissions;
     },
@@ -140,6 +145,9 @@ export default {
     },
   },
   actions: {
+    reset({ commit }) {
+      commit("reset");
+    },
     savePrevRouteName({ commit }, prevRouteName) {
       commit("setPrevRouteName", prevRouteName);
     },

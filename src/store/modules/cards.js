@@ -1,29 +1,30 @@
-export default {
-  state: {
-    kycModal: false,
-    virtualCardModal: false,
-    transactionsModal: false,
-    fundingValidateModal: false,
-    generateCardModal: false,
-    kycValidated: false,
-    fundingSource: false,
-    fundingSources: [],
-    currentCard: {},
-    identityCards: "",
-    cards: [],
-    primaryFundingSource: "",
+const defaultState = () => ({
+  kycModal: false,
+  virtualCardModal: false,
+  transactionsModal: false,
+  fundingValidateModal: false,
+  generateCardModal: false,
+  kycValidated: false,
+  fundingSource: false,
+  fundingSources: [],
+  currentCard: {},
+  identityCards: "",
+  cards: [],
+  primaryFundingSource: "",
+  transaction: null,
+  cardInformation: null,
+  rightPanel: {
+    show: false,
     transaction: null,
-    cardInformation: null,
-    rightPanel: {
-      show: false,
-      transaction: null,
-      card: null,
-      settings: false,
-    },
-    cardSettings: {},
-    statements: [],
-    transactions: [],
+    card: null,
+    settings: false,
   },
+  cardSettings: {},
+  statements: [],
+  transactions: [],
+});
+export default {
+  state: defaultState(),
 
   mutations: {
     openKycModal: (state) => {
@@ -147,9 +148,15 @@ export default {
     setTransactions(state, data) {
       state.transactions = data;
     },
+    resetState(state) {
+      Object.assign(state, defaultState());
+    },
   },
 
   actions: {
+    resetCardsStore({ commit }) {
+      commit("resetState");
+    },
     openKycModal({ commit }) {
       commit("openKycModal");
       document.body.classList.add("overflow-hidden");

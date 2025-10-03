@@ -1,9 +1,11 @@
+const defaultState = () => ({
+  search: "",
+  menu: false,
+});
+
 export default {
   namespaced: true,
-  state: {
-    search: "",
-    menu: false,
-  },
+  state: defaultState(),
   mutations: {
     setSearch(state, search) {
       state.search = search;
@@ -18,6 +20,9 @@ export default {
     closeInboxMenu(state) {
       state.menu = false;
     },
+    reset(state) {
+      Object.assign(state, defaultState());
+    },
   },
   actions: {
     setSearch({ commit }, search) {
@@ -28,6 +33,9 @@ export default {
     },
     closeInboxMenu({ commit }) {
       commit("closeInboxMenu");
+    },
+    reset({ commit }) {
+      commit("reset");
     },
   },
   getters: {},

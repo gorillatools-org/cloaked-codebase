@@ -8,14 +8,15 @@ import WalletConfirmationModal from "@/features/modals/Wallet/WalletConfirmation
 import FundingSourceAddModal from "@/features/modals/Wallet/FundingSourceAddModal.vue";
 import { posthogCapture } from "@/scripts/posthog";
 import { CARD_PROVIDER_TYPE, constants } from "@/scripts/constants";
-import AddCreditCard from "@/features/modals/Wallet/AddCreditCard.vue";
+import FundingSourceCardFormModal from "@/features/modals/Wallet/FundingSourceCardFormModal.vue";
 import FundingSourceEditModal from "@/features/modals/Wallet/FundingSourceEditModal.vue";
 import FundingSourceSelectModal from "@/features/modals/Wallet/FundingSourceSelectModal.vue";
 import { formattedPrice } from "@/features/subscribe/composables/utils";
-
-export type FundingSourceType =
-  | (typeof constants.CARD_TYPE)[keyof typeof constants.CARD_TYPE]
-  | "ach";
+import moment from "moment";
+import type { CardFormSubmitPayload } from "@/features/modals/Wallet/FundingSourceCardFormModal.vue";
+import isString from "lodash-es/isString";
+import router from "@/routes/router";
+import type { FundingSourceType } from "@/types/Wallet/funding-source";
 
 export type CardProviderType =
   (typeof CARD_PROVIDER_TYPE)[keyof typeof CARD_PROVIDER_TYPE];
@@ -45,6 +46,16 @@ export default function useFundingSource() {
       debit_card: !!allowDebitAch,
       ach: !!allowDebitAch,
     };
+  });
+
+  const expiredFundingSources = computed(() => {
+    return fundingSources.value?.filter((fundingSource) => {
+      return moment(fundingSource.expires_at).isBefore(moment());
+    });
+  });
+
+  const hasExpiredFundingSources = computed(() => {
+    return (expiredFundingSources.value?.length || 0) > 0;
   });
 
   const refetchFundingSources = () => {
@@ -147,13 +158,10 @@ export default function useFundingSource() {
    * Modals
    */
 
-  const openListModal = (isSelectMode: boolean = false) => {
+  const openListModal = () => {
     store.dispatch("openModal", {
       customTemplate: {
         template: markRaw(FundingSourceListModal),
-        props: {
-          isSelectMode: isSelectMode,
-        },
       },
     });
   };
@@ -181,6 +189,26 @@ export default function useFundingSource() {
           fundingSourceId,
         },
       },
+    });
+  };
+
+  const openUpdateModal = (fundingSourceId: string) => {
+    const fundingSource = fundingSources.value?.find(
+      (fundingSource) => fundingSource.id === fundingSourceId
+    );
+
+    if (!fundingSource) {
+      return;
+    }
+
+    if (fundingSource.type === "ach") {
+      openAddPopup(fundingSource.type);
+      return;
+    }
+
+    router.push({
+      name: "VirtualCardsFundingSourceUpdate",
+      params: { fsId: fundingSourceId },
     });
   };
 
@@ -373,7 +401,7 @@ export default function useFundingSource() {
     ) {
       store.dispatch("closeModal"); // Closes the current modal
       posthogCapture("dashboard_pay_wallet_add_funding_source_viewed");
-      openAddCreditCardModal(type, onAddSuccess);
+      _openAddCardModal(type, onAddSuccess);
       return;
     }
 
@@ -397,30 +425,63 @@ export default function useFundingSource() {
       });
   };
 
-  function openAddCreditCardModal(
-    type: FundingSourceType | "ach",
+  function _openAddCardModal(
+    type: FundingSourceType,
     onAddSuccess?: () => void
   ) {
+    const modalProps = reactive({
+      cardType: type,
+      isSubmitting: false,
+      onSubmit,
+    });
+
+    function checkIfNewFundingSourceAdded() {
+      const tempFsListLength = fundingSources.value?.length || 0;
+      refetchFundingSources().then(() => {
+        if ((fundingSources.value?.length || 0) > tempFsListLength) {
+          if (onAddSuccess) {
+            onAddSuccess();
+          }
+        }
+      });
+    }
+
+    function onSubmit(payload: CardFormSubmitPayload) {
+      modalProps.isSubmitting = true;
+      CardsServices.addBankCard(payload)
+        .then(() => {
+          checkIfNewFundingSourceAdded();
+          posthogCapture("dashboard_pay_wallet_add_funding_source_success");
+          store.dispatch("closeModal");
+          toast.success("Card was added successfully");
+        })
+        .catch((error) => {
+          const errorMessage = error.response.data?.error;
+          if (
+            errorMessage &&
+            isString(errorMessage) &&
+            errorMessage.toLowerCase().includes("exists")
+          ) {
+            toast.error(
+              "This card has already been added as a funding source."
+            );
+          } else {
+            toast.error(
+              "We could not add your funding source. Please double check the card data you provided."
+            );
+          }
+
+          posthogCapture("dashboard_pay_wallet_add_funding_source_failed");
+        })
+        .finally(() => {
+          modalProps.isSubmitting = false;
+        });
+    }
+
     store.dispatch("openModal", {
       customTemplate: {
-        template: markRaw(AddCreditCard),
-        props: {
-          isVisible: true,
-          cardType: type,
-          onClose: () => {},
-          onAddSuccess: () => {
-            // Refetch and check if a new funding source was added
-            const tempFsListLength = fundingSources.value?.length || 0;
-            refetchFundingSources().then(() => {
-              if ((fundingSources.value?.length || 0) > tempFsListLength) {
-                // New fs
-                if (onAddSuccess) {
-                  onAddSuccess();
-                }
-              }
-            });
-          },
-        },
+        template: markRaw(FundingSourceCardFormModal),
+        props: modalProps,
       },
     });
   }
@@ -584,6 +645,9 @@ export default function useFundingSource() {
     defaultFundingSource,
     cardFundingSourceVersion,
     enabledFundingSourceTypes,
+    expiredFundingSources,
+    hasExpiredFundingSources,
+    getLightningCheckAmount,
     getFundingSourcesByType,
     refetchFundingSources,
     openListModal,
@@ -591,6 +655,7 @@ export default function useFundingSource() {
     openAddModal,
     openEditModal,
     openDeleteModal,
+    openUpdateModal,
     updateNickname,
     setDefault,
     getProviderIcon,

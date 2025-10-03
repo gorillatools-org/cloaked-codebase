@@ -54,6 +54,7 @@ import Forgot from "@/routes/guest/Forgot.vue";
 import Register from "@/routes/guest/Register.vue";
 import ForgotUsername from "@/routes/guest/ForgotUsername.vue";
 import ResetRecoveryKey from "@/routes/guest/ResetRecoveryKey.vue";
+import JoinTenant from "@/routes/guest/JoinTenant.vue";
 import RegisterV3 from "@/routes/guest/RegisterV3.vue";
 import ForgotPasswordV3 from "@/routes/guest/ForgotPasswordV3.vue";
 import ForgotUsernameV3 from "@/routes/guest/ForgotUsernameV3.vue";
@@ -107,9 +108,6 @@ import PageExposureStatusEnrollMonitoring from "@/routes/enrollmentV2/PageExposu
 import PageExposureStatus from "@/routes/Pages/PageExposureStatus.vue";
 import PageExposureStatusBrokers from "@/routes/Pages/PageExposureStatusBrokers.vue";
 import PageExposureStatusRelatives from "@/routes/Pages/PageExposureStatusRelatives.vue";
-
-// For You
-import PageForYou from "@/routes/Pages/PageForYou.vue";
 
 // Call Guard
 import PageCallGuard from "@/routes/Pages/PageCallGuard.vue";
@@ -373,6 +371,13 @@ const routes = [
         meta: { title: "Virtual Cards", icon: "credit-card" },
         beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
       },
+      {
+        path: "/virtual-cards/funding-source/:fsId/update",
+        name: "VirtualCardsFundingSourceUpdate",
+        component: WalletPage,
+        meta: { title: "Virtual Cards", icon: "credit-card" },
+        beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+      },
     ],
     // Allow query parameters
     props: (route) => ({ query: route.query }),
@@ -458,14 +463,28 @@ const routes = [
     beforeEnter: allowOnlyGuests,
   },
   {
+    path: "/auth/join",
+    name: "JoinTenant",
+    component: JoinTenant,
+    beforeEnter: allowOnlyGuests,
+    children: [
+      {
+        path: ":id",
+        name: "JoinTenantWithId",
+        component: JoinTenant,
+        beforeEnter: allowOnlyGuests,
+      },
+    ],
+  },
+  {
     path: "/auth/reset-recovery-key",
     name: "ResetRecoveryKey",
     component: ResetRecoveryKey,
     beforeEnter: isResetRecoveryKeyEnabled,
     children: [
       {
-        path: "/auth/reset-recovery-key/:id",
-        name: "ResetRecoveryKey",
+        path: ":id",
+        name: "ResetRecoveryKeyWithId",
         component: ResetRecoveryKey,
         beforeEnter: isResetRecoveryKeyEnabled,
       },
@@ -1146,27 +1165,6 @@ const routes = [
         component: PageExposureStatusEnrollMonitoring,
         meta: { title: "Monitoring Enrollment", hideAside: true },
         beforeEnter: allowOnlyAuthenticatedUsers,
-      },
-    ],
-  },
-
-  {
-    path: "/for-you",
-    name: "ForYou",
-    component: PageForYou,
-    meta: { title: "For You" },
-    beforeEnter: allowOnlyAuthenticatedUsers,
-    children: [
-      {
-        path: "feature/:id",
-        name: "ForYouFeature",
-        component: () => import("@/features/ForYou/ForYouFeaturePage.vue"),
-        meta: { title: "Feature Details" },
-        beforeEnter: allowOnlyAuthenticatedUsers,
-        props: (route) => ({
-          id: route.params.id,
-          key: route.params.id,
-        }),
       },
     ],
   },

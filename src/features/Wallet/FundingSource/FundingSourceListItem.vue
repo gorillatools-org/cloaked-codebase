@@ -4,13 +4,17 @@ import BaseIcon from "@/library/BaseIcon.vue";
 import type { FundingSource } from "@/types/Wallet/funding-source";
 import { computed, type PropType } from "vue";
 import { CARD_LABEL_BY_PROVIDER_TYPE } from "@/scripts/constants";
-import Button from "@/features/Button.vue";
 import useFundingSource from "@/composables/Wallet/useFundingSource";
+import VCBaseDropdownMenu, {
+  type DropdownMenuItem,
+} from "@/features/VirtualCards/base/VCBaseDropdownMenu.vue";
 
 const emit = defineEmits<{
   (e: "select"): void;
+  (e: "set-default"): void;
   (e: "remove"): void;
-  (e: "edit"): void;
+  (e: "settings"): void;
+  (e: "update"): void;
 }>();
 
 const props = defineProps({
@@ -22,7 +26,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  isSelectLoading: {
+  isLoading: {
     type: Boolean,
     default: false,
   },
@@ -44,10 +48,50 @@ const props = defineProps({
   },
 });
 
-const { getProviderIcon, getCardBrandImgURL } = useFundingSource();
+const { getProviderIcon, getCardBrandImgURL, expiredFundingSources } =
+  useFundingSource();
+
+const actionsList = computed<DropdownMenuItem[][]>(() => {
+  return [
+    [
+      {
+        id: "update",
+        label: "Update",
+        icon: isExpired.value ? "info" : "edit",
+        color: isExpired.value ? "danger" : undefined,
+        onClick: () => emit("update"),
+      },
+      {
+        id: "set-default",
+        label: "Mark as default",
+        icon: "tick-circle",
+        visible: !props.isSelected && !isExpired.value,
+        onClick: () => emit("set-default"),
+      },
+      {
+        id: "remove",
+        label: "Remove",
+        icon: "remove",
+        onClick: () => emit("remove"),
+      },
+      {
+        id: "settings",
+        label: "Settings",
+        icon: "setting",
+        onClick: () => emit("settings"),
+      },
+    ],
+  ];
+});
 
 const isDefaultFundingSource = computed(() => {
   return props.fundingSource.primary;
+});
+
+const isExpired = computed(() => {
+  return !!expiredFundingSources.value?.find(
+    (fundingSource) => fundingSource.id === props.fundingSource.id
+  );
 });
 
 const brandImgURL = computed(() => {
@@ -74,7 +118,7 @@ const fallbackIconName = computed(() => {
 const handleSelect = () => {
   if (
     props.isDisabled ||
-    props.isSelectLoading ||
+    props.isLoading ||
     props.isSelected ||
     !props.isSelectMode
   )
@@ -87,25 +131,31 @@ const handleSelect = () => {
     class="fs-list-item"
     :class="{
       'fs-list-item--select-mode': isSelectMode,
-      'fs-list-item--loading': isSelectLoading,
+      'fs-list-item--loading': isLoading,
       'fs-list-item--disabled': isDisabled,
       'fs-list-item--selected': isSelected,
+      'fs-list-item--expired': isExpired,
     }"
     @click="handleSelect"
   >
+    <!--Loading-->
     <div
-      v-if="isSelectMode"
+      v-if="isLoading"
+      class="fs-list-item__loader-container"
+    >
+      <span class="fs-list-item__loader"></span>
+    </div>
+
+    <!--Select mode-->
+    <div
+      v-if="isSelectMode && !isLoading"
       class="fs-list-item__selection-container"
     >
       <BaseIcon
-        v-if="!isSelectLoading"
+        v-if="!isLoading"
         :name="isSelected ? 'circle-radio-filled' : 'circle-radio'"
         class="fs-list-item__selection-icon"
       />
-      <span
-        v-else
-        class="fs-list-item__selection-loader"
-      ></span>
     </div>
     <div class="fs-list-item__brand-container">
       <img
@@ -179,22 +229,28 @@ const handleSelect = () => {
       v-if="showActions"
       class="fs-list-item__actions-container"
     >
-      <Button
-        type="tag"
-        size="small"
-        class="fs-list-item__actions-edit-button"
-        @click.stop="emit('edit')"
+      <VCBaseDropdownMenu
+        :popper="{
+          placement: 'bottom-start',
+          zIndex: 10001,
+          offsetAway: 5,
+          width: '150px',
+        }"
+        :items="actionsList"
+        @click.stop
       >
-        Edit
-      </Button>
-      <Button
-        type="danger-secondary"
-        class="fs-list-item__actions-remove-button"
-        size="small"
-        @click.stop="emit('remove')"
-      >
-        Remove
-      </Button>
+        <template #default="{ open }">
+          <span
+            class="fs-list-item__actions-toggle"
+            :class="{ 'fs-list-item__actions-toggle--open': open }"
+          >
+            <BaseIcon
+              name="more-filled"
+              class="fs-list-item__actions-toggle-icon"
+            />
+          </span>
+        </template>
+      </VCBaseDropdownMenu>
     </div>
   </div>
 </template>
@@ -210,6 +266,7 @@ $component-name: "fs-list-item";
   border-radius: 24px;
   border: 1px solid var(--color-base-black-15);
   box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.05);
+  position: relative;
   transition:
     opacity 0.15s ease-in-out,
     background-color 0.15s ease-in-out,
@@ -231,25 +288,26 @@ $component-name: "fs-list-item";
     pointer-events: none;
   }
 
-  &__selection {
-    &-container {
-      min-width: 18px;
-      margin-right: 10px;
-    }
+  &__selection-container,
+  &__loader-container {
+    min-width: 18px;
+    margin-right: 10px;
+  }
 
+  &__selection {
     &-icon {
       font-size: 18px;
     }
+  }
 
-    &-loader {
-      display: block;
-      width: 17px;
-      height: 17px;
-      border-radius: 50%;
-      background: linear-gradient(currentcolor 40%, transparent 70%);
-      mask: radial-gradient(closest-side, transparent 70%, black 70%);
-      animation: loading 0.5s linear infinite;
-    }
+  &__loader {
+    display: block;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: linear-gradient(currentcolor 40%, transparent 70%);
+    mask: radial-gradient(closest-side, transparent 70%, black 70%);
+    animation: loading 0.5s linear infinite;
   }
 
   &__brand {
@@ -334,40 +392,55 @@ $component-name: "fs-list-item";
       justify-content: flex-end;
       margin-left: 10px;
       gap: 4px;
+    }
 
-      .button {
-        opacity: 0;
-        visibility: hidden;
-        transform: translateX(10px);
-        transition:
-          opacity 0.15s ease-in-out,
-          visibility 0.15s ease-in-out,
-          transform 0.15s ease-in-out;
+    &-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      cursor: pointer;
+      background-color: transparent;
+      border-radius: 50%;
+      position: relative;
+      transition:
+        background-color 0.15s ease-in-out,
+        opacity 0.15s ease-in-out;
 
-        .#{$component-name}:hover & {
-          opacity: 1;
-          visibility: visible;
-          transform: translateX(0);
+      .#{$component-name}--loading & {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .#{$component-name}--expired & {
+        &:before {
+          content: "";
+          min-width: 8px;
+          min-height: 8px;
+          border-radius: 50%;
+          background-color: $color-status-error;
+          position: absolute;
+          right: -1px;
+          top: -1px;
         }
       }
-    }
 
-    &-edit-button {
-      font-weight: 600;
+      &:hover,
+      &--open {
+        @at-root .theme-dark & {
+          background-color: rgba($color-primary-100-dark, 0.1);
+        }
 
-      @at-root .theme-dark & {
-        border-color: rgba($color-primary-100-dark, 0.15);
+        @at-root .theme-light & {
+          background-color: rgba($color-primary-100-light, 0.1);
+        }
       }
 
-      @at-root .theme-light & {
-        border-color: rgba($color-primary-100-light, 0.15);
+      &-icon {
+        font-size: 15px;
       }
-    }
-
-    &-remove-button {
-      background: transparent;
-      border-color: rgba($color-status-error, 0.15) !important;
-      font-weight: 600;
     }
   }
 }

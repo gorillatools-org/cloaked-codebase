@@ -9,7 +9,6 @@ export const createNavigationItems = ({
   allUnread,
   unreadCount,
   hasExposureStatus,
-  hasForYou,
 }) => [
   {
     title: "",
@@ -37,12 +36,6 @@ export const createNavigationItems = ({
         icon: "wallet",
         text: "Virtual Cards",
         active: payEnabled,
-      },
-      {
-        url: "/for-you",
-        icon: "search",
-        text: "For You",
-        active: hasForYou && basicModeEnabled,
       },
     ],
     active: basicModeEnabled,

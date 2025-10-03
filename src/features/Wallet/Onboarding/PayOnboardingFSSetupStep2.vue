@@ -7,7 +7,7 @@ import BaseIcon from "@/library/BaseIcon.vue";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import type { BaseIconName } from "@/library/baseIconTypes";
 import { constants } from "@/scripts/constants";
-import type { FundingSourceType } from "@/composables/Wallet/useFundingSource";
+import type { FundingSourceType } from "@/types/Wallet/funding-source";
 import { posthogCapture } from "@/scripts/posthog";
 
 const emit = defineEmits<{

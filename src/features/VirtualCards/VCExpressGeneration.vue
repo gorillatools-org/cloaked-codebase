@@ -16,7 +16,10 @@ import store from "@/store";
 
 const emit = defineEmits<{
   (e: "newCardIssued", cardId: string): void;
-  (e: "showAdvancedModal"): void;
+  (
+    e: "showAdvancedModal",
+    payload: { period: "monthly" | "one-time"; amount?: number }
+  ): void;
 }>();
 
 const {
@@ -107,7 +110,10 @@ const clearErrors = () => {
 
 const handleMoreOptionsClick = () => {
   clearErrors();
-  emit("showAdvancedModal");
+  emit("showAdvancedModal", {
+    period: tab.value,
+    amount: amount.value ? amount.value * 100 : undefined,
+  });
 };
 
 watch(

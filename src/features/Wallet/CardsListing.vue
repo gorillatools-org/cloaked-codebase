@@ -219,7 +219,7 @@ defineExpose({
         v-if="isExpressCardGenerationEnabled"
         ref="expressGenerationRef"
         @new-card-issued="emit('newCardIssued', $event)"
-        @show-advanced-modal="emit('addCard')"
+        @show-advanced-modal="emit('addCard', $event)"
       />
 
       <div

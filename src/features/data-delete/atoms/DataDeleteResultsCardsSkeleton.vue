@@ -124,7 +124,7 @@ defineProps({
   }
 
   &__card {
-    border-radius: 16px;
+    border-radius: 30px;
     padding: 20px;
     display: grid;
     row-gap: 12px;

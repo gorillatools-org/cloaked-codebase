@@ -80,7 +80,7 @@ const isAutoPayEnabled = computed(() => {
 
 const autoPayDescription = computed(() => {
   return canToggleAutoPay.value
-    ? "Automatically funds transactions on your card."
+    ? "Automatically funds transactions for your Virtual Cards."
     : "Cannot be disabled for credit-based funding sources.";
 });
 
@@ -129,22 +129,15 @@ const handleAutoPayToggle = () => {
           variant="headline-3-bold"
           class="fs-edit-modal__header-title"
         >
-          Edit
+          Settings
         </BaseText>
       </header>
       <div class="fs-edit-modal__body">
         <div class="fs-edit-modal__input-container">
-          <BaseText
-            as="p"
-            variant="body-small-medium"
-            class="fs-edit-modal__input-label"
-          >
-            Nickname
-          </BaseText>
           <input
             v-model="nickname"
             class="fs-edit-modal__input"
-            placeholder="My custom nickname"
+            placeholder="Add nickname"
           />
           <div class="fs-edit-modal__input-card-container">
             <BaseText
@@ -242,6 +235,20 @@ $component-name: "fs-edit-modal";
     gap: 24px;
   }
 
+  &__alert {
+    margin-top: 16px;
+
+    &-actions {
+      display: flex;
+      justify-content: flex-end;
+      padding-left: 12px;
+
+      button {
+        width: 75px;
+      }
+    }
+  }
+
   &__input {
     padding: 20px 16px;
     height: 80px;
@@ -260,10 +267,6 @@ $component-name: "fs-edit-modal";
       outline: 1px solid $color-primary-100;
     }
 
-    &-label {
-      color: $color-primary-90;
-    }
-
     &-container {
       margin-top: 24px;
       position: relative;
@@ -274,7 +277,7 @@ $component-name: "fs-edit-modal";
         position: absolute;
         right: 16px;
         top: 50%;
-        transform: translateY(calc(-50% + 12px));
+        transform: translateY(calc(-50% + 3px));
         display: flex;
         align-items: center;
         gap: 8px;
@@ -358,10 +361,6 @@ $component-name: "fs-edit-modal";
       justify-content: center;
       gap: 8px;
       cursor: pointer;
-    }
-
-    &-btn-default {
-      background-color: transparent;
     }
 
     &-btn-save {

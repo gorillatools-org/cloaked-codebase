@@ -189,6 +189,10 @@ export default {
       state.dbLoaded = status;
       state.cloakCount = cloakCount;
     },
+    resetState(state) {
+      state.dbLoaded = false;
+      state.cloakCount = 0;
+    },
   },
 
   getters: {
@@ -201,6 +205,10 @@ export default {
   },
 
   actions: {
+    resetLocalDBStore({ commit }) {
+      commit("resetState");
+      cleanDb();
+    },
     setLoaded({ commit }, value) {
       commit("setLoaded", value);
     },

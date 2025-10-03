@@ -2,17 +2,22 @@ import moment from "moment";
 
 let media;
 
+const defaultState = () => ({
+  playing: null,
+  progress: 0,
+  length: 0,
+  key: null,
+  register: {},
+});
+
 export default {
   namespaced: true,
-  state: {
-    playing: null,
-    progress: 0,
-    length: 0,
-    key: null,
-    register: {},
-  },
+  state: defaultState(),
 
   mutations: {
+    reset(state) {
+      Object.assign(state, defaultState());
+    },
     setPlaying(state, { playing, type }) {
       state.playing = playing;
       state.type = type;
@@ -32,6 +37,9 @@ export default {
   },
   getters: {},
   actions: {
+    reset({ commit }) {
+      commit("reset");
+    },
     register({ commit, state }, { recording, id }) {
       const update = Array.isArray(state.register[recording.id])
         ? [...state.register[recording.id], id]

@@ -3,13 +3,6 @@ import store from "@/store";
 import { PH_FEATURE_FLAG_AUTO_CLOAKING } from "@/scripts/posthogEvents";
 
 export const useFeatures = () => {
-  const hasForYou = computed(() => {
-    return (
-      import.meta.env.VITE_APP_ENV !== "production" &&
-      store.state.authentication?.user?.flags?.feature_discover_tab
-    );
-  });
-
   const hasExposureStatus = computed(() => {
     return store.state.authentication?.user?.flags?.feature_exposure_status;
   });
@@ -41,7 +34,6 @@ export const useFeatures = () => {
   });
 
   return {
-    hasForYou,
     hasDataDeleteScan,
     hasIdentityMonitoring,
     hasPayEnabled,

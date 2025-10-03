@@ -4,53 +4,58 @@ import {
 } from "@/scripts/posthogEvents";
 import { getPosthog } from "@/scripts/posthog";
 
+const defaultState = () => ({
+  removalLogData: {
+    brokerList: [],
+    brokersInProgress: 0,
+    totalBrokers: 0,
+    isComplete: false,
+    removalDate: new Date(),
+    brokersCompleted: 0,
+    removalLogFetched: false,
+  },
+  removalLogDataPastScan: {
+    brokerList: [],
+    brokersInProgress: 0,
+    totalBrokers: 0,
+    isComplete: false,
+    removalDate: new Date(),
+    brokersCompleted: 0,
+    removalLogFetched: false,
+  },
+  enrollmentData: {
+    enrollmentDataFetched: false,
+    brokersCompleted: 0,
+    brokersInProgress: 0,
+    scanUpdatedDate: new Date(),
+    isComplete: false,
+    scanningSites: 0,
+    totalRecordsRemoved: 0,
+    daysProtected: 0,
+    pastScans: [],
+    latestScan: null,
+  },
+  actionRequiredFamilies: [],
+  graphData: null,
+  enrollmentProfile: null,
+
+  // posthog feature flags
+  ddInAppSearchEnabled: false,
+  ddScheduleCallEnabled: false,
+
+  // cloaked basic mode summary
+  basicModeSummary: null,
+  recentlyEnrolled: false,
+});
+
 export default {
   namespaced: true,
-  state: {
-    removalLogData: {
-      brokerList: [],
-      brokersInProgress: 0,
-      totalBrokers: 0,
-      isComplete: false,
-      removalDate: new Date(),
-      brokersCompleted: 0,
-      removalLogFetched: false,
-    },
-    removalLogDataPastScan: {
-      brokerList: [],
-      brokersInProgress: 0,
-      totalBrokers: 0,
-      isComplete: false,
-      removalDate: new Date(),
-      brokersCompleted: 0,
-      removalLogFetched: false,
-    },
-    enrollmentData: {
-      enrollmentDataFetched: false,
-      brokersCompleted: 0,
-      brokersInProgress: 0,
-      scanUpdatedDate: new Date(),
-      isComplete: false,
-      scanningSites: 0,
-      totalRecordsRemoved: 0,
-      daysProtected: 0,
-      pastScans: [],
-      latestScan: null,
-    },
-    actionRequiredFamilies: [],
-    graphData: null,
-    enrollmentProfile: null,
-
-    // posthog feature flags
-    ddInAppSearchEnabled: false,
-    ddScheduleCallEnabled: false,
-
-    // cloaked basic mode summary
-    basicModeSummary: null,
-    recentlyEnrolled: false,
-  },
+  state: defaultState(),
 
   mutations: {
+    reset(state) {
+      Object.assign(state, defaultState());
+    },
     setRecentlyEnrolled(state, recentlyEnrolled) {
       state.recentlyEnrolled = recentlyEnrolled;
     },
@@ -159,6 +164,9 @@ export default {
     hasMonitoringEnrollment: (state) => !!state.enrollmentProfile?.dob,
   },
   actions: {
+    reset({ commit }) {
+      commit("reset");
+    },
     setRecentlyEnrolled({ commit }, recentlyEnrolled) {
       commit("setRecentlyEnrolled", recentlyEnrolled);
     },

@@ -19,6 +19,16 @@ const props = defineProps({
     type: Number,
     default: null,
   },
+  initialPeriod: {
+    type: String,
+    required: false,
+    default: undefined,
+  },
+  initialAmount: {
+    type: Number,
+    required: false,
+    default: undefined,
+  },
 });
 
 onMounted(() => {
@@ -77,7 +87,9 @@ const periodOptions = [
 
 const selectedMerchant = ref("");
 
-const activePeriod = ref(cardSettings?.value?.period || null);
+const activePeriod = ref(
+  props.initialPeriod || cardSettings?.value?.period || "monthly"
+);
 const maxTransactions = ref(
   periodOptions.find((option) => option.value === activePeriod.value)
     ?.maxTransactions || 100
@@ -131,7 +143,9 @@ function selectSource(source) {
 }
 
 const dollars = ref(
-  convertToDollarFormatted(cardSettings?.value?.spending_limit) || ""
+  convertToDollarFormatted(
+    props.initialAmount || cardSettings?.value?.spending_limit
+  ) || ""
 );
 
 const isAmountValid = ref(true);
@@ -171,7 +185,7 @@ function validateMaxTransactions(value) {
 }
 
 const form = ref({
-  amount: cardSettings?.value?.spending_limit || 0,
+  amount: props.initialAmount || cardSettings?.value?.spending_limit || 0,
   period: activePeriod.value || "daily",
   source: selectedSource?.value,
 });

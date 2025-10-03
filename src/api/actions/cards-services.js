@@ -343,4 +343,31 @@ export default class CardsServices {
         throw error;
       });
   }
+
+  /**
+   * Update funding source information.
+   *
+   * @param {{
+   *   funding_source_id: string,
+   *   card: {
+   *     expires_at: string,
+   *     name: string,
+   *     pan: string,
+   *     security_code: string
+   *   },
+   *   channel: string
+   * }} payload
+   * @returns {Promise<void>}
+   */
+  static async updateFundingSource(payload) {
+    return api()
+      .post(`/api/v1/card/createswitch/`, payload)
+      .then((response) => {
+        return response;
+      })
+      .catch((error) => {
+        console.error("updateFundingSource failed:", error);
+        throw error;
+      });
+  }
 }

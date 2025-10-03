@@ -19,7 +19,6 @@ import {
 import { useNavigationStore } from "@/pinia/navigation";
 
 const {
-  hasForYou,
   hasDataDeleteScan,
   hasIdentityMonitoring,
   hasPayEnabled,
@@ -121,7 +120,6 @@ const navigationItems = computed(() =>
     allUnread: allUnread.value,
     unreadCount: unreadCount.value,
     hasExposureStatus: !!hasExposureStatus.value,
-    hasForYou: !!hasForYou.value,
   })
 );
 

@@ -1,6 +1,5 @@
 <script setup>
 import { createPopper as initializePopper } from "@popperjs/core";
-
 import { vOnClickOutside } from "@vueuse/components";
 import {
   ref,
@@ -104,6 +103,11 @@ const props = defineProps({
   hasEventOffset: {
     type: Boolean,
     default: false,
+  },
+  overflow: {
+    type: String,
+    required: false,
+    default: undefined,
   },
 });
 
@@ -238,7 +242,11 @@ const onMouseEnter = (event) => props.hasMouseEnterOpen && open(event);
 
 const onMouseLeave = () => props.hasMouseLeaveClose && close();
 
-const onOutsideClick = () => props.hasOutsideClickClose && close();
+const onOutsideClick = () => {
+  if (props.hasOutsideClickClose) {
+    close();
+  }
+};
 
 const onContentClick = () => props.hasContentClickClose && close();
 
@@ -285,7 +293,7 @@ onUpdated(() => {
             width,
             height,
             maxHeight,
-            overflow: maxHeight !== 'unset' ? 'scroll' : 'auto',
+            overflow: overflow || (maxHeight !== 'unset' ? 'scroll' : 'auto'),
           }"
         >
           <slot name="content" />

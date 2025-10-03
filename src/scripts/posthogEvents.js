@@ -156,8 +156,10 @@ export const PH_EVENT_EMAIL_BREACH_SEARCH_STARTED =
   "email_breach_search_started";
 export const PH_EVENT_EMAIL_BREACH_RESULTS_VIEWED =
   "email_breach_results_viewed";
-export const PH_EVENT_EMAIL_BREACH_PASSWORD_REVEALED =
-  "email_breach_password_revealed";
+export const PH_EVENT_EMAIL_BREACH_IDENTITY_REVEALED =
+  "email_breach_identity_revealed";
+export const PH_EVENT_EMAIL_BREACH_IDENTITY_MASKED =
+  "email_breach_identity_masked";
 
 // New onboarding screen events
 export const PH_SCREEN_EVENT_ONBOARDING_INTRO_FIRST_SCREEN =
@@ -286,3 +288,6 @@ export const PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1 =
 // Cloaked Pay Enable Subscription
 export const PH_FEATURE_FLAG_CLOAKED_PAY_ENABLE_SUBSCRIPTION =
   "cloaked_pay_enable_subscription";
+
+export const PH_FEATURE_FLAG_CLOAKED_ADDRESSES_ENABLED =
+  "cloaked_addresses_enabled";

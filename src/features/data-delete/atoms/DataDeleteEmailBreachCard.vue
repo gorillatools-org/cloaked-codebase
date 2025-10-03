@@ -14,10 +14,10 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["breach-revealed"]);
+const emit = defineEmits(["breach-revealed", "breach-masked"]);
 
 const isOpen = ref(false);
-const isRevealed = ref(false);
+const isRevealed = ref(true);
 
 const toggleOpen = () => {
   isOpen.value = !isOpen.value;
@@ -29,6 +29,8 @@ const toggleReveal = () => {
 
   if (!wasRevealed && isRevealed.value) {
     emit("breach-revealed");
+  } else {
+    emit("breach-masked");
   }
 };
 
@@ -60,13 +62,23 @@ const formatDate = (date) => {
     <div class="breach-card">
       <div class="breach-card__header">
         <div class="breach-card__icon">
+          <BaseIcon
+            v-if="!breach.logo_url"
+            name="shield-lock-filled"
+            class="breach-card__icon-svg"
+          />
           <img
+            v-else
             :src="breach.logo_url"
+            alt="breach logo"
             class="breach-card__icon"
           />
         </div>
         <div class="breach-card__info">
-          <BaseText variant="headline-4-bold">
+          <BaseText
+            variant="headline-4-bold"
+            class="breach-card__info-title"
+          >
             {{
               breach.breached_companies
                 ?.map((c) => c.company_name)
@@ -79,12 +91,9 @@ const formatDate = (date) => {
             variant="body-3-regular"
             class="breach-date"
           >
-            <BaseIcon
-              name="calendar"
-              class="breach-card__row__icon"
-            />
+            <BaseIcon name="calendar" />
             {{ isMobile ? "" : "Breach Date:" }}
-            {{ formatDate(breach.breach_date) }}
+            <strong>{{ formatDate(breach.breach_date) }}</strong>
           </BaseText>
         </div>
       </div>
@@ -106,7 +115,7 @@ const formatDate = (date) => {
             class="breach-card__row__reveal"
             @click="toggleReveal"
           >
-            <BaseIcon :name="isRevealed ? 'eye-hidden-filled' : 'eye-filled'" />
+            <BaseIcon :name="isRevealed ? 'eye-visible' : 'eye-hidden'" />
           </button>
         </div>
 
@@ -126,7 +135,7 @@ const formatDate = (date) => {
             class="breach-card__row__reveal"
             @click="toggleReveal"
           >
-            <BaseIcon :name="isRevealed ? 'eye-hidden-filled' : 'eye-filled'" />
+            <BaseIcon :name="isRevealed ? 'eye-visible' : 'eye-hidden'" />
           </button>
         </div>
 
@@ -146,7 +155,7 @@ const formatDate = (date) => {
             class="breach-card__row__reveal"
             @click="toggleReveal"
           >
-            <BaseIcon :name="isRevealed ? 'eye-hidden-filled' : 'eye-filled'" />
+            <BaseIcon :name="isRevealed ? 'eye-visible' : 'eye-hidden'" />
           </button>
         </div>
       </div>
@@ -157,20 +166,20 @@ const formatDate = (date) => {
       >
         <BaseText
           variant="headline-6-bold"
-          class="breach-card__description__title"
+          class="breach-card__description-title"
         >
           Description:
         </BaseText>
         <BaseText
           variant="body-3-regular"
-          class="breach-card__description__text"
+          class="breach-card__description-text"
         >
           {{ breach?.description }}
         </BaseText>
         <div class="breach-card__details">
           <BaseText
             variant="headline-6-bold"
-            class="breach-card__details__title"
+            class="breach-card__details-title"
           >
             Info Discovered:
           </BaseText>
@@ -233,8 +242,8 @@ const formatDate = (date) => {
   }
 
   &__icon {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     color: $color-primary-5;
     display: flex;
@@ -242,6 +251,18 @@ const formatDate = (date) => {
     justify-content: center;
     flex-shrink: 0;
     object-fit: contain;
+    overflow: hidden;
+
+    &-svg {
+      width: 100%;
+      height: 100%;
+      color: $color-primary-5;
+      background-color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
   }
 
   &__chevron-icon {
@@ -256,12 +277,16 @@ const formatDate = (date) => {
 
   &__info {
     flex: 1;
+
+    &-title {
+      font-size: 18px;
+    }
   }
 
   &__details {
     padding: 16px 16px 16px 0;
 
-    &__title {
+    &-title {
       font-size: 15px;
     }
   }
@@ -319,11 +344,25 @@ const formatDate = (date) => {
       border: none;
       cursor: pointer;
       color: $color-primary-100;
+      width: 24px;
+      height: 24px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background-color 0.3s ease;
+
+      @media all and (min-width: $screen-sm) {
+        &:hover {
+          background-color: $color-base-black-10-dark;
+        }
+      }
     }
 
     &__icon-svg {
-      width: 18px;
-      height: 18px;
+      width: 19px;
+      height: 19px;
     }
   }
 
@@ -331,13 +370,13 @@ const formatDate = (date) => {
     margin-top: 12px;
   }
 
-  &__description__title {
+  &__description-title {
     margin-bottom: 8px;
     display: block;
     font-size: 15px;
   }
 
-  &__description__text {
+  &__description-text {
     font-size: 13px;
     font-weight: 500;
     color: $color-primary-100;
@@ -394,7 +433,7 @@ const formatDate = (date) => {
   display: flex;
   text-align: center;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .see-details-btn {

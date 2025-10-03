@@ -1,12 +1,14 @@
 import ImporterService from "@/api/actions/importer-service";
 
+const defaultState = () => ({
+  recentlyImported: [],
+  nextPage: null,
+  startTime: null,
+});
+
 export default {
   namespaced: true,
-  state: {
-    recentlyImported: [],
-    nextPage: null,
-    startTime: null,
-  },
+  state: defaultState(),
   mutations: {
     setRecentlyImported(state, payload) {
       state.recentlyImported = payload;
@@ -17,8 +19,14 @@ export default {
     setImportStartTime(state, timestamp) {
       state.startTime = timestamp;
     },
+    reset(state) {
+      Object.assign(state, defaultState());
+    },
   },
   actions: {
+    reset({ commit }) {
+      commit("reset");
+    },
     async fetch({ state, commit, dispatch }, freshFetch) {
       freshFetch &&
         commit(

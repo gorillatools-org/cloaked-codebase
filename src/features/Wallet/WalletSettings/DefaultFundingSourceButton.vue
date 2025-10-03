@@ -35,12 +35,12 @@ const openDefaultFundingSources = () => {
   if ((fundingSources.value?.length ?? 0) === 0) {
     openAddModal(() => {
       // UX: open list modal after confirmation of a new funding source
-      openListModal(true);
+      openListModal();
     });
     return;
   }
 
-  openListModal(true);
+  openListModal();
 };
 </script>
 

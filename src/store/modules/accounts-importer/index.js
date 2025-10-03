@@ -193,22 +193,27 @@ const INITIAL_SELECTED_IDENTITIES = [];
 const INITIAL_IDENTITIES_PREPARED = false;
 const INITIAL_IMPORT_STATUS = null;
 
+const defaultState = () => ({
+  isParsing: INITIAL_IS_PARSING,
+  parsingError: INITIAL_PARSING_ERROR,
+  importFile: INITIAL_IMPORT_FILE,
+  importedColumns: INITIAL_IMPORTED_COLUMNS,
+  importedFields: INITIAL_IMPORTED_FIELDS,
+  importedRecords: INITIAL_IMPORTED_RECORDS,
+  identityFields: INITIAL_IDENTITY_FIELDS,
+  identityRecords: INITIAL_IDENTITY_RECORDS,
+  selectedIdentities: INITIAL_SELECTED_IDENTITIES,
+  identitiesPrepared: INITIAL_IDENTITIES_PREPARED,
+  importStatus: INITIAL_IMPORT_STATUS,
+});
+
 export default {
   namespaced: true,
-  state: {
-    isParsing: INITIAL_IS_PARSING,
-    parsingError: INITIAL_PARSING_ERROR,
-    importFile: INITIAL_IMPORT_FILE,
-    importedColumns: INITIAL_IMPORTED_COLUMNS,
-    importedFields: INITIAL_IMPORTED_FIELDS,
-    importedRecords: INITIAL_IMPORTED_RECORDS,
-    identityFields: INITIAL_IDENTITY_FIELDS,
-    identityRecords: INITIAL_IDENTITY_RECORDS,
-    selectedIdentities: INITIAL_SELECTED_IDENTITIES,
-    identitiesPrepared: INITIAL_IDENTITIES_PREPARED,
-    importStatus: INITIAL_IMPORT_STATUS,
-  },
+  state: defaultState(),
   mutations: {
+    reset(state) {
+      Object.assign(state, defaultState());
+    },
     setIsParsing: (state, payload) => {
       state.isParsing = payload;
     },
@@ -244,6 +249,9 @@ export default {
     },
   },
   actions: {
+    reset({ commit }) {
+      commit("reset");
+    },
     remove: ({ commit }) => {
       commit("setIsParsing", INITIAL_IS_PARSING);
       commit("setParsingError", INITIAL_PARSING_ERROR);

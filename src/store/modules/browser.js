@@ -1,10 +1,12 @@
+const defaultState = () => ({
+  pluginDetected: false,
+  operatorDashboardLink: null,
+  autoPasswordChangeUrl: null,
+});
+
 export default {
   namespaced: true,
-  state: {
-    pluginDetected: false,
-    operatorDashboardLink: null,
-    autoPasswordChangeUrl: null,
-  },
+  state: defaultState(),
 
   mutations: {
     setPluginDetected(state, status) {
@@ -16,6 +18,9 @@ export default {
     setAutoPasswordChangeUrl(state, url) {
       state.autoPasswordChangeUrl = url;
     },
+    reset(state) {
+      Object.assign(state, defaultState());
+    },
   },
   getters: {
     pluginDetected: (state) => state.pluginDetected,
@@ -23,6 +28,9 @@ export default {
     autoPasswordChangeUrl: (state) => state.autoPasswordChangeUrl,
   },
   actions: {
+    reset({ commit }) {
+      commit("reset");
+    },
     savePluginDetected({ commit }, remove) {
       commit("setPluginDetected", !remove);
     },

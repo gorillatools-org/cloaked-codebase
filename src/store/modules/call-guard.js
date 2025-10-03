@@ -1,23 +1,28 @@
 import CallGuardService from "@/api/actions/call-guard-service";
 import PhoneService from "@/api/actions/phone-service";
 
+const defaultState = () => ({
+  calls: [],
+  setupStatus: null,
+  loading: {
+    calls: false,
+    setup: false,
+  },
+  error: {
+    message: null,
+    code: null,
+    details: null,
+    timestamp: null,
+  },
+});
+
 export default {
   namespaced: true,
-  state: {
-    calls: [],
-    setupStatus: null,
-    loading: {
-      calls: false,
-      setup: false,
-    },
-    error: {
-      message: null,
-      code: null,
-      details: null,
-      timestamp: null,
-    },
-  },
+  state: defaultState(),
   mutations: {
+    reset(state) {
+      Object.assign(state, defaultState());
+    },
     setCalls(state, calls) {
       state.calls = calls;
     },
@@ -86,6 +91,9 @@ export default {
       } finally {
         commit("setLoading", { key: "setup", value: false });
       }
+    },
+    reset({ commit }) {
+      commit("reset");
     },
   },
   getters: {

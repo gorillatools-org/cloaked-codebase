@@ -22,7 +22,7 @@ const hasPassword = computed(() => {
   return !!props.account.password;
 });
 
-const onSuccessRecoveryContinue = async () => {
+const onPageCheckoutSuccessContinue = async () => {
   // Check if user subscribed to a Cloaked Pay plan using store's collected plans
   const subscription = store.getters["settings/getSubscription"];
 
@@ -58,10 +58,11 @@ onMounted(() => posthogCapture("user_signed_up"));
   <PageCheckoutSuccessRecovery
     v-else-if="hasPassword"
     :account="account"
-    @continue="onSuccessRecoveryContinue"
+    @continue="onPageCheckoutSuccessContinue"
   />
   <PageCheckoutSuccessPasswordless
     v-else
     :account="account"
+    @continue="onPageCheckoutSuccessContinue"
   />
 </template>

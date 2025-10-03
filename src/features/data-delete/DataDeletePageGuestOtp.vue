@@ -77,6 +77,7 @@ const { formattedPhoneNumber, formattedUserName } =
 const initialStep = route.query?.email
   ? FUNNEL_STEP.EMAIL_RESULTS
   : FUNNEL_STEP.OTP;
+
 const { step, setStep } = useFunnel(initialStep);
 
 const hasSearchError = ref(false);

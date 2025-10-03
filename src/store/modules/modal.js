@@ -1,10 +1,12 @@
 let modalId = 1;
 
+const defaultState = () => ({
+  visibleModals: {},
+  modals: [],
+});
+
 export default {
-  state: {
-    visibleModals: {},
-    modals: [],
-  },
+  state: defaultState(),
 
   mutations: {
     addModal(state, modal) {
@@ -22,8 +24,8 @@ export default {
     hideAllModals(state) {
       state.visibleModals = {};
     },
-    removeAllModals(state) {
-      state.modals = {};
+    resetState(state) {
+      Object.assign(state, defaultState());
     },
   },
 
@@ -117,12 +119,6 @@ export default {
       commit("addModal", modal);
       commit("showModal", modal);
     },
-
-    closeAllModals({ commit }) {
-      commit("hideAllModals");
-      commit("removeAllModals");
-    },
-
     closeModal({ commit, state }, { id } = {}) {
       let modalId = id;
 
@@ -138,6 +134,9 @@ export default {
 
       commit("hideModal", { id: modalId });
       commit("removeModal", { id: modalId });
+    },
+    resetModalStore({ commit }) {
+      commit("resetState");
     },
   },
 };

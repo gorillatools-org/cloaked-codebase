@@ -17,7 +17,8 @@ import { emailCheck } from "@/scripts/regex";
 import {
   PH_EVENT_EMAIL_BREACH_SEARCH_STARTED,
   PH_EVENT_EMAIL_BREACH_RESULTS_VIEWED,
-  PH_EVENT_EMAIL_BREACH_PASSWORD_REVEALED,
+  PH_EVENT_EMAIL_BREACH_IDENTITY_REVEALED,
+  PH_EVENT_EMAIL_BREACH_IDENTITY_MASKED,
 } from "@/scripts/posthogEvents";
 import store from "@/store";
 import { useDisplay } from "@/composables/useDisplay";
@@ -57,9 +58,11 @@ function getUniqueBreachedCompanies(breaches) {
 }
 
 const handleBreachRevealed = () => {
-  posthogCapture(PH_EVENT_EMAIL_BREACH_PASSWORD_REVEALED, {
-    email: email.value,
-  });
+  posthogCapture(PH_EVENT_EMAIL_BREACH_IDENTITY_REVEALED);
+};
+
+const handleBreachMasked = () => {
+  posthogCapture(PH_EVENT_EMAIL_BREACH_IDENTITY_MASKED);
 };
 
 const loadBreachData = async (page = 1) => {
@@ -228,6 +231,7 @@ const goToPage = (page) => {
                 :key="breach.document_id || idx"
                 :breach="breach"
                 @breach-revealed="handleBreachRevealed"
+                @breach-masked="handleBreachMasked"
               />
             </div>
 
@@ -474,6 +478,11 @@ const goToPage = (page) => {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+
+    :deep(.data-delete-card) {
+      border-radius: 30px;
+      padding: 20px;
+    }
   }
 
   &__no-breaches {

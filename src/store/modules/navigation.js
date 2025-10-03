@@ -1,16 +1,24 @@
-const state = {
+const defaultState = () => ({
   history: [],
-};
+});
+
+const state = defaultState();
 
 const mutations = {
   mutateHistory(state, value) {
     state.history = [...state.history, value];
+  },
+  reset(state) {
+    Object.assign(state, defaultState());
   },
 };
 
 const actions = {
   updateNavHistory({ commit }, newPage) {
     commit("mutateHistory", newPage);
+  },
+  reset({ commit }) {
+    commit("reset");
   },
 };
 

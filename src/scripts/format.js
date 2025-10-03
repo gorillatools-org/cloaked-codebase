@@ -229,11 +229,59 @@ export const formatNumbersBasedonLocale = (number) => {
   // ex: 3500 > '3,500' if in US English locale
 };
 
-export function formatCardNumberField(event) {
-  let value = event.target.value;
-  value = value ? (value.match(/\d{1,4}/g) || []).join(" ") : "";
-  return value;
-}
+export const formatCardNumberField = (
+  event,
+  maxDigits = 16,
+  gaps = [4, 8, 12]
+) => {
+  const input = event?.target;
+  const raw = input?.value ?? "";
+  const caret = input?.selectionStart ?? raw.length;
+
+  const digits = raw.replace(/\D/g, "");
+  const digitsBeforeCaret = raw.slice(0, caret).replace(/\D/g, "").length;
+  const clampedDigits = digits.slice(0, maxDigits);
+
+  // Format digits with gaps
+  let formattedDigits = "";
+  let lastGap = 0; // used to track where to start the next slice
+
+  // clampedDigits.length used as last gap to ensure all digits are included
+  for (const gap of [...gaps, clampedDigits.length]) {
+    if (lastGap >= clampedDigits.length) break;
+
+    const part = clampedDigits.slice(
+      lastGap,
+      Math.min(gap, clampedDigits.length)
+    );
+    if (!part) break;
+
+    formattedDigits += (formattedDigits ? " " : "") + part;
+    lastGap = gap;
+  }
+
+  // Restore caret position
+  const clampedDigitsBeforeCaret = Math.min(
+    digitsBeforeCaret,
+    clampedDigits.length
+  );
+
+  const spacesBeforeCaret = gaps.filter(
+    (gap) => gap <= clampedDigitsBeforeCaret
+  ).length;
+
+  const newCaret = Math.min(
+    formattedDigits.length,
+    clampedDigitsBeforeCaret + spacesBeforeCaret
+  );
+
+  if (input) {
+    input.value = formattedDigits;
+    input.setSelectionRange(newCaret, newCaret);
+  }
+
+  return formattedDigits;
+};
 
 export function formatCardExpiresAtField(event) {
   let value = event.target.value;

@@ -1,10 +1,12 @@
 import UserService from "@/api/actions/user-service";
+const defaultState = () => ({
+  target: false,
+  checklist: [],
+});
+
 export default {
   namespaced: true,
-  state: {
-    target: false,
-    checklist: [],
-  },
+  state: defaultState(),
   mutations: {
     SET_OPEN: (state, target) => (state.target = target),
     getChecklist: (state, data) => (state.checklist = data),
@@ -16,10 +18,16 @@ export default {
         }
       });
     },
+    reset(state) {
+      Object.assign(state, defaultState());
+    },
   },
   actions: {
     openGetStarted({ commit }, target) {
       commit("SET_OPEN", target);
+    },
+    reset({ commit }) {
+      commit("reset");
     },
   },
   getters: {

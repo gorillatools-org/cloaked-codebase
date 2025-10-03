@@ -84,7 +84,7 @@ export default function useVirtualCardGenerate() {
         errorMessage = "Sorry, that didn't work. Try again in a few minutes";
       }
 
-      throw new Error(errorMessage || "Failed to generate Virtual Card.");
+      throw new Error(errorMessage || "Failed to generate Virtual Card");
     }
   };
 

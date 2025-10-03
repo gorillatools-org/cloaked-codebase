@@ -134,37 +134,6 @@ const closeModal = () => {
         />
         <!-- eslint-enable vue/no-v-text-v-html-on-component -->
         <!-- eslint-enable vue/no-v-html -->
-
-        <div
-          v-if="isLoadingExtraDescription || extraDescription"
-          class="fs-select-modal__header-extra-description"
-        >
-          <div
-            v-if="isLoadingExtraDescription"
-            class="fs-select-modal__header-extra-description-skeletons"
-          >
-            <div
-              class="fs-select-modal__header-extra-description-skeleton"
-              style="width: 60%"
-            ></div>
-            <div
-              class="fs-select-modal__header-extra-description-skeleton"
-              style="width: 40%"
-            ></div>
-          </div>
-
-          <!-- eslint-disable vue/no-v-html -->
-          <!-- eslint-disable vue/no-v-text-v-html-on-component -->
-          <BaseText
-            v-else-if="!isLoadingExtraDescription && sanitizedExtraDescription"
-            as="p"
-            variant="caption-semibold"
-            class="fs-select-modal__header-extra-description-text"
-            v-html="sanitizedExtraDescription"
-          />
-          <!-- eslint-enable vue/no-v-text-v-html-on-component -->
-          <!-- eslint-enable vue/no-v-html -->
-        </div>
       </header>
       <div
         v-if="fundingSourceList"
@@ -180,13 +149,42 @@ const closeModal = () => {
             :is-select-mode="true"
             :funding-source="source"
             :show-actions="false"
-            :is-select-loading="
-              isSaving && source.id === selectedFundingSource?.id
-            "
+            :is-loading="isSaving && source.id === selectedFundingSource?.id"
             :is-disabled="isSaving && source.id !== selectedFundingSource?.id"
             @select="selectSource(source)"
           />
         </div>
+      </div>
+
+      <div
+        v-if="isLoadingExtraDescription || extraDescription"
+        class="fs-select-modal__header-extra-description"
+      >
+        <div
+          v-if="isLoadingExtraDescription"
+          class="fs-select-modal__header-extra-description-skeletons"
+        >
+          <div
+            class="fs-select-modal__header-extra-description-skeleton"
+            style="width: 60%"
+          ></div>
+          <div
+            class="fs-select-modal__header-extra-description-skeleton"
+            style="width: 40%"
+          ></div>
+        </div>
+
+        <!-- eslint-disable vue/no-v-html -->
+        <!-- eslint-disable vue/no-v-text-v-html-on-component -->
+        <BaseText
+          v-else-if="!isLoadingExtraDescription && sanitizedExtraDescription"
+          as="p"
+          variant="caption-semibold"
+          class="fs-select-modal__header-extra-description-text"
+          v-html="sanitizedExtraDescription"
+        />
+        <!-- eslint-enable vue/no-v-text-v-html-on-component -->
+        <!-- eslint-enable vue/no-v-html -->
       </div>
     </template>
     <template #footer>
@@ -236,16 +234,19 @@ const closeModal = () => {
     &-extra-description {
       width: 100%;
       display: flex;
-      margin-top: 8px;
+      margin-top: 16px;
 
       &-text {
         font-weight: 400;
         color: $color-primary-50;
+        text-align: center;
       }
 
       &-skeletons {
         width: 100%;
         display: flex;
+        justify-content: center;
+        align-items: center;
         flex-direction: column;
         gap: 3px;
         margin-top: 2px;

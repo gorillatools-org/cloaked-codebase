@@ -13,10 +13,16 @@ import router from "@/routes/router";
 import { posthogCapture } from "@/scripts/posthog.js";
 import useFundingSource from "@/composables/Wallet/useFundingSource";
 import GenerateCard from "@/features/modals/Wallet/GenerateCard.vue";
+import VCBannerFundingSourcesExpired from "@/features/VirtualCards/VCBannerFundingSourcesExpired.vue";
+import FundingSourceCardUpdateModal from "@/features/modals/Wallet/FundingSourceCardUpdateModal.vue";
 
 const route = useRoute();
 const toast = useToast();
-const { openAddModal, fundingSources } = useFundingSource();
+const {
+  openAddModal: openAddFundingSourceModal,
+  fundingSources,
+  hasExpiredFundingSources,
+} = useFundingSource();
 
 const cardsListingRef = ref(null);
 
@@ -131,25 +137,41 @@ function handleNewCardIssued(cardId) {
   });
 }
 
-function handleAddCard() {
+function handleAddCard(event) {
   if ((fundingSources.value?.length ?? 0) === 0) {
-    openAddModal(() => {
-      openCreateModal();
+    openAddFundingSourceModal(() => {
+      openCreateModal(event);
     });
     return;
   }
 
-  openCreateModal();
+  openCreateModal(event);
 }
 
-const openCreateModal = () => {
+const openCreateModal = (options) => {
   store.dispatch("openModal", {
     customTemplate: {
       template: markRaw(GenerateCard),
       props: {
         isVisible: true,
+        initialPeriod: options?.period,
+        initialAmount: options?.amount,
         onNewCardIssued: (cardId) => {
           handleNewCardIssued(cardId);
+        },
+      },
+    },
+  });
+};
+
+const openUpdateFundingSourceModal = () => {
+  store.dispatch("openModal", {
+    customTemplate: {
+      template: markRaw(FundingSourceCardUpdateModal),
+      props: {
+        onClose: () => {
+          console.log("onClose");
+          router.push({ name: "VirtualCardsIndex" });
         },
       },
     },
@@ -171,43 +193,75 @@ watch(
     getCardInformation();
   }
 );
+
+watch(
+  () => route.name,
+  (name) => {
+    if (name === "VirtualCardsFundingSourceUpdate") {
+      openUpdateFundingSourceModal();
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
-  <section>
-    <div>
-      <CardsListing
-        ref="cardsListingRef"
-        @type="setType"
-        @add-card="handleAddCard"
-        @new-card-issued="handleNewCardIssued"
-      />
+  <section class="wallet-activity">
+    <div
+      v-if="hasExpiredFundingSources"
+      class="wallet-activity__banner-container"
+    >
+      <VCBannerFundingSourcesExpired />
     </div>
-
-    <main :class="{ rightPanel: rightPanelActive }">
-      <div class="container">
-        <WalletSettings
-          :list-type="type"
-          :create-card-disabled="collectionsActive"
+    <div class="wallet-activity__content">
+      <div>
+        <CardsListing
+          ref="cardsListingRef"
+          @type="setType"
+          @add-card="handleAddCard"
           @new-card-issued="handleNewCardIssued"
         />
-        <TransactionsListing :list-type="type" />
       </div>
-    </main>
 
-    <RightPanel :create-card-disabled="collectionsActive" />
+      <main
+        class="wallet-activity__main"
+        :class="{ rightPanel: rightPanelActive }"
+      >
+        <div class="wallet-activity__main-container">
+          <WalletSettings
+            :list-type="type"
+            :create-card-disabled="collectionsActive"
+            @new-card-issued="handleNewCardIssued"
+          />
+          <TransactionsListing :list-type="type" />
+        </div>
+      </main>
+
+      <RightPanel :create-card-disabled="collectionsActive" />
+    </div>
   </section>
 </template>
 
 <style lang="scss" scoped>
-/* stylelint-disable */
-section {
+.wallet-activity {
   width: 100%;
   display: flex;
+  flex-direction: column;
   min-height: calc(100vh - 60px);
   position: relative;
+  gap: 10px;
 
-  main {
+  &__banner-container {
+    width: 100%;
+    padding-inline: 22px;
+  }
+
+  &__content {
+    display: flex;
+    overflow-x: hidden;
+  }
+
+  &__main {
     width: calc(100% - 399px);
     padding: 22px;
     position: relative;
@@ -215,21 +269,11 @@ section {
     transition: all 0.4s ease-in-out;
     left: 400px;
 
-    .container {
+    &-container {
       width: 100%;
       max-width: 1280px;
       margin: 0 auto;
     }
   }
-}
-
-.card-iframe {
-  position: absolute;
-  top: -9999px;
-  left: -9999px;
-  border: none;
-  z-index: 1;
-  width: 1px;
-  height: 1px;
 }
 </style>

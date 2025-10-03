@@ -7,6 +7,7 @@ import { computed, onMounted, ref } from "vue";
 import { posthogCapture } from "@/scripts/posthog.js";
 import BaseText from "@/library/BaseText.vue";
 import { useDisplay } from "@/composables/useDisplay.js";
+import { personalNameCheck } from "@/scripts/regex.js";
 
 const props = defineProps({
   value: {
@@ -19,7 +20,7 @@ const props = defineProps({
   },
 });
 
-defineEmits(["input", "submit"]);
+const emit = defineEmits(["input", "submit"]);
 
 const firstNameInput = ref("firstNameInput");
 onMounted(() => firstNameInput.value?.$refs?.input?.focus());
@@ -30,11 +31,47 @@ onMounted(() => {
   });
 });
 
+const firstNameErrors = ref([]);
+const lastNameErrors = ref([]);
+
 const isFormValid = computed(
-  () => props.value.firstName && props.value.lastName
+  () =>
+    props.value.firstName &&
+    props.value.lastName &&
+    !firstNameErrors.value?.length &&
+    !lastNameErrors.value?.length
 );
 
 const { isMobile } = useDisplay();
+
+const validateFirstName = () => {
+  const { firstName } = props.value;
+
+  if (firstName && !personalNameCheck(firstName)) {
+    firstNameErrors.value = ["Please enter a valid name"];
+  } else {
+    firstNameErrors.value = [];
+  }
+};
+
+const validateLastName = () => {
+  const { lastName } = props.value;
+
+  if (lastName && !personalNameCheck(lastName)) {
+    lastNameErrors.value = ["Please enter a valid name"];
+  } else {
+    lastNameErrors.value = [];
+  }
+};
+
+const onSubmit = () => {
+  validateFirstName();
+  validateLastName();
+
+  if (isFormValid.value) {
+    emit("submit");
+  }
+};
 </script>
 
 <template>
@@ -60,25 +97,27 @@ const { isMobile } = useDisplay();
           placeholder="First name"
           :value="value.firstName"
           autocomplete="given-name"
+          :errors="firstNameErrors"
           @input="$emit('input', { ...value, firstName: $event })"
-          @keydown.enter="isFormValid && $emit('submit')"
+          @keydown.enter="onSubmit"
         />
         <BottomBorderInputText
           placeholder="Last name"
           :value="value.lastName"
           autocomplete="family-name"
+          :errors="lastNameErrors"
           @input="$emit('input', { ...value, lastName: $event })"
-          @keydown.enter="isFormValid && $emit('submit')"
+          @keydown.enter="onSubmit"
         />
       </fieldset>
       <DataDeleteSticky class="data-delete-additional-search__cta">
         <BaseButton
           variant="primary"
           size="lg"
-          :disabled="!isFormValid"
+          :disabled="!value.firstName || !value.lastName"
           icon="arrow-right"
           class="data-delete-additional-search__cta-button"
-          @click="$emit('submit')"
+          @click="onSubmit"
         >
           Continue
         </BaseButton>

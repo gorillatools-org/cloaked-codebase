@@ -113,7 +113,7 @@ function popstate(event) {
       });
     }
   } else {
-    const match = window.location.href?.match(/(auth\/[^/?]+)/);
+    const match = window.location.href?.match(/(auth\/[^?#]*)/);
     if (match) {
       const [, pathValue] = match;
       setHistory(pathValue);
@@ -262,6 +262,23 @@ async function iframeListener(message) {
       router.push(props.prevRoute).catch(() => {});
     }
     if (message.data.event === "url-change") {
+      // Only update the URL if it's a different base route, not just a different ID
+      const currentPath = window.location.pathname;
+      const newPath = message.data.data;
+
+      // Check if we're on a route with an ID (like /auth/join/UUID or /auth/reset-recovery-key/UUID)
+      const currentHasId = currentPath.match(
+        /^\/auth\/(join|reset-recovery-key)\/[^/]+/
+      );
+      const newIsBaseRoute = newPath.match(
+        /^\/auth\/(join|reset-recovery-key)$/
+      );
+
+      // Don't change URL if we're on a route with ID and the iframe is reporting the base route
+      if (currentHasId && newIsBaseRoute) {
+        return;
+      }
+
       if (props.useV3Route) {
         const routes = {
           "/auth/login": "/auth/v3/login",
@@ -342,6 +359,10 @@ const src = computed(() => {
   if (newPath.includes("auth/register") || newPath.includes("auth/sign-up")) {
     newPath = "auth/signup";
   } else if (newPath.includes("auth/reset-recovery-key")) {
+    newPath = window.location.pathname.endsWith("/")
+      ? window.location.pathname.slice(0, -1)
+      : window.location.pathname;
+  } else if (newPath.includes("auth/join")) {
     newPath = window.location.pathname.endsWith("/")
       ? window.location.pathname.slice(0, -1)
       : window.location.pathname;

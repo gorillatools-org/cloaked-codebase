@@ -8,6 +8,7 @@ import store from "@/store";
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import FundingSourceListItem from "@/features/Wallet/FundingSource/FundingSourceListItem.vue";
 import type { FundingSource } from "@/types/Wallet/funding-source";
+import VCBaseAlert from "@/features/VirtualCards/base/VCBaseAlert.vue";
 
 const emit = defineEmits(["close"]);
 const props = defineProps({
@@ -19,19 +20,17 @@ const props = defineProps({
     type: String,
     default: "",
   },
-  isSelectMode: {
-    type: Boolean,
-    default: false,
-  },
 });
 
 const {
   fundingSources,
+  hasExpiredFundingSources,
   refetchFundingSources,
   setDefault,
   openDeleteModal,
   openAddModal,
   openEditModal,
+  openUpdateModal,
 } = useFundingSource();
 const loadingFundingSourceId = ref<string>();
 
@@ -45,19 +44,11 @@ onUnmounted(() => {
 });
 
 const _title = computed(() => {
-  return (
-    props.title ||
-    (props.isSelectMode ? "Select a Default Funding Source" : "Funding Sources")
-  );
+  return props.title || "Manage your funding sources";
 });
 
 const _description = computed(() => {
-  return (
-    props.description ||
-    (props.isSelectMode
-      ? "Your Virtual Card payments will be made from this source."
-      : "")
-  );
+  return props.description || "";
 });
 
 const closeModal = () => {
@@ -65,13 +56,8 @@ const closeModal = () => {
   store.dispatch("closeModal");
 };
 
-const handleSelection = (fundingSource: FundingSource) => {
-  if (
-    loadingFundingSourceId.value ||
-    !props.isSelectMode ||
-    fundingSource.primary
-  )
-    return;
+const handleSetDefault = (fundingSource: FundingSource) => {
+  if (loadingFundingSourceId.value || fundingSource.primary) return;
 
   loadingFundingSourceId.value = fundingSource.id;
   setDefault(fundingSource.id).finally(() => {
@@ -117,6 +103,13 @@ const handleRemove = (fundingSource: FundingSource) => {
           {{ _description }}
         </BaseText>
       </header>
+      <VCBaseAlert
+        v-if="hasExpiredFundingSources"
+        color="danger"
+        :icon-with-background="true"
+        icon="info-filled"
+        description="You have expired funding sources. Click on the menu to update."
+      />
       <TransitionGroup
         name="funding-source-list"
         tag="div"
@@ -131,16 +124,17 @@ const handleRemove = (fundingSource: FundingSource) => {
             :funding-source="fundingSource"
             :show-default-badge="(fundingSources || []).length > 1"
             :show-actions="true"
-            :is-select-loading="fundingSource.id === loadingFundingSourceId"
-            :is-select-mode="props.isSelectMode"
+            :is-loading="fundingSource.id === loadingFundingSourceId"
+            :is-select-mode="false"
             :is-selected="fundingSource.primary"
             :is-disabled="
               !!loadingFundingSourceId &&
               fundingSource.id !== loadingFundingSourceId
             "
-            @select="handleSelection(fundingSource)"
+            @set-default="handleSetDefault(fundingSource)"
             @remove="handleRemove(fundingSource)"
-            @edit="openEditModal(fundingSource.id)"
+            @settings="openEditModal(fundingSource.id)"
+            @update="openUpdateModal(fundingSource.id)"
           />
         </div>
       </TransitionGroup>

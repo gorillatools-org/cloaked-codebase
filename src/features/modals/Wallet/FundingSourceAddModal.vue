@@ -8,7 +8,7 @@ import store from "@/store";
 import { ref, computed } from "vue";
 import type { BaseIconName } from "@/library/baseIconTypes";
 import { constants, CARD_PROVIDER_TYPE } from "@/scripts/constants";
-import type { FundingSourceType } from "@/composables/Wallet/useFundingSource";
+import type { FundingSourceType } from "@/types/Wallet/funding-source";
 
 const emit = defineEmits<{
   (e: "close"): void;

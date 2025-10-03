@@ -9,15 +9,17 @@ let initPromise = null;
 
 const { openPlansModal } = usePlansModal();
 
+const defaultState = () => ({
+  stripe: null,
+  plans: [],
+  payPlans: [],
+  invitations: [],
+  subscriptionDetails: null,
+});
+
 export default {
   namespaced: true,
-  state: {
-    stripe: null,
-    plans: [],
-    payPlans: [],
-    invitations: [],
-    subscriptionDetails: null,
-  },
+  state: defaultState(),
   mutations: {
     SET_STRIPE: (state, payload) => (state.stripe = payload),
     SET_PLANS: (state, payload) => (state.plans = payload),
@@ -25,8 +27,15 @@ export default {
     SET_INVITATIONS: (state, payload) => (state.invitations = payload),
     SET_SUBSCRIPTION_DETAILS: (state, payload) =>
       (state.subscriptionDetails = payload),
+    reset(state) {
+      Object.assign(state, defaultState());
+      initPromise = null;
+    },
   },
   actions: {
+    reset({ commit }) {
+      commit("reset");
+    },
     async loadStripe({ commit }) {
       const stripe = await loadStripe(import.meta.env.VITE_STRIPE);
       commit("SET_STRIPE", stripe);

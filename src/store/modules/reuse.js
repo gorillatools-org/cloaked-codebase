@@ -1,10 +1,12 @@
+const defaultState = () => ({
+  initialized: false,
+  numbers: [],
+  count: [],
+});
+
 export default {
   namespaced: true,
-  state: {
-    initialized: false,
-    numbers: [],
-    count: [],
-  },
+  state: defaultState(),
   mutations: {
     setInitialized(state) {
       state.initialized = true;
@@ -15,8 +17,14 @@ export default {
     setCount(state, count) {
       state.count = count;
     },
+    reset(state) {
+      Object.assign(state, defaultState());
+    },
   },
   actions: {
+    reset({ commit }) {
+      commit("reset");
+    },
     storeResults({ commit }, { results, count }) {
       commit("setInitialized");
       commit("setNumbers", results);

@@ -323,6 +323,9 @@ export default {
     logout({ commit }) {
       commit("setLogout");
     },
+    reset({ commit }) {
+      commit("setLogout");
+    },
     setMfaMethods({ commit }, enabledMethods) {
       commit("setMfaMethods", enabledMethods);
     },

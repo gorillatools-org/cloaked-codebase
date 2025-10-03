@@ -89,8 +89,8 @@ export const logout = async ({
 
   sendLogoutEventToExtension();
 
-  await cleanDb();
   window.localStorage.clear();
+  window?.sessionStorage?.clear();
   cleanup();
   store.dispatch("logout", {}, { root: true });
   setTimeout(() => {

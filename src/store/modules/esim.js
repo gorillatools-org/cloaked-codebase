@@ -1,15 +1,20 @@
+const defaultState = () => ({
+  esims: [],
+  usage: {},
+});
+
 export default {
   namespaced: true,
-  state: {
-    esims: [],
-    usage: {},
-  },
+  state: defaultState(),
   mutations: {
     setEsims(state, esims) {
       state.esims = esims;
     },
     setSimUsage(state, { simId, usageData }) {
       state.usage = { ...state.usage, [simId]: usageData };
+    },
+    reset(state) {
+      Object.assign(state, defaultState());
     },
   },
   actions: {
@@ -18,6 +23,9 @@ export default {
     },
     setSimUsage({ commit }, { simId, usageData }) {
       commit("setSimUsage", { simId, usageData });
+    },
+    reset({ commit }) {
+      commit("reset");
     },
   },
   getters: {

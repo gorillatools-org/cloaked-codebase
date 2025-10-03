@@ -1,7 +1,9 @@
+const defaultState = () => ({
+  waitlist: null,
+});
+
 export default {
-  state: {
-    waitlist: null,
-  },
+  state: defaultState(),
   mutations: {
     setWaitlist(state, waitlist) {
       state.waitlist = waitlist;
@@ -10,6 +12,9 @@ export default {
       state.waitlist = state.waitlist.map((item) =>
         item.id === waitlist.id ? waitlist : item
       );
+    },
+    resetState(state) {
+      Object.assign(state, defaultState());
     },
   },
   getters: {
@@ -48,6 +53,11 @@ export default {
       }
 
       return true;
+    },
+  },
+  actions: {
+    resetWaitlistStore({ commit }) {
+      commit("resetState");
     },
   },
 };
