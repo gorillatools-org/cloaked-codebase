@@ -26,6 +26,7 @@ type Props = {
   hideTrackWhenSingle?: boolean;
   disabled?: boolean;
   loading?: boolean;
+  backgroundColor?: "primary-1" | "primary-5" | "primary-10";
 };
 
 const emit = defineEmits<{
@@ -40,6 +41,7 @@ const props = withDefaults(defineProps<Props>(), {
   hideTrackWhenSingle: false,
   disabled: false,
   loading: false,
+  backgroundColor: "primary-1",
 });
 
 const current = defineModel<string>();
@@ -140,6 +142,7 @@ watch(
       v-if="hideTrackWhenSingle ? items.length > 1 : true"
       ref="trackEl"
       class="vc-base-tabs__track"
+      :class="[`vc-base-tabs__track--${backgroundColor}`]"
       :style="trackStyle"
       role="tablist"
       :aria-label="ariaLabel"
@@ -226,8 +229,19 @@ watch(
     width: 100%;
     height: var(--tabs-h);
     border-radius: 999px;
-    background-color: $color-primary-1;
     overflow: hidden;
+
+    &--primary-1 {
+      background-color: $color-primary-1;
+    }
+
+    &--primary-5 {
+      background-color: $color-primary-5;
+    }
+
+    &--primary-10 {
+      background-color: $color-primary-10;
+    }
 
     .vc-base-tabs--loading & {
       @include value-skeleton;

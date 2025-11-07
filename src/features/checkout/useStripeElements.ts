@@ -11,6 +11,8 @@ import {
   type StripePaymentElement,
 } from "@stripe/stripe-js";
 import SubscriptionService from "@/api/settings/subscription-services";
+import { generateConsistentFakeName } from "@/utils/generateFakeName";
+import store from "@/store";
 
 export const useStripeElements = () => {
   const { loadStripe: loadStripeLibrary } = useStripe();
@@ -120,12 +122,15 @@ export const useStripeElements = () => {
 
     stripeError.value = null;
 
+    const stripeEmail = store.getters["settings/getStripe"]?.email;
+    const fakeName = generateConsistentFakeName(stripeEmail);
+
     const result = await stripeValue.confirmSetup({
       elements: stripeElementsValue,
       confirmParams: {
         payment_method_data: {
           billing_details: {
-            name: "dashboard user",
+            name: fakeName,
           },
         },
       },

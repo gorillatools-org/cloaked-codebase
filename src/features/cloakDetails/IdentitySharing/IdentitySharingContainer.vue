@@ -30,22 +30,74 @@ const sharing = ref(null);
 const activeModal = ref(null);
 const isModalOpen = ref(false);
 const isTooltipOpen = ref(false);
-const isShared = computed(() => !!props.identity.sharing);
+const locallyDeleted = ref(false);
+const locallyCreated = ref(false);
+const isShared = computed(() => {
+  if (locallyDeleted.value) {
+    return false;
+  }
+  if (locallyCreated.value) {
+    return true;
+  }
+  return !!props.identity.sharing;
+});
 
-const resetChanges = () => {
-  sharing.value = {
-    data: props.identity.sharing?.data ?? [],
-    private_key: props.identity.sharing?.private_key ?? null,
-    public_key: props.identity.sharing?.public_key ?? null,
-    salt: props.identity.sharing?.salt ?? null,
-    expires_at: props.identity.sharing?.expires_at ?? null,
-    shared_at: props.identity.sharing?.shared_at ?? null,
-    shared_url: props.identity.sharing?.shared_url ?? null,
-    recipient_shared_password:
-      props.identity.sharing?.recipient_shared_password ?? null,
-    decryptedPassword: props.identity.sharing?.decryptedPassword,
-    onetimeview: props.identity.sharing?.onetimeview ?? false,
-  };
+const resetChanges = async () => {
+  if (!props.identity.sharing) {
+    locallyDeleted.value = false;
+    locallyCreated.value = false;
+    sharing.value = {
+      data: [],
+      private_key: null,
+      public_key: null,
+      salt: null,
+      expires_at: null,
+      shared_at: null,
+      shared_url: null,
+      recipient_shared_password: null,
+      decryptedPassword: null,
+      onetimeview: false,
+    };
+    return;
+  }
+
+  if (!locallyDeleted.value) {
+    locallyCreated.value = false;
+  }
+
+  if (props.identity.sharing.decryptedPassword) {
+    sharing.value = {
+      data: props.identity.sharing.data ?? [],
+      private_key: props.identity.sharing.private_key ?? null,
+      public_key: props.identity.sharing.public_key ?? null,
+      salt: props.identity.sharing.salt ?? null,
+      expires_at: props.identity.sharing.expires_at ?? null,
+      shared_at: props.identity.sharing.shared_at ?? null,
+      shared_url: props.identity.sharing.shared_url ?? null,
+      recipient_shared_password:
+        props.identity.sharing.recipient_shared_password ?? null,
+      decryptedPassword: props.identity.sharing.decryptedPassword,
+      onetimeview: props.identity.sharing.onetimeview ?? false,
+    };
+  } else {
+    const { withDecryptedSharing } = await import("@/scripts/identitySharing");
+    const tempIdentity = { sharing: props.identity.sharing };
+    const processedIdentity = await withDecryptedSharing(tempIdentity);
+
+    sharing.value = {
+      data: processedIdentity.sharing.data ?? [],
+      private_key: processedIdentity.sharing.private_key ?? null,
+      public_key: processedIdentity.sharing.public_key ?? null,
+      salt: processedIdentity.sharing.salt ?? null,
+      expires_at: processedIdentity.sharing.expires_at ?? null,
+      shared_at: processedIdentity.sharing.shared_at ?? null,
+      shared_url: processedIdentity.sharing.shared_url ?? null,
+      recipient_shared_password:
+        processedIdentity.sharing.recipient_shared_password ?? null,
+      decryptedPassword: processedIdentity.sharing.decryptedPassword,
+      onetimeview: processedIdentity.sharing.onetimeview ?? false,
+    };
+  }
 };
 
 const refreshIdentity = () =>
@@ -53,14 +105,32 @@ const refreshIdentity = () =>
     const unwatch = watch(
       () => props.identity.sharing,
       () => {
-        resetChanges();
-        unwatch();
-        resolve();
+        resetChanges().then(() => {
+          unwatch();
+          resolve();
+        });
       },
       { deep: true }
     );
 
-    emit("refresh", { id: props.identity.id });
+    setTimeout(() => {
+      emit("refresh", { id: props.identity.id });
+    }, 100);
+
+    setTimeout(() => {
+      if (
+        props.identity.sharing &&
+        (!sharing.value.shared_url || !sharing.value.decryptedPassword)
+      ) {
+        resetChanges().then(() => {
+          unwatch();
+          resolve();
+        });
+      } else {
+        unwatch();
+        resolve();
+      }
+    }, 2000);
   });
 
 watch(
@@ -77,22 +147,29 @@ watch(
 
 watch(
   () => isModalOpen.value,
-  (newValue) => {
+  async (newValue) => {
     if (!newValue) {
       activeModal.value = isShared.value
         ? "IdentitySharingModalPublished"
         : "IdentitySharingModalCreate";
 
       if (!isShared.value) {
-        resetChanges();
+        await resetChanges();
+      }
+    } else {
+      if (
+        isShared.value &&
+        (!sharing.value.shared_url || !sharing.value.decryptedPassword)
+      ) {
+        await resetChanges();
       }
     }
   },
   { immediate: true, deep: true }
 );
 
-onBeforeMount(() => {
-  resetChanges();
+onBeforeMount(async () => {
+  await resetChanges();
 });
 
 const getExistingPermission = ({ identityKey, id }) => {
@@ -215,7 +292,7 @@ const onCreate = async () => {
       public_key: publicKey,
     });
 
-    await IdentityService.createSharing(props.identity.id, {
+    const payload = {
       data: encryptedData,
       private_key: privateKey,
       public_key: publicKey,
@@ -224,9 +301,52 @@ const onCreate = async () => {
       expires_at: expirationDate.toISOString(),
       onetimeview: false,
       has_full_permissions: hasFullPermissions.value,
-    });
+    };
 
-    await refreshIdentity();
+    const response = await IdentityService.createSharing(
+      props.identity.id,
+      payload
+    );
+
+    if (response.data && response.data.shared_url) {
+      const { withDecryptedSharing } = await import(
+        "@/scripts/identitySharing"
+      );
+      const tempIdentity = { sharing: response.data };
+      const processedIdentity = await withDecryptedSharing(tempIdentity);
+
+      sharing.value = {
+        data: processedIdentity.sharing.data ?? [],
+        private_key: processedIdentity.sharing.private_key ?? null,
+        public_key: processedIdentity.sharing.public_key ?? null,
+        salt: processedIdentity.sharing.salt ?? null,
+        expires_at: processedIdentity.sharing.expires_at ?? null,
+        shared_at: processedIdentity.sharing.shared_at ?? null,
+        shared_url: processedIdentity.sharing.shared_url ?? null,
+        recipient_shared_password:
+          processedIdentity.sharing.recipient_shared_password ?? null,
+        decryptedPassword: processedIdentity.sharing.decryptedPassword,
+        onetimeview: processedIdentity.sharing.onetimeview ?? false,
+      };
+
+      locallyCreated.value = true;
+
+      activeModal.value = "IdentitySharingModalPublished";
+      toast.success("Identity shared.");
+
+      refreshIdentity()
+        .then(() => {
+          // Background refresh completed
+        })
+        .catch(() => {
+          // Background refresh failed
+        });
+
+      return;
+    } else {
+      await refreshIdentity();
+    }
+
     activeModal.value = "IdentitySharingModalPublished";
     toast.success("Identity shared.");
   } catch {
@@ -240,10 +360,16 @@ const onUpdate = async () => {
   try {
     isLoading.value = true;
 
-    const isUpdatingExpiration =
-      props.identity.sharing.expires_at !== sharing.value.expires_at ||
-      props.identity.sharing.shared_at !== sharing.value.shared_at ||
-      props.identity.sharing.onetimeview !== sharing.value.onetimeview;
+    let isUpdatingExpiration;
+
+    if (!props.identity.sharing) {
+      isUpdatingExpiration = true;
+    } else {
+      isUpdatingExpiration =
+        props.identity.sharing.expires_at !== sharing.value.expires_at ||
+        props.identity.sharing.shared_at !== sharing.value.shared_at ||
+        props.identity.sharing.onetimeview !== sharing.value.onetimeview;
+    }
 
     const encryptedData = await encryptSharingData(sharing.value.data, {
       public_key: sharing.value.public_key,
@@ -257,12 +383,14 @@ const onUpdate = async () => {
       has_full_permissions: hasFullPermissions.value,
     });
 
-    await refreshIdentity();
     activeModal.value = "IdentitySharingModalPublished";
 
-    isUpdatingExpiration
-      ? toast.success("New expiration published.")
-      : toast.success("New permissions published.");
+    const successMessage =
+      !props.identity.sharing || isUpdatingExpiration
+        ? "New expiration published."
+        : "New permissions published.";
+
+    toast.success(successMessage);
   } catch {
     toast.error("There was an issue saving. Try again in a moment.");
   } finally {
@@ -273,15 +401,63 @@ const onUpdate = async () => {
 const onDelete = async () => {
   try {
     isLoading.value = true;
+
     await IdentityService.deleteSharing(props.identity.id);
 
-    await refreshIdentity();
+    locallyDeleted.value = true;
+    sharing.value = {
+      data: [],
+      private_key: null,
+      public_key: null,
+      salt: null,
+      expires_at: null,
+      shared_at: null,
+      shared_url: null,
+      recipient_shared_password: null,
+      decryptedPassword: null,
+      onetimeview: false,
+    };
+
     activeModal.value = "IdentitySharingModalCreate";
     isModalOpen.value = false;
-
     toast.success("Identity is no longer being shared.");
-  } catch {
-    toast.error("There was an issue saving. Try again in a moment.");
+
+    refreshIdentity()
+      .then(() => {
+        // Background refresh completed
+      })
+      .catch(() => {
+        // Background refresh failed
+      });
+  } catch (error) {
+    if (error.response?.status === 400 || error.response?.status === 404) {
+      locallyDeleted.value = true;
+      sharing.value = {
+        data: [],
+        private_key: null,
+        public_key: null,
+        salt: null,
+        expires_at: null,
+        shared_at: null,
+        shared_url: null,
+        recipient_shared_password: null,
+        decryptedPassword: null,
+        onetimeview: false,
+      };
+      activeModal.value = "IdentitySharingModalCreate";
+      isModalOpen.value = false;
+      toast.success("Identity is no longer being shared.");
+
+      refreshIdentity()
+        .then(() => {
+          // Background refresh completed
+        })
+        .catch(() => {
+          // Background refresh failed
+        });
+    } else {
+      toast.error("There was an issue saving. Try again in a moment.");
+    }
   } finally {
     isLoading.value = false;
   }

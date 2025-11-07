@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, toValue, watch, onMounted } from "vue";
-import type { Router } from "vue-router";
 import { useNameValidation } from "@/composables/validation/useNameValidation.js";
 import { useDateOfBirthValidation } from "@/composables/validation/useDateOfBirthValidation.js";
 import { getFormattedDateOfBirthValue } from "@/features/enrollment/utils.js";
@@ -14,8 +13,10 @@ import EnrollmentTag from "@/features/enrollment/EnrollmentTag.vue";
 import EnrollmentTags from "@/features/enrollment/EnrollmentTags.vue";
 import PageEnrollmentAddressesManual from "@/routes/enrollment/PageEnrollmentAddressesManual.vue";
 import DataDeleteService from "@/api/actions/data-delete-service.js";
-import { toApiPayload } from "@/features/enrollment/data-utils.js";
-import { useRouter } from "vue-router";
+import {
+  toApiPayload,
+  captureAutofillAccuracy,
+} from "@/features/enrollment/data-utils.js";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { PH_EVENT_USER_SUBMITTED_DD_SUBMISSION_FORM } from "@/scripts/posthogEvents.js";
 import { useColorScheme } from "@/composables/useColorScheme";
@@ -24,12 +25,10 @@ import store from "@/store";
 import { usePhoneValidation } from "@/composables/validation/usePhoneValidation.js";
 import { useSsnValidation } from "@/composables/validation/useSsnValidation.js";
 import { getFormattedSsnValue } from "@/features/enrollment/utils.js";
-import UserService from "@/api/actions/user-service.js";
-import { HAS_EXITED_DELETE_FLOW } from "@/scripts/userFlags.js";
-
 import BaseIcon from "@/library/BaseIcon.vue";
 import type { UserPhone } from "@/types/user";
 import { useUserPhoneNumbers } from "@/features/data-delete/composables/useUserPhoneNumbers";
+import { useSessionEnrollmentData } from "@/features/enrollment/useSessionEnrollmentData";
 
 export interface EnrollmentAddress {
   address1?: string;
@@ -77,12 +76,13 @@ interface FormattedAddress {
 // Composables
 const { colorScheme } = useColorScheme();
 const toast = useToast();
-const router: Router = useRouter();
 
 // Props
 const props = withDefaults(defineProps<Props>(), {
   autofillData: () => ({}),
 });
+
+const emit = defineEmits(["exit-delete-flow"]);
 
 const { phoneNumbers, fetch: fetchPhoneNumbers } = useUserPhoneNumbers();
 const isFetchingPhones = ref(false);
@@ -319,6 +319,8 @@ function handleSubmit() {
   }
 }
 
+const { saveEnrollmentData } = useSessionEnrollmentData();
+
 async function submitExposures(): Promise<void> {
   isSubmitting.value = true;
   if (validateForm()) {
@@ -340,11 +342,13 @@ async function submitExposures(): Promise<void> {
       };
       const payload = toApiPayload(rawPayload);
       await DataDeleteService.createEnrollmentData(payload);
+      captureAutofillAccuracy(props.autofillData, rawPayload);
+      saveEnrollmentData(rawPayload);
       posthogCapture(PH_EVENT_USER_SUBMITTED_DD_SUBMISSION_FORM, {
         theme: colorScheme.value,
       });
       store.dispatch("dataDelete/setRecentlyEnrolled", true);
-      exitDeleteFlow();
+      emit("exit-delete-flow");
     } catch (error: any) {
       toast.error(
         error.response?.data?.message ||
@@ -357,14 +361,6 @@ async function submitExposures(): Promise<void> {
     toast.error("Please correct the errors in the form before submitting.");
     isSubmitting.value = false;
   }
-}
-
-async function exitDeleteFlow() {
-  await UserService.setFlag({
-    name: HAS_EXITED_DELETE_FLOW,
-    value: true,
-  });
-  return router.push("/exposure-status");
 }
 
 function showDoLaterConfirmation() {

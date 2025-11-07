@@ -10,6 +10,11 @@ import type { FundingSource } from "@/types/Wallet/funding-source";
 import useFundingSource from "@/composables/Wallet/useFundingSource";
 import { safe_html } from "@/scripts/sanitize";
 
+export type FundingSourceSelectPayload = {
+  fundingSource: FundingSource;
+  isCurrentFundingSource: boolean;
+};
+
 type Props = {
   title: string;
   description?: string;
@@ -20,6 +25,7 @@ type Props = {
   filterBySameType?: boolean;
   isSaving?: boolean;
   isLoadingExtraDescription?: boolean;
+  closeOnSelect?: boolean;
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -31,14 +37,12 @@ const props = withDefaults(defineProps<Props>(), {
   filterBySameType: false,
   isSaving: false,
   isLoadingExtraDescription: false,
+  closeOnSelect: false,
 });
 
 const emit = defineEmits<{
   (e: "save", fundingSource: FundingSource): void;
-  (
-    e: "select",
-    payload: { fundingSource: FundingSource; isCurrentFundingSource: boolean }
-  ): void;
+  (e: "select", payload: FundingSourceSelectPayload): void;
   (e: "close"): void;
 }>();
 
@@ -96,6 +100,10 @@ const selectSource = (source: FundingSource) => {
     fundingSource: source,
     isCurrentFundingSource: source.id === props.currentFundingSource?.id,
   });
+
+  if (props.closeOnSelect) {
+    closeModal();
+  }
 };
 
 const closeModal = () => {
@@ -188,19 +196,21 @@ const closeModal = () => {
       </div>
     </template>
     <template #footer>
-      <Button
-        type="secondary"
-        @click="closeModal"
-      >
-        Cancel
-      </Button>
-      <Button
-        :disabled="isSaveBtnDisabled"
-        :loading="isSaving"
-        @click="save"
-      >
-        {{ props.saveButtonText }}
-      </Button>
+      <template v-if="!closeOnSelect">
+        <Button
+          type="secondary"
+          @click="closeModal"
+        >
+          Cancel
+        </Button>
+        <Button
+          :disabled="isSaveBtnDisabled"
+          :loading="isSaving"
+          @click="save"
+        >
+          {{ props.saveButtonText }}
+        </Button>
+      </template>
     </template>
   </ModalTemplate>
 </template>

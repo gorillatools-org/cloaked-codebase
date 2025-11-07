@@ -71,6 +71,7 @@ const defaultState = () => {
     ui: {
       identitySortType: "-created_at",
       open_dialog: false,
+      webviewMode: false,
       preference: {
         open: false,
         selected: "account",
@@ -137,6 +138,9 @@ export default new Vuex.Store({
     },
     unclipBody(state) {
       state.ui.open_dialog = false;
+    },
+    setWebviewMode(state, enabled) {
+      state.ui.webviewMode = enabled;
     },
     insertUser(state, user) {
       state.user = user;

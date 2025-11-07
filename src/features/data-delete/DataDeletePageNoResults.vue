@@ -1,12 +1,19 @@
 <script setup>
-import InlineSvg from "@/features/InlineSvg.vue";
-
 import DataDeleteCard from "@/features/data-delete/atoms/DataDeleteCard.vue";
-import DataDeleteSubscribe from "@/features/data-delete/atoms/DataDeleteSubscribe.vue";
 import DataDeleteThreatLevel from "@/features/data-delete/atoms/DataDeleteThreatLevel.vue";
+import DataDeleteSticky from "@/features/data-delete/atoms/DataDeleteSticky.vue";
 import BaseText from "@/library/BaseText.vue";
+import BaseButton from "@/library/BaseButton.vue";
+import BaseIcon from "@/library/BaseIcon.vue";
+import { onMounted } from "vue";
+import { posthogCapture } from "@/scripts/posthog.js";
+import { PH_EVENT_USER_VIEWED_DATA_DELETION_NO_RESULTS } from "@/scripts/posthogEvents.js";
 
 defineEmits(["complete"]);
+
+onMounted(() => {
+  posthogCapture(PH_EVENT_USER_VIEWED_DATA_DELETION_NO_RESULTS);
+});
 </script>
 
 <template>
@@ -19,68 +26,53 @@ defineEmits(["complete"]);
       <BaseText
         as="p"
         variant="headline-6-medium"
-        class="data-delete__text"
+        class="data-delete-no-results__text"
       >
         Your phone number poses no immediate threats, but your data is not
         totally safe. Cloaked permanently protects you.
       </BaseText>
-      <DataDeleteSubscribe
-        class="data-delete-no-results__subscribe"
-        @click="$emit('complete')"
-      />
+      <DataDeleteSticky>
+        <BaseButton
+          type="primary"
+          size="lg"
+          full-width
+          class="data-delete-no-results__subscribe"
+          @click="$emit('complete')"
+        >
+          Subscribe now
+        </BaseButton>
+      </DataDeleteSticky>
     </div>
     <div class="data-delete-results__column">
       <DataDeleteCard class="data-delete-no-results__card">
         <BaseText
           as="h2"
           variant="headline-4-bold"
-          class="data-delete__subtitle"
+          class="data-delete-no-results__subtitle"
         >
           How Cloaked protects you:
         </BaseText>
-        <ul class="data-delete-no-results__how">
-          <li>
+        <ul
+          class="data-delete-no-results__list data-delete-no-results__list--how"
+        >
+          <li
+            v-for="(item, index) in [
+              'Ongoing defense from fraud and identity theft with $1 million coverage.',
+              'Identity protection with unlimited generated phone numbers, emails, and credit cards.',
+              'Ultimate safety and security with encrypted messaging, integrated password manager, and more.',
+            ]"
+            :key="index"
+          >
             <DataDeleteCard
               type="dark"
-              class="data-delete-no-results__list-item data-delete-no-results__list-item--benefits"
+              class="data-delete-no-results__list-item"
             >
-              <InlineSvg
-                name="checkmark"
+              <BaseIcon
+                name="check"
                 class="data-delete-no-results__icon"
               />
               <BaseText variant="body-2-semibold">
-                Ongoing defense from fraud and identity theft with $1 million
-                coverage
-              </BaseText>
-            </DataDeleteCard>
-          </li>
-          <li>
-            <DataDeleteCard
-              type="dark"
-              class="data-delete-no-results__list-item data-delete-no-results__list-item--benefits"
-            >
-              <InlineSvg
-                name="checkmark"
-                class="data-delete-no-results__icon"
-              />
-              <BaseText variant="body-2-semibold">
-                Identity protection with unlimited generated phone numbers,
-                emails, and credit cards
-              </BaseText>
-            </DataDeleteCard>
-          </li>
-          <li>
-            <DataDeleteCard
-              type="dark"
-              class="data-delete-no-results__list-item data-delete-no-results__list-item--benefits"
-            >
-              <InlineSvg
-                name="checkmark"
-                class="data-delete-no-results__icon"
-              />
-              <BaseText variant="body-2-semibold">
-                Ultimate safety and security with encrypted messaging,
-                integrated password manager, and more.
+                {{ item }}
               </BaseText>
             </DataDeleteCard>
           </li>
@@ -88,56 +80,31 @@ defineEmits(["complete"]);
         <BaseText
           as="h2"
           variant="headline-4-bold"
-          class="data-delete__subtitle"
+          class="data-delete-no-results__subtitle"
         >
           Why protection is important:
         </BaseText>
-        <ul class="data-delete-no-results__why">
-          <li>
+        <ul
+          class="data-delete-no-results__list data-delete-no-results__list--why"
+        >
+          <li
+            v-for="(item, index) in [
+              'Fraudsters with your name and social security can apply for: a new bank account or Credit Card; a Driver\'s License; an IRS Tax Refund; even a job using your name.',
+              'Scammers with your relationship information can change insurance policies and access important documents requiring popular verification methods.',
+              'Spammers can use your email and phone number to automate phone calls, texts and emails, subjecting you to unwanted advertising and dangerous phishing attempts.',
+            ]"
+            :key="index"
+          >
             <DataDeleteCard
               type="dark"
               class="data-delete-no-results__list-item"
             >
-              <InlineSvg
-                name="tip-info"
+              <BaseIcon
+                name="info"
                 class="data-delete-no-results__icon"
               />
               <BaseText variant="body-2-semibold">
-                Fraudsters with your name and social security can apply for: a
-                new bank account or Credit Card; a Driver's License; an IRS Tax
-                Refund; even a job using your name.
-              </BaseText>
-            </DataDeleteCard>
-          </li>
-          <li>
-            <DataDeleteCard
-              type="dark"
-              class="data-delete-no-results__list-item"
-            >
-              <InlineSvg
-                name="tip-info"
-                class="data-delete-no-results__icon"
-              />
-              <BaseText variant="body-2-semibold">
-                Scammers with your relationship information can change insurance
-                policies and access important documents requiring popular
-                verification methods.
-              </BaseText>
-            </DataDeleteCard>
-          </li>
-          <li>
-            <DataDeleteCard
-              type="dark"
-              class="data-delete-no-results__list-item"
-            >
-              <InlineSvg
-                name="tip-info"
-                class="data-delete-no-results__icon"
-              />
-              <BaseText variant="body-2-semibold">
-                Spammers can use your email and phone number to automate phone
-                calls, texts and emails, subjecting you to unwanted advertising
-                and dangerous phishing attempts.
+                {{ item }}
               </BaseText>
             </DataDeleteCard>
           </li>
@@ -147,29 +114,27 @@ defineEmits(["complete"]);
   </div>
 </template>
 
-<!-- eslint-disable-next-line vue/enforce-style-attribute -->
-<style lang="scss">
+<style lang="scss" scoped>
 .data-delete-no-results {
-  .data-delete {
-    &__subtitle {
-      animation: appear-bottom-5 0.3s 0.3s forwards ease-out;
-      opacity: 0;
-      margin-top: 16px;
+  &__subtitle {
+    animation: appear-bottom-5 0.3s 0.3s forwards ease-out;
+    opacity: 0;
+    margin-top: 24px;
 
-      &:first-child {
-        margin-top: 0;
-      }
-
-      &:nth-child(3) {
-        animation-delay: 0.5s;
-      }
+    &:first-child {
+      margin-top: 0;
     }
 
-    &__text {
-      animation: appear-bottom-5 0.5s forwards ease-out;
-      opacity: 0;
-      animation-delay: 0.2s;
+    &:nth-child(3) {
+      animation-delay: 0.5s;
     }
+  }
+
+  &__text {
+    animation: appear-bottom-5 0.5s forwards ease-out;
+    opacity: 0;
+    animation-delay: 0.2s;
+    margin-top: 16px;
   }
 
   &__card {
@@ -178,95 +143,39 @@ defineEmits(["complete"]);
   }
 
   &__icon {
-    width: 18px;
-    height: 18px;
+    font-size: 18px;
     flex-shrink: 0;
   }
 
-  &__how {
+  &__list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
     & > * {
       animation: appear-bottom-5 0.4s forwards ease-out;
       opacity: 0;
 
       @for $i from 1 through 3 {
         &:nth-child(#{$i}) {
-          opacity: 0;
           animation-delay: 0.3s + $i * 0.05s;
         }
       }
     }
-  }
 
-  &__why {
-    // replace with a better alternative
-    width: 100%;
-    display: flex;
-    overflow: scroll;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    flex: 0;
-    flex-direction: column;
-    gap: 0;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-
-    & > * {
-      animation: appear-bottom-5 0.4s forwards ease-out;
-      opacity: 0;
-      width: 100%;
-      flex-shrink: 0;
-      scroll-snap-align: center;
-
-      @for $i from 1 through 3 {
-        &:nth-child(#{$i}) {
-          opacity: 0;
-          animation-delay: 0.5s + $i * 0.05s;
-        }
-      }
-    }
-  }
-
-  &__list-item {
-    display: flex;
-    align-items: center;
-    padding: 24px 16px;
-    gap: 24px;
-    margin-top: 8px;
-
-    @media all and (min-width: $screen-xl) {
-      margin-top: 8px;
-    }
-
-    &--benefits {
-      font-weight: 600;
+    &-item {
+      display: flex;
+      align-items: center;
+      padding: 20px 16px;
+      gap: 16px;
     }
   }
 
   &__subscribe {
-    @media all and (min-width: $screen-xl) {
-      align-items: center;
-      margin-top: 16px;
-    }
-
-    &.data-delete-subscribe {
-      animation-delay: 0.65s;
-    }
-
-    .data-delete-subscribe {
-      &__guarantee {
-        @media all and (min-width: $screen-xl) {
-          animation-delay: 0.8s;
-        }
-      }
-
-      &__cta {
-        @media all and (min-width: $screen-xl) {
-          animation-delay: 0.7s;
-        }
-      }
-    }
+    opacity: 0;
+    margin-top: 16px;
+    animation: appear-bottom-5 0.5s 0.5s forwards ease-out;
   }
 }
 </style>

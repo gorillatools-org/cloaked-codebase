@@ -27,7 +27,10 @@ const toast = useToast();
 const isSaving = ref(false);
 
 onMounted(() => {
-  if (route.name !== "VirtualCardsFundingSourceUpdate" || !route.params.fsId) {
+  if (
+    route.name !== "VirtualCardsWalletFundingSourceUpdate" ||
+    !route.params.fsId
+  ) {
     closeModal();
   }
 });

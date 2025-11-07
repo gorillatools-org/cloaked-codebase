@@ -1,0 +1,16 @@
+import { createElementVNode as _createElementVNode, openBlock as _openBlock, createElementBlock as _createElementBlock, createStaticVNode as _createStaticVNode } from "vue"
+
+const _hoisted_1 = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "112",
+  height: "112",
+  fill: "none",
+  viewBox: "0 0 112 112"
+}
+
+export function render(_ctx, _cache) {
+  return (_openBlock(), _createElementBlock("svg", _hoisted_1, _cache[0] || (_cache[0] = [
+    _createStaticVNode("<path fill=\"#FEFEFE\" d=\"M37.518 84s-23.456-8.602-18.296-17.683c3.284-5.735 10.79.478 22.518 6.691z\"></path><path fill=\"url(#paint0_linear_791_53869)\" d=\"M66.133 81.133c17.826 1.433 25.721-6.634 27.597-9.024 0 0-10.642-13.563-16.914-22.662-4.27-6.195-9.743-15.004-12.874-20.118-1.115-1.82-3.774-1.744-4.91.061-11.64 18.487-33.073 32.346-37.878 35.016 3.8-1.578 10.734 3.345 20.116 8.602 0 0 6.971 3.628 11.69 5.305 6.051 2.15 13.173 2.82 13.173 2.82\"></path><defs><linearGradient id=\"paint0_linear_791_53869\" x1=\"21.154\" x2=\"72.389\" y1=\"80.014\" y2=\"11.938\" gradientUnits=\"userSpaceOnUse\"><stop offset=\".302\" stop-color=\"#FF550C\"></stop><stop offset=\"1\" stop-color=\"#FD9871\"></stop></linearGradient></defs>", 3)
+  ])))
+}
+export default { render: render }

@@ -55,6 +55,8 @@ defineEmits(["update:modelValue"]);
     left: 50%;
     top: 50%;
     transform: translate3d(-50%, -50%, 0);
+    width: calc(100vw - 2 * 22px);
+    max-width: 560px;
   }
 }
 

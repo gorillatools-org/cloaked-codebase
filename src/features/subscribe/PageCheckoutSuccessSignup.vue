@@ -1,8 +1,7 @@
 <script setup>
 import PageCheckoutSuccessRecovery from "@/features/subscribe/PageCheckoutSuccessRecovery.vue";
 import PageCheckoutSuccessPasswordless from "@/features/subscribe/PageCheckoutSuccessPasswordless.vue";
-import PageCheckoutSubscriptionStarted from "@/features/subscribe/PageCheckoutSubscriptionStarted.vue";
-import { onBeforeMount, ref, computed, onMounted } from "vue";
+import { onBeforeMount, computed, onMounted } from "vue";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { PH_EVENT_USER_VIEWED_DATA_DELETION_SIGNUP_SUCCESS_SCREEN } from "@/scripts/posthogEvents.js";
 import { useRouter } from "vue-router";
@@ -13,9 +12,12 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  isCloakedPayCustomerRoute: {
+    type: Boolean,
+    required: true,
+  },
 });
 
-const showSubscriptionStarted = ref(true);
 const router = useRouter();
 
 const hasPassword = computed(() => {
@@ -27,7 +29,7 @@ const onPageCheckoutSuccessContinue = async () => {
   const subscription = store.getters["settings/getSubscription"];
 
   // Check if user subscribed to a Cloaked Pay plan
-  if (subscription?.product_identifier) {
+  if (subscription?.product_identifier && props.isCloakedPayCustomerRoute) {
     const cloakedPayPlans = store.getters["subscription/getPayPlans"] || [];
     const isCloakedPayPlan = cloakedPayPlans.some(
       (plan) => plan.product_id === subscription.product_identifier
@@ -51,18 +53,15 @@ onMounted(() => posthogCapture("user_signed_up"));
 </script>
 
 <template>
-  <PageCheckoutSubscriptionStarted
-    v-if="hasPassword && showSubscriptionStarted"
-    @continue="showSubscriptionStarted = false"
-  />
   <PageCheckoutSuccessRecovery
-    v-else-if="hasPassword"
+    v-if="hasPassword"
     :account="account"
     @continue="onPageCheckoutSuccessContinue"
   />
   <PageCheckoutSuccessPasswordless
     v-else
     :account="account"
+    :is-cloaked-pay-onboarding="isCloakedPayCustomerRoute"
     @continue="onPageCheckoutSuccessContinue"
   />
 </template>

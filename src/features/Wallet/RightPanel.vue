@@ -14,13 +14,6 @@ import { tools } from "@/scripts/tools";
 const isDeleting = ref(false);
 const toast = useToast();
 
-const props = defineProps({
-  createCardDisabled: {
-    type: Boolean,
-    default: false,
-  },
-});
-
 const transaction = computed(() => {
   return store.state.cards.rightPanel?.transaction;
 });
@@ -133,10 +126,7 @@ function handleKeydown(e) {
 
         <TransactionDetails v-if="transaction" />
         <CardDetails v-if="card" />
-        <SettingsDetails
-          v-if="settings"
-          :create-card-disabled="props.createCardDisabled"
-        />
+        <SettingsDetails v-if="settings" />
 
         <div class="footer">
           <DeleteCard

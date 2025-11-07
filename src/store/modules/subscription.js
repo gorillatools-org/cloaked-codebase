@@ -47,9 +47,7 @@ export default {
       return plans;
     },
     async fetchCloakedPayPlans({ commit }) {
-      const plans = await SubscriptionService.getSubscriptionPlans({
-        product_label: "cloaked_pay",
-      });
+      const plans = await SubscriptionService.getCloakedPaySubscriptionPlans();
       commit("SET_PAY_PLANS", plans);
       return plans;
     },
@@ -138,44 +136,58 @@ export default {
       openPlansModal(allowClose);
     },
     awaitSubscriptionChange({ rootGetters }) {
-      // backend is not in sync with payment providers, after payment, it takes a few moments for subscription status to update
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         let pollingInterval = null;
         let count = 0;
+
         pollingInterval = setInterval(() => {
           const oldProductId =
             rootGetters["settings/getSubscription"]?.product_identifier;
+          const oldSubscriptionState =
+            rootGetters["settings/getSubscription"]?.state;
 
           SubscriptionService.getSubscription()
             .then((newSubscription) => {
               const newProductId = newSubscription?.product_identifier;
+              const newSubscriptionState = newSubscription?.state;
 
               if (
                 rootGetters["settings/isSubscribed"] &&
-                newProductId !== oldProductId
+                (newProductId !== oldProductId ||
+                  newSubscriptionState !== oldSubscriptionState)
               ) {
-                resolve();
                 clearInterval(pollingInterval);
+                resolve();
               } else {
                 count++;
+
                 if (count === 10) {
                   toast.success(
                     "Still fetching your subscription status, please hold..."
                   );
                 } else if (count >= 60) {
-                  // after 1 minute, stop polling so this doesnt ping forever
-                  throw new Error(
-                    "Subscription status not updated after 1 minute"
+                  clearInterval(pollingInterval);
+                  toast.error(
+                    "There was an error fetching your subscription status. Please try refreshing the page."
+                  );
+                  reject(
+                    new Error("Subscription status not updated after 1 minute")
                   );
                 }
               }
             })
             .catch(() => {
               count++;
+
               if (count >= 60) {
                 clearInterval(pollingInterval);
-                return toast.error(
+                toast.error(
                   "There was an error fetching your subscription status. Please try refreshing the page."
+                );
+                reject(
+                  new Error(
+                    "Failed to fetch subscription status after 60 attempts"
+                  )
                 );
               }
             });

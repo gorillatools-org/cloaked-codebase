@@ -43,7 +43,6 @@ export default class DataDeleteService {
     phoneNumber,
     age,
     email,
-    useArray = false,
     redactAddress = false,
   }) {
     let query = {
@@ -55,8 +54,6 @@ export default class DataDeleteService {
       phone: phoneNumber,
       redactAddress: redactAddress,
     };
-
-    if (useArray) return { data: { results: [] } }; // todo implement array
 
     return await search()
       .post("/api/v1/data_report_scan44/search/", query)
@@ -229,6 +226,10 @@ export default class DataDeleteService {
     return api().get(
       `/api/v1/breach/report/email/?email=${encodeURIComponent(email)}&page=${page}&page_size=${pageSize}`
     );
+  }
+
+  static async getEmailBreachCompany(company) {
+    return api().get(`/api/v1/website/?search=${encodeURIComponent(company)}`);
   }
 }
 

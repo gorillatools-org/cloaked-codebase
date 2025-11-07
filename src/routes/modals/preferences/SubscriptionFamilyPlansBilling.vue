@@ -1,14 +1,35 @@
 <script setup>
+import { computed, toRef } from "vue";
 import SubscriptionFamilyPlansBillingStripe from "@/routes/modals/preferences/SubscriptionFamilyPlansBillingStripe.vue";
 import SubscriptionFamilyPlansBillingPaypal from "@/routes/modals/preferences/SubscriptionFamilyPlansBillingPaypal.vue";
 import SubscriptionFamilyPlansBillingText from "@/routes/modals/preferences/SubscriptionFamilyPlansBillingText.vue";
+import SubscriptionFamilyPlansBillingV2 from "@/routes/modals/preferences/SubscriptionFamilyPlansBillingV2.vue";
 import SettingsTitle from "@/features/Settings/SettingsTitle.vue";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import store from "@/store";
 
-defineProps({
+const props = defineProps({
   activePlan: {
     type: Object,
     default: null,
   },
+});
+
+// Create reactive reference to activePlan to maintain reactivity
+const activePlan = toRef(props, "activePlan");
+
+const { featureFlag: paymentManagementV2 } = usePostHogFeatureFlag(
+  "payment_method_management_v2"
+);
+
+// Check if user is the subscription owner
+const isOwner = computed(() => {
+  return store.getters["settings/getSubscription"]?.owner;
+});
+
+// Determine if we should show payment management components
+const shouldShowPaymentManagement = computed(() => {
+  return isOwner.value;
 });
 </script>
 
@@ -16,13 +37,16 @@ defineProps({
   <section>
     <SettingsTitle>Subscription</SettingsTitle>
     <SubscriptionFamilyPlansBillingText :active-plan="activePlan" />
-    <template
-      v-if="activePlan && $store.getters['settings/getSubscription'].owner"
-    >
-      <SubscriptionFamilyPlansBillingStripe
-        v-if="activePlan.provider === 'stripe'"
-        v-bind="$attrs"
-      />
+    <template v-if="shouldShowPaymentManagement">
+      <!-- For expired users without activePlan, default to stripe/V2 -->
+      <template v-if="!activePlan || activePlan.provider === 'stripe'">
+        <SubscriptionFamilyPlansBillingV2 v-if="paymentManagementV2" />
+
+        <SubscriptionFamilyPlansBillingStripe
+          v-else
+          v-bind="$attrs"
+        />
+      </template>
       <SubscriptionFamilyPlansBillingPaypal
         v-else-if="activePlan.provider === 'paypal'"
         v-bind="$attrs"
@@ -44,10 +68,6 @@ defineProps({
   }
 
   &__link {
-    // font-size: 15px;
-    // font-style: normal;
-    // font-weight: 600;
-    // line-height: normal;
     cursor: pointer;
     display: flex;
     align-items: center;

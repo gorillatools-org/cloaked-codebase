@@ -3,7 +3,7 @@ import { reactive, computed } from "vue";
 import BaseMedallion from "@/library/BaseMedallion.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
-import { useVirtualCardsApplicationStore } from "@/pinia/VirtualCards/useVirtualCardsApplicationStore";
+import { useVirtualCardsApplicationStore } from "@/features/VirtualCards/store/useVirtualCardsApplicationStore";
 import { storeToRefs } from "pinia";
 import moment from "moment";
 import { onMounted } from "vue";

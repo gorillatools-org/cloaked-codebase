@@ -7,6 +7,7 @@ export type VCBaseCardBorderProps = {
   borderRadius?: string | number;
   focused?: boolean;
   loading?: boolean;
+  clickable?: boolean;
 };
 
 const props = withDefaults(defineProps<VCBaseCardBorderProps>(), {
@@ -14,6 +15,7 @@ const props = withDefaults(defineProps<VCBaseCardBorderProps>(), {
   focused: false,
   borderRadius: 16,
   loading: false,
+  clickable: false,
 });
 
 const cardRef = useTemplateRef<HTMLElement>("cardRef");
@@ -46,6 +48,8 @@ const cursorStyle = computed(() => {
     :class="{
       'vc-base-card-border--focused': props.focused && !props.loading,
       'vc-base-card-border--loading': props.loading,
+      'vc-base-card-border--spotlight': props.enableSpotlight,
+      'vc-base-card-border--clickable': props.clickable,
     }"
   >
     <span
@@ -61,14 +65,37 @@ const cursorStyle = computed(() => {
 .vc-base-card-border {
   position: relative;
   background-color: $color-base-black-10;
-  overflow: hidden;
   padding: 1px;
   border-radius: var(--vc-base-card-border-radius);
 
+  &--loading,
+  &--focused,
+  &--spotlight {
+    overflow: hidden;
+  }
+
+  &--spotlight {
+    padding: 1.4px;
+  }
+
   &--focused {
-    background-color: $color-primary-100;
+    background-color: $color-primary-70;
     transition: background-color 0.4s ease-in;
     transition-delay: 0.4s;
+  }
+
+  &--focused:not(&--spotlight) {
+    transition: background-color 0.15s ease-in;
+    transition-delay: unset;
+  }
+
+  &--clickable:not(&--focused, &--loading) {
+    cursor: pointer;
+    transition: background-color 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      background-color: $color-primary-30;
+    }
   }
 
   &__cursor {
@@ -76,17 +103,19 @@ const cursorStyle = computed(() => {
     width: 60px;
     height: 60px;
     filter: blur(30px);
-    background-color: $color-primary-100;
+    background-color: $color-primary-70;
     border-radius: 50%;
     pointer-events: none;
     transform: translate(-50%, -50%);
     transition:
-      width 0.3s ease-in-out,
-      height 0.3s ease-in-out;
+      background-color 0.12s ease-in,
+      width 0.2s ease-in,
+      height 0.2s ease-in;
 
     .vc-base-card-border--loading & {
       left: 0%;
       top: 0%;
+      background-color: $color-primary-100;
       animation: loading 1.7s linear infinite;
     }
 

@@ -5,6 +5,7 @@ import { AUTH_V3_ROUTES_ENABLED } from "@/scripts/featureFlags";
 import { logout } from "@/scripts/actions/auth";
 import { useToast } from "@/composables/useToast.js";
 import { useBasicMode } from "@/composables/useBasicMode.js";
+import { useCloakedPaySubscription } from "@/features/VirtualCards/composables/useCloakedPaySubscription.ts";
 
 const toast = useToast();
 
@@ -12,7 +13,6 @@ const toast = useToast();
 import HomePage from "@/features/home/HomePage.vue";
 
 import SubscribeNow from "@/features/subscribe/SubscribeNow.vue";
-import DownloadApp from "@/features/onboarding/DownloadApp.vue";
 import AutoPasswordChange from "@/routes/AutoPasswordChange.vue";
 
 // data delete
@@ -21,10 +21,13 @@ import DataDeletePageGuestOtp from "@/features/data-delete/DataDeletePageGuestOt
 import DataRemoval from "@/routes/DataDeletion/DataRemoval.vue";
 
 // cloaked pay
-import Cards from "@/routes/CloakedCards/Cards.vue";
-import WalletPage from "@/routes/WalletPage.vue";
+import { PH_VIRTUAL_CARDS_FEATURE_FLAG_SUMMARY_VIEW_DETAILS } from "@/features/VirtualCards/constants/posthog-feature-flag";
+import VirtualCardsPage from "@/routes/CloakedPay/VirtualCardsPage.vue";
+import VirtualCardsWalletLayoutPage from "@/routes/CloakedPay/VirtualCardsWalletLayoutPage.vue";
+import VirtualCardsWalletIndexPage from "@/routes/CloakedPay/Wallet/VirtualCardsWalletIndexPage.vue";
+import VirtualCardsWalletSummaryTransactionsPage from "@/routes/CloakedPay/Wallet/VirtualCardsWalletSummaryTransactionsPage.vue";
+import VirtualCardsWalletCardPage from "@/routes/CloakedPay/Wallet/VirtualCardsWalletCardPage.vue";
 import WalletWaitlistPage from "@/routes/WalletWaitlistPage.vue";
-import Transactions from "@/routes/CloakedCards/Transactions.vue";
 import CloakedPaySubscriptionOnboardingPage from "@/routes/CloakedPay/CloakedPaySubscriptionOnboardingPage.vue";
 
 // identities
@@ -84,6 +87,9 @@ import InboxDetail from "@/features/inbox/InboxDetail.vue";
 // esim
 import EsimGetStarted from "@/routes/Pages/EsimGetStarted.vue";
 import EsimPage from "@/routes/Pages/EsimPage.vue";
+
+// error pages
+import Page404 from "@/routes/Pages/Page404.vue";
 import { useEncryptionGate } from "@/composables/useEncryptionGate";
 import CheckVerificationEmail from "@/features/verification/CheckVerificationEmail.vue";
 
@@ -103,6 +109,7 @@ import PageEnrollmentActivated from "@/routes/enrollment/PageEnrollmentActivated
 import PageExposureStatusEnroll from "@/routes/enrollmentV2/PageExposureStatusEnroll.vue";
 import PageExposureStatusEnrollExposures from "@/routes/enrollmentV2/PageExposureStatusEnrollExposures.vue";
 import PageExposureStatusEnrollMonitoring from "@/routes/enrollmentV2/PageExposureStatusEnrollMonitoring.vue";
+import PageExposureStatusEnrollSuccess from "@/routes/enrollmentV2/PageExposureStatusEnrollSuccess.vue";
 
 // Exposure Status
 import PageExposureStatus from "@/routes/Pages/PageExposureStatus.vue";
@@ -130,6 +137,7 @@ import PageCheckoutPayment from "@/routes/checkout/PageCheckoutPayment.vue";
 import NativeCheckout from "@/routes/NativeCheckout.vue";
 
 import { useMonitoringModal } from "@/features/monitoring/useMonitoringModal.js";
+import { initiateEncryption } from "@/scripts/actions/encryption";
 
 import ExtensionAuthIssue from "@/features/extension-auth/ExtensionAuthIssue.vue";
 import ExtensionAuthStatus from "@/features/extension-auth/ExtensionAuthStatus.vue";
@@ -154,9 +162,103 @@ const beforeEnterImport = (to, from, next) => {
   next();
 };
 
-const beforeEnterSettings = (to, from, next) => {
+const beforeEnterSettings = async (to, from, next) => {
   store.dispatch("settings/savePrevRouteName", from.name || "Home");
   store.dispatch("closeRightPanel");
+
+  if (to.query.webview !== undefined) {
+    const isWebview =
+      to.query.webview === "true" ||
+      to.query.webview === "1" ||
+      to.query.webview === "";
+    store.commit("setWebviewMode", isWebview);
+  }
+
+  if (to.query.acctok && authenticated.value) {
+    const cleanQuery = { ...to.query };
+    delete cleanQuery.acctok;
+    return next({
+      name: to.name,
+      params: to.params,
+      query: cleanQuery,
+      hash: to.hash,
+      replace: true,
+    });
+  }
+
+  if (to.query.acctok && !authenticated.value) {
+    const isWebview = to.query.webview !== undefined;
+    const token = to.query.acctok;
+
+    if (!isWebview || !token) {
+      toast.error("Invalid authentication request. Please log in.");
+      return next({
+        name: "login",
+        query: { prevRoute: to.fullPath.split("?")[0] },
+      });
+    }
+
+    const cleanQuery = { ...to.query };
+    delete cleanQuery.acctok;
+    delete cleanQuery.webview;
+    const cleanUrl = `${to.path}${Object.keys(cleanQuery).length > 0 ? "?" + new URLSearchParams(cleanQuery).toString() : ""}`;
+    window.history.replaceState({}, "", cleanUrl);
+
+    try {
+      store.commit("authentication/setAuth", {
+        oauth: {
+          access_token: token,
+          refresh_token: "",
+          expires_in: 3600,
+        },
+      });
+
+      await store.dispatch("authentication/getUser");
+
+      const user = store.state.authentication?.user;
+      if (
+        user?.encryption_status === 3 &&
+        !store.state.authentication?.encryption
+      ) {
+        store.commit("authentication/setPayload", {
+          payload: {
+            user: user,
+            encryption: {
+              public_key: null,
+              private_key: null,
+            },
+            auth: {},
+          },
+        });
+      }
+
+      await initiateEncryption();
+
+      await store.dispatch("authentication/setRefreshTimeout");
+
+      return next({
+        ...to,
+        query: cleanQuery,
+        replace: true,
+      });
+    } catch {
+      store.commit("authentication/setAuth", {
+        oauth: {
+          access_token: "",
+          refresh_token: "",
+          expires_in: 0,
+        },
+      });
+
+      toast.error("Invalid or expired authentication token. Please log in.");
+
+      return next({
+        name: "login",
+        query: { prevRoute: to.fullPath.split("?")[0] },
+      });
+    }
+  }
+
   return allowOnlyAuthenticatedUsers(to, from, next);
 };
 
@@ -208,9 +310,11 @@ const callGuardEnabled = computed(() => {
   return store.state.authentication?.user?.flags?.["spam-blocking"];
 });
 
-const isCloakedPaySubscriptionEnabled = computed(() => {
+const { isCloakedPaySubscriptionEnabled } = useCloakedPaySubscription();
+
+const isCloakedPaySummaryViewDetailsEnabled = computed(() => {
   return !!store.state.authentication?.user?.flags?.[
-    "cloaked_pay_enable_subscription"
+    PH_VIRTUAL_CARDS_FEATURE_FLAG_SUMMARY_VIEW_DETAILS
   ];
 });
 
@@ -262,9 +366,18 @@ const allowOnlyAdvancedMode = (to, from, next) => {
   return next();
 };
 
+const allowOnlyCloakedPaySummaryViewDetailsEnabledUsers = (to, from, next) => {
+  if (!isCloakedPaySummaryViewDetailsEnabled.value) {
+    return next({ name: "VirtualCardsWalletIndex" });
+  }
+  return next();
+};
+
 const allowOnlyPayEnabledUsers = (to, from, next) => {
   if (
-    !store.state.authentication?.user?.cloaked_card_enabled &&
+    (store.state.authentication?.user?.cloaked_card_enabled_status !==
+      "enabled" ||
+      !store.state.authentication?.user?.cloaked_card_enabled) &&
     !isCloakedPaySubscriptionEnabled.value
   ) {
     return next({ name: "VirtualCardsWaitlist" });
@@ -275,11 +388,31 @@ const allowOnlyPayEnabledUsers = (to, from, next) => {
 const allowOnlyPayDisabledUsers = (to, from, next) => {
   if (
     store.state.authentication?.user?.cloaked_card_enabled ||
+    store.state.authentication?.user?.cloaked_card_enabled_status ===
+      "enabled" ||
     isCloakedPaySubscriptionEnabled.value
   ) {
     return next({ name: "VirtualCardsIndex" });
   }
   return next();
+};
+
+const allowOnlyPayWalletEnabledUsers = (to, from, next) => {
+  const user = store.state.authentication?.user;
+
+  const isEnabled =
+    !!user?.cloaked_card_enabled ||
+    user?.cloaked_card_enabled_status === "enabled";
+
+  const isKycValidated = !!user?.cloaked_card_kyc_configured;
+  const isOnboardingCompleted =
+    !!user?.cloaked_card_post_kyc_onboarding_completed;
+
+  if (isEnabled && isKycValidated && isOnboardingCompleted) {
+    return next();
+  }
+
+  return next({ name: "VirtualCardsIndex" });
 };
 
 const allowOnlyPayOnboardingEnabled = (to, from, next) => {
@@ -312,13 +445,6 @@ const routes = [
     component: DataRemovalGraphShared,
   },
   {
-    path: "/cards",
-    name: "Cards",
-    component: Cards,
-    meta: { title: "Cards" },
-    beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
-  },
-  {
     path: "/cloaked-pay",
     name: "CloakedPay",
     meta: { title: "Cloaked Pay", icon: "credit-card" },
@@ -341,60 +467,90 @@ const routes = [
   {
     path: "/virtual-cards",
     name: "VirtualCards",
-    alias: ["/wallet"],
+    alias: "/wallet",
     meta: { title: "Virtual Cards", icon: "credit-card" },
     beforeEnter: [beforeEnterActivity],
     children: [
       {
         path: "",
         name: "VirtualCardsIndex",
-        component: WalletPage,
+        component: VirtualCardsPage,
         meta: { title: "Virtual Cards", icon: "credit-card" },
-        beforeEnter: [
-          allowOnlyPayEnabledUsers,
-          allowOnlyEncryptedUsers,
-          beforeEnterActivity,
+        beforeEnter: [allowOnlyEncryptedUsers, allowOnlyPayEnabledUsers],
+        children: [
+          {
+            path: "wallet",
+            name: "VirtualCardsWallet",
+            component: VirtualCardsWalletLayoutPage,
+            meta: { title: "Virtual Cards", icon: "credit-card" },
+            beforeEnter: [allowOnlyPayWalletEnabledUsers],
+            children: [
+              {
+                path: "",
+                name: "VirtualCardsWalletIndex",
+                component: VirtualCardsWalletIndexPage,
+                meta: {
+                  title: "Virtual Cards",
+                  icon: "credit-card",
+                  viewKey: "index",
+                },
+              },
+              {
+                path: "summary",
+                name: "VirtualCardsWalletSummary",
+                component: VirtualCardsWalletIndexPage,
+                beforeEnter: [
+                  allowOnlyCloakedPaySummaryViewDetailsEnabledUsers,
+                ],
+                meta: {
+                  title: "Virtual Cards",
+                  icon: "credit-card",
+                  viewKey: "index",
+                },
+              },
+              {
+                path: "summary/:type(payments|refunds|blocked)",
+                name: "VirtualCardsWalletSummaryTransactions",
+                component: VirtualCardsWalletSummaryTransactionsPage,
+                beforeEnter: [
+                  allowOnlyCloakedPaySummaryViewDetailsEnabledUsers,
+                ],
+              },
+              {
+                path: "card/:id",
+                name: "VirtualCardsWalletCard",
+                alias: ["/virtual-cards/card/:id"], // Legacy route
+                component: VirtualCardsWalletCardPage,
+                meta: {
+                  title: "Virtual Cards",
+                  icon: "credit-card",
+                  viewKey: "card",
+                },
+              },
+              {
+                path: "funding-source/:fsId/update",
+                name: "VirtualCardsWalletFundingSourceUpdate",
+                component: VirtualCardsWalletIndexPage,
+                meta: {
+                  title: "Virtual Cards",
+                  icon: "credit-card",
+                  viewKey: "index",
+                },
+              },
+            ],
+          },
         ],
       },
       {
-        path: "/virtual-cards/waitlist",
+        path: "waitlist",
         name: "VirtualCardsWaitlist",
         component: WalletWaitlistPage,
         meta: { title: "Virtual Cards", icon: "credit-card" },
-        beforeEnter: [allowOnlyPayDisabledUsers, beforeEnterActivity],
-      },
-      {
-        path: "/virtual-cards/card/:id",
-        name: "VirtualCardsCard",
-        alias: ["/wallet/card/:id"],
-        component: WalletPage,
-        meta: { title: "Virtual Cards", icon: "credit-card" },
-        beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
-      },
-      {
-        path: "/virtual-cards/funding-source/:fsId/update",
-        name: "VirtualCardsFundingSourceUpdate",
-        component: WalletPage,
-        meta: { title: "Virtual Cards", icon: "credit-card" },
-        beforeEnter: [allowOnlyEncryptedUsers, beforeEnterActivity],
+        beforeEnter: [allowOnlyPayDisabledUsers],
       },
     ],
     // Allow query parameters
     props: (route) => ({ query: route.query }),
-  },
-  {
-    path: "/transactions",
-    name: "Transactions",
-    component: Transactions,
-    meta: { title: "Transactions" },
-    beforeEnter: allowOnlyEncryptedUsers,
-  },
-  {
-    path: "/support",
-    name: "Support",
-    component: All,
-    meta: { title: "Recent Activity", support: true },
-    beforeEnter: allowOnlyEncryptedUsers,
   },
   {
     path: "/trash",
@@ -419,30 +575,6 @@ const routes = [
     component: ReferralDenied,
     beforeEnter: allowOnlyGuests,
   },
-  /* Legacy Auth V2 routes */
-  {
-    path: "/auth/v2/login",
-    name: "loginv2",
-    component: Login,
-    props: { version: 2 },
-    beforeEnter: allowOnlyGuests,
-  },
-  {
-    path: "/auth/v2/forgot-password",
-    name: "forgotv2",
-    component: Forgot,
-    props: { version: 2 },
-    beforeEnter: allowOnlyGuests,
-  },
-  {
-    path: "/auth/v2/signup",
-    alias: ["/auth/v2/register", "/auth/v2/sign-up"],
-    name: "signupv2",
-    component: Register,
-    props: { version: 2 },
-    beforeEnter: allowOnlyGuests,
-  },
-  /* End legacy Auth V2 routes */
   {
     path: "/auth/signup",
     alias: ["/auth/register", "/auth/sign-up"],
@@ -1102,12 +1234,6 @@ const routes = [
     ],
   },
   {
-    path: "/download-app",
-    name: "DownloadApp",
-    component: DownloadApp,
-    meta: { title: "Download App" },
-  },
-  {
     path: "/home",
     name: "Home",
     component: HomePage,
@@ -1164,6 +1290,13 @@ const routes = [
         name: "ExposureStatusEnrollMonitoring",
         component: PageExposureStatusEnrollMonitoring,
         meta: { title: "Monitoring Enrollment", hideAside: true },
+        beforeEnter: allowOnlyAuthenticatedUsers,
+      },
+      {
+        path: "success",
+        name: "ExposureStatusEnrollSuccess",
+        component: PageExposureStatusEnrollSuccess,
+        meta: { title: "You're protected", hideAside: true },
         beforeEnter: allowOnlyAuthenticatedUsers,
       },
     ],
@@ -1255,8 +1388,9 @@ const routes = [
   // NOTE: this catchall should always be listed last
   {
     path: "/:pathMatch(.*)*",
-    redirect: "/",
-    beforeEnter: allowOnlyAuthenticatedUsers,
+    name: "404",
+    component: Page404,
+    meta: { title: "Page Not Found" },
   },
 ];
 
@@ -1283,6 +1417,14 @@ router.beforeEach((to, from, next) => {
     store.commit("unclipBody");
   }
   store.commit("closeCloak");
+
+  if (!to.path.startsWith("/settings") && store.state.ui.webviewMode) {
+    store.commit("setWebviewMode", false);
+  }
+
+  if (to.query.webview === "false") {
+    store.commit("setWebviewMode", false);
+  }
 
   // Check if it's the root path AND NOT an extension auth callback
   if (to.path === "/") {

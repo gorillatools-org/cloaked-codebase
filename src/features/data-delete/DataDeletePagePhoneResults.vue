@@ -1,9 +1,11 @@
 <script setup>
 import BaseButton from "@/library/BaseButton.vue";
+import BaseIcon from "@/library/BaseIcon.vue";
 import DataDeletePagePhoneResultsCard from "@/features/data-delete/DataDeletePagePhoneResultsCard.vue";
 import DataDeleteSticky from "@/features/data-delete/atoms/DataDeleteSticky.vue";
 import DataDeleteThreatLevel from "@/features/data-delete/atoms/DataDeleteThreatLevel.vue";
 import DataDeleteEmailCaptureModal from "@/features/data-delete/atoms/DataDeleteEmailCaptureModal.vue";
+import DataDeleteCompanyHeader from "@/features/data-delete/atoms/DataDeleteCompanyHeader.vue";
 import {
   PH_EVENT_USER_CLICKED_DATA_DELETION_NOT_ME_BUTTON,
   PH_EVENT_USER_CLICKED_DATA_DELETION_SEARCH_RESULTS_CONTINUE_BUTTON,
@@ -18,6 +20,7 @@ import {
   usePostHogFeatureFlag,
   fetchFeatureFlag,
 } from "@/composables/usePostHogFeatureFlag.js";
+import { useRoute } from "vue-router";
 
 const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
   PH_FEATURE_FLAG_DD_EMAIL_CAPTURE_MODAL
@@ -26,6 +29,8 @@ const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
 const isEmailCaptureModalFlag = computed(
   () => hasLoadedFeatureFlag.value && featureFlag.value === true
 );
+
+const route = useRoute();
 
 const props = defineProps({
   searchResults: {
@@ -108,9 +113,15 @@ onMounted(() => {
     console.error(e);
   }
 });
+
+// for enterprise scan
+const isEnterpriseLeadScanResults = computed(
+  () => !!route.query?.email_address
+);
 </script>
 
 <template>
+  <DataDeleteCompanyHeader />
   <div class="data-delete-results data-delete-phone-results">
     <div class="data-delete-results__column">
       <DataDeleteThreatLevel
@@ -136,7 +147,18 @@ onMounted(() => {
         data brokers.
       </BaseText>
       <DataDeleteSticky class="data-delete-phone-results__cta">
+        <a
+          v-if="isEnterpriseLeadScanResults"
+          href="https://calendar.app.google/MXaBzzaZhermx9FU7"
+          class="data-delete-phone-results__cta-button data-delete-phone-results__cta-link"
+        >
+          <BaseText variant="body-2-semibold">Schedule a call now!</BaseText>
+          <span class="data-delete-phone-results__cta-link-icon">
+            <BaseIcon name="arrow-right" />
+          </span>
+        </a>
         <BaseButton
+          v-else
           variant="primary"
           size="lg"
           icon="arrow-right"
@@ -199,6 +221,53 @@ onMounted(() => {
 
     &-button {
       width: 100%;
+    }
+
+    &-link {
+      display: inline-grid;
+      grid-template-columns: 44px 1fr 44px;
+      grid-template-areas: "left text right";
+      align-items: center;
+      column-gap: 8px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+      min-height: 54px;
+      width: 100%;
+      background-color: $color-primary-100;
+      color: $color-primary-1;
+
+      &:hover {
+        opacity: 0.9;
+      }
+
+      .base-text {
+        grid-area: text;
+        text-align: center;
+        padding: 0 6px;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        display: block;
+      }
+    }
+
+    &-link-icon {
+      grid-area: right;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: $color-primary-90;
+      border-radius: 50%;
+      font-size: 16px;
+      font-weight: 500;
+      width: 44px;
+      height: 44px;
     }
   }
 }

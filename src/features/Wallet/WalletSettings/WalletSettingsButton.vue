@@ -65,7 +65,7 @@ const props = defineProps({
   font-style: normal;
   font-weight: 500;
   line-height: normal;
-  border: 1px solid $color-primary-10;
+  border: 1px solid $color-base-black-10;
   padding: 16px;
   display: flex;
   gap: 16px;
@@ -83,7 +83,7 @@ const props = defineProps({
     cursor: pointer;
 
     &:hover {
-      background-color: $color-primary-5;
+      background-color: $color-primary-10;
     }
   }
 
@@ -92,7 +92,7 @@ const props = defineProps({
     position: relative;
 
     .icon {
-      background-color: $color-primary-5;
+      background-color: $color-base-black-10;
       border-radius: 50%;
       mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
       background-repeat: no-repeat;
@@ -119,7 +119,7 @@ const props = defineProps({
           transform: translateY(-50%);
           width: 100%;
           height: 80%;
-          background-color: $color-primary-5;
+          background-color: $color-base-black-10;
           border-radius: 20px;
           mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300%
             100%;
@@ -143,7 +143,7 @@ const props = defineProps({
           transform: translateY(-50%);
           width: 80%;
           height: 70%;
-          background-color: $color-primary-5;
+          background-color: $color-base-black-10;
           border-radius: 20px;
           mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300%
             100%;

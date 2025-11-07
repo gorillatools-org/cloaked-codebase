@@ -27,16 +27,32 @@ import ChoosePlanSignup from "@/features/subscribe/ChoosePlanSignup.vue";
 import TrustLogos from "@/features/subscribe/TrustLogos.vue";
 import PageCheckoutFeatureVpn from "./PageCheckoutFeatureVpn.vue";
 import PageCheckoutFeatureCloakedPay from "./PageCheckoutFeatureCloakedPay.vue";
+import SubscribeNowPlans from "@/features/subscribe/SubscribeNowPlans.vue";
 import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 import {
   PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT,
   PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE,
-  PH_FEATURE_FLAG_CLOAKED_PAY_ENABLE_SUBSCRIPTION,
 } from "@/scripts/posthogEvents";
+import { PH_FEATURE_FLAG_CLOAKED_PAY_ENABLE_SUBSCRIPTION } from "@/features/VirtualCards/constants/posthog-feature-flag";
 import { posthogCapture } from "@/scripts/posthog.js";
 
 const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
   PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
+);
+
+const isDiagnosticQuestions = computed(
+  () =>
+    hasLoadedFeatureFlag.value &&
+    (featureFlag.value === "pre-checkout-diagnostic-3q" ||
+      featureFlag.value === "pre-checkout-diagnostic-1q")
+);
+
+const questionnaireSkipped = computed(
+  () => sessionStorage.getItem("questionnaire-skipped") === "true"
+);
+
+const shouldShowPlans = computed(
+  () => isDiagnosticQuestions.value && !questionnaireSkipped.value
 );
 
 const {
@@ -203,6 +219,7 @@ watch(
         showLimitedDiscountOfferBanner && !!timeLimitedDiscount,
     }"
   >
+    <SubscribeNowPlans v-if="shouldShowPlans" />
     <PageCheckoutFeatureVpn v-if="showFeatureVpn" />
     <PageCheckoutFeatureCloakedPay v-if="cloakedPay.showBanner" />
     <ChoosePlanPickerFlat

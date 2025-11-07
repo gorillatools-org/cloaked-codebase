@@ -36,6 +36,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  withoutFooterPadding: {
+    type: Boolean,
+    default: false,
+  },
   footerBorder: {
     type: Boolean,
     default: false,
@@ -202,6 +206,7 @@ watch(
         class="modal-footer"
         :class="{
           'modal-footer--bordered': props.footerBorder,
+          'modal-footer--no-padding': props.withoutFooterPadding,
         }"
       >
         <slot name="footer" />
@@ -290,6 +295,10 @@ watch(
       .modal-body {
         padding: 36px 36px;
         overflow-x: hidden;
+
+        &--no-padding {
+          padding: 0;
+        }
       }
     }
 
@@ -355,6 +364,10 @@ watch(
 
       &--top {
         border-bottom: 1px solid $color-primary-10;
+      }
+
+      &--no-padding {
+        padding: 0;
       }
     }
   }

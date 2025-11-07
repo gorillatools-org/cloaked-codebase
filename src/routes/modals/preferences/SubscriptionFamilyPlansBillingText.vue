@@ -3,6 +3,7 @@ import { toRef, computed } from "vue";
 import store from "@/store";
 import { useFormattedDate } from "@/composables/useFormattedDate";
 import { usePlanType } from "@/features/subscribe/composables/usePlanType.js";
+import { usePlans } from "@/features/subscribe/composables/usePlans.ts";
 import BaseText from "@/library/BaseText.vue";
 
 const props = defineProps({
@@ -13,6 +14,9 @@ const props = defineProps({
 });
 
 const planType = usePlanType(toRef(() => props.activePlan));
+
+// Get all available plans for price lookup
+const { allPlans } = usePlans();
 
 const subscriptionEndDate = useFormattedDate(
   toRef(() => store.getters["settings/getSubscription"]?.expires_date)
@@ -25,20 +29,42 @@ const isCancelled = computed(() => {
   );
 });
 
-const subscriptionCancelReason = computed(() => {
-  return store.getters["settings/getSubscription"]?.reason_for_cancellation;
+// Get subscription data for expired users
+const expiredSubscription = computed(() => {
+  return store.getters["settings/getSubscription"];
 });
 
-const cancelledDisplayText = computed(() => {
-  switch (subscriptionCancelReason.value) {
-    case "removed_from_bulk_plan":
-      return "You have been removed from a managed Cloaked plan";
-    case "voluntary_cancellation":
-      return "Your managed Cloaked plan has been cancelled";
-    case "plan_expired":
-    default:
-      return "Your managed Cloaked plan has expired";
+// Format expired plan details
+const expiredPlanText = computed(() => {
+  if (!expiredSubscription.value) {
+    return "You are on a limited plan.";
   }
+
+  const planTitle = expiredSubscription.value.product_plan_title || "Cloaked";
+  const interval = expiredSubscription.value.recurring_interval;
+
+  // Try to get price from subscription data first
+  let price = expiredSubscription.value.product_price;
+
+  // If no price in subscription, try to find it from available plans using product_identifier
+  if (!price && expiredSubscription.value.product_identifier) {
+    const matchingPlan = allPlans.value.find(
+      (plan) => plan.product_id === expiredSubscription.value.product_identifier
+    );
+    price = matchingPlan?.price;
+  }
+
+  let priceText = "";
+  if (price && interval) {
+    const formattedPrice = (price / 100).toFixed(2);
+    priceText = ` for $${formattedPrice}${interval === "annually" ? "/year" : "/month"}`;
+  } else if (price) {
+    // Fallback if no interval info
+    const formattedPrice = (price / 100).toFixed(2);
+    priceText = ` for $${formattedPrice}`;
+  }
+
+  return `You were on a ${planTitle} plan${priceText}. Reactivate to restore access.`;
 });
 
 const planPriceText = computed(() => {
@@ -72,7 +98,7 @@ const planPriceText = computed(() => {
     variant="body-2-semibold"
     class="family-plans-billing-text"
   >
-    {{ cancelledDisplayText }}. You are on a limited plan.
+    {{ expiredPlanText }}
   </BaseText>
   <BaseText
     v-else-if="$store.getters['settings/getSubscription'].owner"

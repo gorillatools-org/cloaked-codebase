@@ -2,20 +2,28 @@
 import VCBaseCardBorder, {
   type VCBaseCardBorderProps,
 } from "./VCBaseCardBorder.vue";
+import { useAttrs } from "vue";
 
-const DEFAULT_BORDER_RADIUS = 16;
-
-type Props = {
-  border?: VCBaseCardBorderProps;
+export type VCBaseCardProps = {
+  border?: Omit<VCBaseCardBorderProps, "clickable">;
+  clickable?: boolean;
 };
 
-withDefaults(defineProps<Props>(), {
+defineOptions({
+  inheritAttrs: false,
+});
+
+const DEFAULT_BORDER_RADIUS = 16;
+const attrs = useAttrs();
+
+withDefaults(defineProps<VCBaseCardProps>(), {
   border: () => ({
     loading: false,
     focused: false,
     enableSpotlight: false,
     borderRadius: DEFAULT_BORDER_RADIUS,
   }),
+  clickable: false,
 });
 </script>
 
@@ -23,11 +31,15 @@ withDefaults(defineProps<Props>(), {
   <VCBaseCardBorder
     class="vc-base-card"
     :enable-spotlight="border.enableSpotlight"
-    :border-radius="border.borderRadius || DEFAULT_BORDER_RADIUS"
+    :border-radius="border.borderRadius ?? DEFAULT_BORDER_RADIUS"
     :loading="border.loading"
     :focused="border.focused"
+    :clickable="clickable"
   >
-    <div class="vc-base-card__body">
+    <div
+      class="vc-base-card__body"
+      v-bind="attrs"
+    >
       <slot />
     </div>
   </VCBaseCardBorder>

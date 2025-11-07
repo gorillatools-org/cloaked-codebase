@@ -5,8 +5,15 @@ import BaseOrb from "@/library/BaseOrb.vue";
 import BaseButton from "@/library/BaseButton.vue";
 import { useDataDeleteOverlay } from "@/routes/DataDeletion/composables/useDataDeleteOverlay";
 import { posthogCapture } from "@/scripts/posthog.js";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const { openDataDeleteOverlay } = useDataDeleteOverlay();
+const { featureFlag: enrollmentV2Enabled } = usePostHogFeatureFlag(
+  "enrollment_v2_enabled"
+);
 
 const props = defineProps({
   isEnrolled: {
@@ -22,6 +29,14 @@ watch(showEnrollCta, (newVal) => {
     posthogCapture("dashboard_pre_enrollment_screen");
   }
 });
+
+function onEnrollNowClick() {
+  if (enrollmentV2Enabled.value) {
+    router.push({ name: "ExposureStatusEnrollExposures" });
+  } else {
+    openDataDeleteOverlay();
+  }
+}
 </script>
 
 <template>
@@ -64,7 +79,7 @@ watch(showEnrollCta, (newVal) => {
           icon="arrow-right"
           full-width
           class="exposure-status-splash__animate-item exposure-status-splash__animate-item--3"
-          @click="openDataDeleteOverlay"
+          @click="onEnrollNowClick"
         >
           Enroll Now
         </BaseButton>

@@ -8,7 +8,7 @@ import UiTooltip from "@/features/ui/ui-tooltip.vue";
 import BaseInput from "@/library/BaseInput.vue";
 import BaseInputFeedback from "@/library/BaseInputFeedback.vue";
 import { useValidation } from "@/composables/validation/useValidation";
-import { useVirtualCardsApplicationStore } from "@/pinia/VirtualCards/useVirtualCardsApplicationStore";
+import { useVirtualCardsApplicationStore } from "@/features/VirtualCards/store/useVirtualCardsApplicationStore";
 import { posthogCapture } from "@/scripts/posthog.js";
 
 const emit = defineEmits<{ (e: "continue"): void }>();

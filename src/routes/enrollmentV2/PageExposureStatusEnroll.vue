@@ -14,7 +14,11 @@ import { PH_EVENT_USER_VIEWED_DD_SUBMISSION_FORM } from "@/scripts/posthogEvents
 import { useColorScheme } from "@/composables/useColorScheme";
 import { posthogCapture } from "@/scripts/posthog.js";
 import EnrollmentCardHeader from "@/features/enrollment/EnrollmentCardHeader.vue";
+import UserService from "@/api/actions/user-service.js";
 import { getPosthog } from "@/scripts/posthog.js";
+import { useDisplay } from "@/composables/useDisplay.js";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { useRouter } from "vue-router";
 const { colorScheme } = useColorScheme();
 
 onMounted(() => {
@@ -22,15 +26,26 @@ onMounted(() => {
     theme: colorScheme.value,
   });
 
-  getPosthog().then((postHog) => {
-    postHog?.startSessionRecording();
-  });
+  getPosthog()
+    .then((posthog) => {
+      if (posthog?.sessionRecordingStarted()) {
+        posthog?.stopSessionRecording();
+      }
+      posthog?.startSessionRecording();
+    })
+    .catch(() => {
+      // do nothing, silently handle error
+    });
 });
 
 onBeforeUnmount(() => {
-  getPosthog().then((postHog) => {
-    postHog?.stopSessionRecording();
-  });
+  getPosthog()
+    .then((posthog) => {
+      posthog?.stopSessionRecording();
+    })
+    .catch(() => {
+      // do nothing, silently handle error
+    });
 });
 
 const props = defineProps({
@@ -86,6 +101,27 @@ onBeforeMount(autofillFormOnce);
 const hasExitedDeleteFlow = computed(() => {
   return store.getters.getFlag(HAS_EXITED_DELETE_FLOW);
 });
+
+const router = useRouter();
+const { isMobile } = useDisplay();
+const { featureFlag } = usePostHogFeatureFlag("download-app-experiment");
+
+async function exitDeleteFlow() {
+  if (isMobile.value && featureFlag.value.startsWith("call-guard")) {
+    return router.push({ name: "ExposureStatusEnrollSuccess" });
+  }
+
+  if (featureFlag.value.startsWith("enrollment-progress")) {
+    return router.push({ name: "ExposureStatusEnrollSuccess" });
+  }
+
+  await UserService.setFlag({
+    name: HAS_EXITED_DELETE_FLOW,
+    value: true,
+  });
+
+  return router.push({ name: "ExposureStatusBrokers" });
+}
 </script>
 
 <template>
@@ -105,6 +141,7 @@ const hasExitedDeleteFlow = computed(() => {
         :is-enrolled="props.isEnrolled"
         :has-exited-delete-flow="hasExitedDeleteFlow"
         :autofill-data="autofillData"
+        @exit-delete-flow="exitDeleteFlow"
       />
     </div>
   </div>

@@ -25,9 +25,7 @@ import { DEFAULT_PASSWORD_SETTINGS } from "@/scripts/constants.js";
 import SubscriptionService from "@/api/settings/subscription-services.js";
 import InlineSvg from "@/features/InlineSvg.vue";
 import { cloakHelpers } from "@/scripts/cloakHelpers";
-import { toValue } from "vue";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag";
-import { PH_FEATURE_FLAG_CLOAKED_ADDRESSES_ENABLED } from "@/scripts/posthogEvents.js";
+import { useCloakedAddressFeatureFlag } from "@/composables/useCloakedAddressFeatureFlag";
 
 const toast = useToast();
 
@@ -43,14 +41,7 @@ const featureFlag = computed(
   () => store.state.authentication?.user?.flags.hibp_dashboard_v1
 );
 
-const {
-  featureFlag: addressFlagEnabled,
-  hasLoadedFeatureFlag: addressFlagLoaded,
-} = usePostHogFeatureFlag(PH_FEATURE_FLAG_CLOAKED_ADDRESSES_ENABLED);
-
-const cloakedAddressEnabled = computed(() => {
-  return toValue(addressFlagLoaded) && toValue(addressFlagEnabled);
-});
+const { cloakedAddressEnabled } = useCloakedAddressFeatureFlag();
 
 const state = reactive({
   fetching: {

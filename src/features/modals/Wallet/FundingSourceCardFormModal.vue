@@ -192,6 +192,11 @@ watch(
           :disabled="props.isSubmitting"
           title="Name on card*"
           placeholder="Cardholder Name"
+          name="cc-name"
+          autocomplete="cc-name"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
           minlength="1"
           maxlength="50"
           class="inputs__input full-width"
@@ -206,6 +211,12 @@ watch(
             :disabled="props.isSubmitting"
             title="Number*"
             placeholder="0000 0000 0000 0000"
+            name="cc-number"
+            autocomplete="cc-number"
+            inputmode="numeric"
+            autocorrect="off"
+            autocapitalize="none"
+            spellcheck="false"
             class="inputs__input full-width"
             @blur="validateCardNumber"
             @input="onCardNumberInput"
@@ -224,6 +235,12 @@ watch(
           :disabled="props.isSubmitting"
           title="Expires at*"
           placeholder="MM/YY"
+          name="cc-exp"
+          autocomplete="cc-exp"
+          inputmode="numeric"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
           minlength="5"
           maxlength="5"
           class="inputs__input"
@@ -238,6 +255,13 @@ watch(
           :disabled="props.isSubmitting"
           title="Security code*"
           placeholder="000"
+          name="cc-csc"
+          autocomplete="cc-csc"
+          inputmode="numeric"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
+          type="password"
           minlength="3"
           maxlength="4"
           class="inputs__input secure"
@@ -343,14 +367,6 @@ watch(
 
     &.full-width {
       width: 100%;
-    }
-
-    &.secure {
-      // Add styles for BaseInput input
-      &:deep(.base-input__input) {
-        -webkit-text-security: circle;
-        text-security: circle;
-      }
     }
   }
 }

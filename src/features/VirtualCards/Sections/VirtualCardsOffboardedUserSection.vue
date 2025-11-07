@@ -6,7 +6,17 @@ import ListStatements from "@/features/modals/Wallet/ListStatements.vue";
 import { markRaw, ref } from "vue";
 import store from "@/store";
 import CardsServices from "@/api/actions/cards-services";
-import Button from "@/features/Button.vue";
+import BaseButton from "@/library/BaseButton.vue";
+
+interface Props {
+  isDisabledDowngraded?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isDisabledDowngraded: false,
+});
+
+const emit = defineEmits(["restartSubscription"]);
 
 const isFetchingStatements = ref(false);
 
@@ -33,13 +43,30 @@ async function viewStatements() {
 function sendSupportEmailEvent() {
   posthogCapture(`dashboard_pay_offboarded_user_contact_support_clicked`);
 }
+
+function restartSubscriptionFlow() {
+  posthogCapture(
+    `dashboard_pay_disabled_downgraded_user_restart_subscription_clicked`
+  );
+  emit("restartSubscription");
+}
 </script>
 
 <template>
   <section class="vc-offboarded-user-section">
     <WalletSupportContact title="Your Cloaked Pay account is no longer active">
       <template #description>
-        <p class="vc-offboarded-user-section__support-description">
+        <p
+          v-if="props.isDisabledDowngraded"
+          class="vc-offboarded-user-section__support-description"
+        >
+          We're sorry to see you go. You can re-activate Cloaked Pay anytime and
+          pick up right where you left off.
+        </p>
+        <p
+          v-else
+          class="vc-offboarded-user-section__support-description"
+        >
           Cloaked Pay has been turned off on your account. Reach out to Cloaked
           Support at
           <a
@@ -53,15 +80,28 @@ function sendSupportEmailEvent() {
         </p>
       </template>
       <template #footer-content>
-        <div class="vc-offboarded-user-section__button">
-          <Button
-            variant="outline"
-            :disabled="isFetchingStatements"
-            :loading="isFetchingStatements"
-            @click="viewStatements()"
+        <div class="vc-offboarded-user-section__buttons">
+          <div
+            v-if="props.isDisabledDowngraded"
+            class="vc-offboarded-user-section__button"
           >
-            View statements
-          </Button>
+            <BaseButton
+              variant="primary"
+              @click="restartSubscriptionFlow()"
+            >
+              Restart Cloaked Pay
+            </BaseButton>
+          </div>
+          <div class="vc-offboarded-user-section__button">
+            <BaseButton
+              variant="outline"
+              :disabled="isFetchingStatements"
+              :loading="isFetchingStatements"
+              @click="viewStatements()"
+            >
+              View statements
+            </BaseButton>
+          </div>
         </div>
       </template>
     </WalletSupportContact>
@@ -86,43 +126,18 @@ $component-name: "vc-offboarded-user-section";
     line-height: normal;
   }
 
-  &__button {
+  &__buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     max-width: 215px;
+  }
+
+  &__button {
+    width: 100%;
 
     button {
       width: 100%;
-      padding: 11px;
-      border-radius: 30px;
-      background: transparent;
-      color: $color-primary-100;
-      font-size: 15px;
-      font-style: normal;
-      font-weight: 500;
-      line-height: normal;
-      border: 1px solid $color-primary-100;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      &:hover {
-        background: $color-primary-10;
-      }
-
-      svg {
-        width: 24px;
-        height: 24px;
-        margin-left: 10px;
-        display: inline-block;
-      }
-
-      &.disabled {
-        cursor: not-allowed;
-        background: $color-success;
-        border-color: $color-success;
-        color: $white;
-        pointer-events: none;
-      }
     }
   }
 

@@ -99,30 +99,12 @@ export default class CardsServices {
     return await api().patch(`/api/v1/card/${id}/`, payload);
   }
 
-  static async getPrimaryCard() {
-    return await api()
-      .get(`/api/v1/card/primary/`)
-      .then((resp) => {
-        store.dispatch("addPrimaryCard", resp.data);
-        return resp;
-      })
-      .catch((error) => {
-        if (error.response.status === 404) {
-          return;
-        }
-      });
-  }
-
   static async getCardList() {
     return await api()
-      .get(`/api/v1/cloaked/card?page_size=50/`)
+      .get(`/api/v1/cloaked/card?page_size=50`)
       .then((response) => {
         store.dispatch("addCardList", response.data);
       });
-  }
-
-  static async getSingleCard(id) {
-    return await api().get(`/api/v1/cloaked/card/${id}/`);
   }
 
   static async getFundingSourceCards(fundingSourceId) {
@@ -135,15 +117,7 @@ export default class CardsServices {
 
   static async getCancelCardList() {
     return await api()
-      .get(`/api/v1/cloaked/card?deleted=true&page_size=50/`)
-      .then((response) => {
-        store.dispatch("addCardList", response.data);
-      });
-  }
-
-  static async getGiftCardList() {
-    return await api()
-      .get(`/api/v1/cloaked/card/gift-cards?page_size=50/`)
+      .get(`/api/v1/cloaked/card?deleted=true&page_size=50`)
       .then((response) => {
         store.dispatch("addCardList", response.data);
       });
@@ -160,7 +134,7 @@ export default class CardsServices {
 
   static async getTransactions() {
     return await api()
-      .get(`/api/v1/cloaked/card/transaction/?page_size=100/`)
+      .get(`/api/v1/cloaked/card/transaction/?page_size=100`)
       .then((response) => {
         store.dispatch("setTransactions", response?.data);
         return response;
@@ -173,7 +147,7 @@ export default class CardsServices {
 
   static async getTransactionsByCardId(id) {
     return await api()
-      .get(`/api/v1/cloaked/card/transaction/?card=${id}&page_size=100/`)
+      .get(`/api/v1/cloaked/card/transaction/?card=${id}&page_size=100`)
       .then((response) => {
         store.dispatch("setTransactions", response?.data);
         return response;
@@ -184,42 +158,10 @@ export default class CardsServices {
       });
   }
 
-  static async getIdentityTransactions(id, canceled) {
-    return await api()
-      .get(`/api/v1/cloaked/identity/${id}/transaction?canceled=${canceled}/`)
-      .then((response) => {
-        store.dispatch("setTransactions", response?.data);
-        return response;
-      })
-      .catch((error) => {
-        store.dispatch("setTransactions", { count: 0, results: [] });
-        return error;
-      });
-  }
-
-  static async getIdentityCards(cloakId) {
-    const url = `/api/v1/cloaked/identity/${cloakId}/card/`;
-    return api()
-      .get(url)
-      .then(({ data }) => {
-        store.commit("identityCards", data.results);
-      });
-  }
-
-  static async getSingleIdentityCard(cloakId, cardId) {
+  static async getSingleIdentityCard(cloakId, cardId, signal) {
     const url = `/api/v1/cloaked/identity/${cloakId}/card/${cardId}/`;
     return api()
-      .get(url)
-      .then((response) => {
-        store.commit("currentCard", response.data);
-        return response;
-      });
-  }
-
-  static async getSingleGiftCard(cardId) {
-    const url = `/api/v1/cloaked/card/${cardId}/gift-card/details/`;
-    return api()
-      .get(url)
+      .get(url, { signal })
       .then((response) => {
         store.commit("currentCard", response.data);
         return response;
@@ -278,6 +220,19 @@ export default class CardsServices {
     return api().post("/api/v1/cloaked/card/pay-all/");
   }
 
+  /**
+   * Pay the balance due - it's possible to pay partial amount or full amount
+   * @param {number} amount - The amount to pay in cents
+   * @param {string} [fundingSourceId] - The ID of the funding source to use
+   * @returns {Promise<import('axios').AxiosResponse<any>>}
+   */
+  static async payBalanceDue(amount, fundingSourceId) {
+    return api().post("/api/v1/cloaked/card/payments/", {
+      amount,
+      funding_source: fundingSourceId,
+    });
+  }
+
   static async payCard(payload) {
     return api().post("/api/v1/cloaked/card/payments/", payload);
   }
@@ -329,7 +284,7 @@ export default class CardsServices {
   }
 
   static async getOutstandingBalanceCards() {
-    return api().get(`/api/v1/cloaked/card?outstanding_balance__gt=50/`);
+    return api().get(`/api/v1/cloaked/card?outstanding_balance__gt=50`);
   }
 
   static async addBankCard(payload) {

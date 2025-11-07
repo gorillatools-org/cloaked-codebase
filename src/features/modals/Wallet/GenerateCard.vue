@@ -6,9 +6,9 @@ import Button from "@/features/Button.vue";
 import ModalTemplate from "@/features/ModalTemplate.vue";
 import { posthogCapture } from "@/scripts/posthog.js";
 import FundingSourceListItem from "@/features/Wallet/FundingSource/FundingSourceListItem.vue";
-import SelectMerchantDropdown from "@/features/Wallet/SelectMerchantDropdown.vue";
+import VCMerchantDropdown from "@/features/VirtualCards/VCMerchantDropdown.vue";
 import { useToast } from "@/composables/useToast.js";
-import useVirtualCardGenerate from "@/composables/Wallet/useVirtualCardGenerate";
+import useVirtualCardGenerate from "@/features/VirtualCards/composables/useVirtualCardGenerate";
 
 const props = defineProps({
   isVisible: {
@@ -210,12 +210,9 @@ async function handleGenerate(id) {
 
     const params = {
       identity_id: id ?? undefined,
-      website_url: selectedMerchant.value?.website_url,
+      website_url: selectedMerchant.value?.base_domain,
       nickname:
-        selectedMerchant.value?.title ||
-        selectedMerchant.value?.nickname ||
-        selectedMerchant.value ||
-        undefined,
+        selectedMerchant.value?.name || selectedMerchant.value || undefined,
       funding_source: String(form.value.source),
       transaction_period_limit: form.value.amount,
       transaction_period: selectedPeriodOption.transactionPeriod,
@@ -282,7 +279,7 @@ function preventAmountInputCharacters(event) {
     </template>
     <template #body>
       <div class="select-merchant-dropdown">
-        <SelectMerchantDropdown v-model="selectedMerchant" />
+        <VCMerchantDropdown v-model="selectedMerchant" />
       </div>
 
       <div class="amount">

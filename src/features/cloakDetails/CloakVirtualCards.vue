@@ -67,7 +67,7 @@ function openCard(id) {
     store.dispatch("closeRightPanel");
   } else {
     router.push({
-      path: `/virtual-cards/card/${id}`,
+      path: `/virtual-cards/wallet/card/${id}`,
     });
   }
 }

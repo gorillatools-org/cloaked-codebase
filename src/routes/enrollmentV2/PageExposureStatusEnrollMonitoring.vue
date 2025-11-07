@@ -8,18 +8,14 @@ import { useSsnValidation } from "@/composables/validation/useSsnValidation.js";
 import { getFormattedSsnValue } from "@/features/enrollment/utils.js";
 import BaseIcon from "@/library/BaseIcon.vue";
 import store from "@/store";
-import UserService from "@/api/actions/user-service.js";
-import { HAS_EXITED_DELETE_FLOW } from "@/scripts/userFlags.js";
 import DataDeleteService from "@/api/actions/data-delete-service.js";
 import { useToast } from "@/composables/useToast.js";
-import { useRouter } from "vue-router";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { useColorScheme } from "@/composables/useColorScheme";
 import { formatPhoneStringBasic } from "@/scripts/format.js";
 import { toApiPayloadMapped } from "@/features/enrollment/data-utils.js";
 
 const toast = useToast();
-const router = useRouter();
 
 const props = defineProps({
   autofillData: {
@@ -27,6 +23,8 @@ const props = defineProps({
     required: true,
   },
 });
+
+const emit = defineEmits(["exit-delete-flow"]);
 
 const { colorScheme } = useColorScheme();
 
@@ -103,7 +101,7 @@ function submitMonitoring() {
           theme: colorScheme.value,
         });
       }
-      exitDeleteFlow();
+      emit("exit-delete-flow");
     })
     .catch((error) => {
       console.error("Error updating enrollment:", error);
@@ -112,14 +110,6 @@ function submitMonitoring() {
     .finally(() => {
       isSubmitting.value = false;
     });
-}
-
-async function exitDeleteFlow() {
-  await UserService.setFlag({
-    name: HAS_EXITED_DELETE_FLOW,
-    value: true,
-  });
-  return router.push("/exposure-status");
 }
 
 function showDoLaterConfirmation() {
@@ -135,7 +125,7 @@ function showDoLaterConfirmation() {
         posthogCapture("user_skipped_ssn_monitoring", {
           theme: colorScheme.value,
         });
-        exitDeleteFlow();
+        emit("exit-delete-flow");
       },
     },
     cancelText: "Back",

@@ -10,6 +10,7 @@ export type DropdownMenuItem = {
   id?: string;
   label: string;
   icon?: BaseIconName;
+  iconPosition?: "left" | "right";
   color?: "default" | "danger" | "success" | "yield";
   visible?: boolean;
   onClick?: () => void;
@@ -57,7 +58,11 @@ const filteredItems = computed(() => {
             v-for="(item, itemIndex) in itemsSet"
             :key="item.id || itemIndex"
             class="vc-base-dropdown-menu__item"
-            :class="`vc-base-dropdown-menu__item--${item.color || 'default'}`"
+            :class="[
+              `vc-base-dropdown-menu__item--${item.color || 'default'}`,
+              item.iconPosition === 'right' &&
+                'vc-base-dropdown-menu__item--icon-right',
+            ]"
             @click="item.onClick ? item.onClick() : null"
           >
             <slot
@@ -127,13 +132,21 @@ const filteredItems = computed(() => {
       color: $color-status-yield;
     }
 
-    &:hover {
-      background-color: $color-primary-10;
-    }
-
     &-icon {
       font-size: 15px;
       margin-top: -2px;
+    }
+
+    &--icon-right {
+      justify-content: space-between;
+
+      .vc-base-dropdown-menu__item-icon {
+        order: 1;
+      }
+    }
+
+    &:hover {
+      background-color: $color-primary-10;
     }
   }
 }

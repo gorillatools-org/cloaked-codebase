@@ -7,8 +7,10 @@ import inlineSvg from "@/features/InlineSvg.vue";
 import CardsServices from "@/api/actions/cards-services";
 import { useToast } from "@/composables/useToast.js";
 import Button from "@/features/Button.vue";
+import useCreationLimit from "@/features/VirtualCards/composables/useCreationLimit";
 
 const isSaving = ref(false);
+const { refresh: refreshCreationLimit } = useCreationLimit();
 const route = useRoute();
 const toast = useToast();
 
@@ -114,6 +116,7 @@ function saveForm() {
   CardsServices.patchUpdateCloakedCardDetails(currentCard.value.id, payload)
     .then(() => {
       store.dispatch("updateCard", updatedCard);
+      void refreshCreationLimit();
       emit("close");
     })
     .catch((err) => {

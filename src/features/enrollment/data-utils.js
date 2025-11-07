@@ -1,5 +1,8 @@
 import { formatPhoneStringBasic } from "@/scripts/format.js";
 import { toValue } from "@vueuse/core";
+import { isEqual } from "lodash-es";
+import { posthogCapture } from "@/scripts/posthog.js";
+import { PH_EVENT_ENROLLMENT_DATA_AUTOFILL_ACCURACY } from "@/scripts/posthogEvents.js";
 
 export const toApiPayload = (request) => {
   const [month, day, year] = (toValue(request)?.dob ?? "").split("-");
@@ -85,4 +88,31 @@ export const toEnrollmentRequest = (apiResponse) => {
     phone_numbers: apiResponse?.phone_numbers ?? [],
     ssn_submitted: apiResponse?.ssn_submitted,
   };
+};
+
+export const captureAutofillAccuracy = (autofill, payload) => {
+  const autofilled = {
+    firstName: !!autofill.name?.first,
+    lastName: !!autofill.name?.last,
+    dob: !!autofill.dob,
+    ssn: !!autofill.ssn,
+    email: !!autofill.email_addresses?.length,
+    phone: !!autofill.phone_numbers?.length,
+    addresses: false, // address autofill is not implemented
+  };
+
+  const updated = {
+    firstName: (autofill.name?.first ?? "") !== (payload.name.first ?? ""),
+    lastName: (autofill.name?.last ?? "") !== (payload.name.last ?? ""),
+    dob: (autofill.dob ?? "") !== (payload.dob ?? ""),
+    ssn: (autofill.ssn ?? "") !== (payload.ssn ?? ""),
+    email: autofill.email_addresses?.[0] !== payload.email_addresses[0],
+    phone: autofill.phone_numbers?.[0] !== payload.phone_numbers[0],
+    addresses: !isEqual(autofill.addresses?.[0], payload.addresses[0]),
+  };
+
+  posthogCapture(PH_EVENT_ENROLLMENT_DATA_AUTOFILL_ACCURACY, {
+    autofilled,
+    updated,
+  });
 };

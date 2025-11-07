@@ -146,6 +146,18 @@ const toggleDarkMode = () => {
     100
   );
 };
+
+async function onClickLogout() {
+  try {
+    await Promise.race([
+      posthogCapture("user_clicked_dashboard_logout"),
+      new Promise((resolve) => setTimeout(resolve, 1000)),
+    ]);
+  } catch {
+    // Prevent analytics failures from blocking logout
+  }
+  logout();
+}
 </script>
 
 <template>
@@ -272,7 +284,7 @@ const toggleDarkMode = () => {
           no-background
           no-right-icon
           alert
-          @click="logout()"
+          @click="onClickLogout()"
         />
       </div>
     </div>

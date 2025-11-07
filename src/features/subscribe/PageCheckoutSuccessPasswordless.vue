@@ -7,21 +7,38 @@ import BaseButton from "@/library/BaseButton.vue";
 import { SUPPORT_EMAIL } from "@/scripts/constants";
 import BaseText from "@/library/BaseText.vue";
 import { useDisplay } from "@/composables/useDisplay.js";
+import { computed } from "vue";
 
-defineProps({
+const props = defineProps({
   account: {
     type: Object,
+    required: true,
+  },
+  isCloakedPayOnboarding: {
+    type: Boolean,
     required: true,
   },
 });
 
 const emit = defineEmits(["continue"]);
 
+const { isMobile } = useDisplay();
+
+const titleText = computed(() => {
+  return props.isCloakedPayOnboarding
+    ? "You're signed in, let's finish enrolling in Cloaked Pay"
+    : "You're signed in, let's finish enrolling in data removal";
+});
+
+const buttonText = computed(() => {
+  return props.isCloakedPayOnboarding
+    ? "Finish Cloaked Pay setup"
+    : "Finish data removal setup";
+});
+
 const onContinue = () => {
   emit("continue");
 };
-
-const { isMobile } = useDisplay();
 </script>
 
 <template>
@@ -34,7 +51,7 @@ const { isMobile } = useDisplay();
         :variant="isMobile ? 'headline-2-semibold' : 'headline-1-medium'"
         class="page-checkout-success-recovery__title"
       >
-        You're signed in, let's finish enrolling in data removal
+        {{ titleText }}
       </BaseText>
       <div class="page-checkout-success-recovery__cards">
         <PasswordlessCard
@@ -51,7 +68,7 @@ const { isMobile } = useDisplay();
         class="passwordless-card__cta"
         @click="onContinue"
       >
-        Finish data removal setup
+        {{ buttonText }}
       </BaseButton>
       <BaseText
         as="footer"

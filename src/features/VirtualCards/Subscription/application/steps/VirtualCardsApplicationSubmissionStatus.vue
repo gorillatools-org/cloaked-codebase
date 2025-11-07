@@ -11,7 +11,7 @@ import {
 } from "@/composables/useKYC";
 import WalletStatusSection from "@/features/Wallet/WalletStatusSection.vue";
 import KycManualReviewDocsList from "@/features/Wallet/KycFlow/KycManualReviewDocsList.vue";
-import { useVirtualCardsApplicationStore } from "@/pinia/VirtualCards/useVirtualCardsApplicationStore";
+import { useVirtualCardsApplicationStore } from "@/features/VirtualCards/store/useVirtualCardsApplicationStore";
 import { storeToRefs } from "pinia";
 
 const emit = defineEmits(["tryAgain", "close"]);

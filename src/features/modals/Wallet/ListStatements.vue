@@ -18,7 +18,7 @@ const downloadingStatementId = ref(null);
 
 function closeModal() {
   store.dispatch("closeModal");
-  router.replace("/virtual-cards", undefined, { shallow: true });
+  router.replace("/virtual-cards/wallet", undefined, { shallow: true });
 }
 
 const statements = computed(() => {

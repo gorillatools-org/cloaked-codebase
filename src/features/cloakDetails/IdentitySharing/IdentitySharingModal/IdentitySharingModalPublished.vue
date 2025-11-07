@@ -58,18 +58,27 @@ const emit = defineEmits([
 const expiresIn = ref(null);
 
 const sharedUrl = computed(() => {
-  const replaceYour = props.identity.sharing?.shared_url.replace("your", "my");
+  const originalUrl =
+    props.sharing?.shared_url || props.identity.sharing?.shared_url;
+
+  if (!originalUrl) return "";
+
+  const replaceYour = originalUrl.replace("your", "my");
   const replaceApp = replaceYour.replace("app", "com");
   return replaceApp;
 });
 
 const previousExpiresIn = computed(() => {
-  if (props.identity?.sharing?.onetimeview) {
+  if (props.sharing?.onetimeview || props.identity?.sharing?.onetimeview) {
     return "One-time view";
   }
 
-  const sharedDate = new Date(props.sharing.shared_at);
-  const expiresDate = new Date(props.sharing.expires_at);
+  const sharedDate = new Date(
+    props.sharing.shared_at || props.identity.sharing?.shared_at
+  );
+  const expiresDate = new Date(
+    props.sharing.expires_at || props.identity.sharing?.expires_at
+  );
 
   const dateDifferenceInHours =
     (expiresDate.getTime() - sharedDate.getTime()) / (1000 * 60 * 60);
@@ -129,12 +138,14 @@ const onExpiresInChanged = (value) => {
   if (value === "One-time view") {
     expirationDate.setDate(expirationDate.getDate() + 30);
 
-    emit("update-sharing", {
+    const updateData = {
       ...props.sharing,
       onetimeview: true,
       shared_at: sharedDate.toISOString(),
       expires_at: expirationDate.toISOString(),
-    });
+    };
+
+    emit("update-sharing", updateData);
   } else {
     switch (value) {
       case "1 hour":
@@ -151,20 +162,29 @@ const onExpiresInChanged = (value) => {
         break;
     }
 
-    emit("update-sharing", {
+    const updateData = {
       ...props.sharing,
       shared_at: sharedDate.toISOString(),
       expires_at: expirationDate.toISOString(),
       onetimeview: false,
-    });
+    };
+
+    emit("update-sharing", updateData);
   }
 
   toast?.success("Link expiration changed. Click publish changes.");
 };
 
 function copyAll() {
-  // copy url and password
-  const copyString = `${props.sharing?.shared_url}\nPassword: ${props.sharing?.decryptedPassword}`;
+  const url = props.sharing?.shared_url || "";
+  const password = props.sharing?.decryptedPassword || "";
+
+  if (!url || !password) {
+    toast?.error("Link or password not available yet");
+    return;
+  }
+
+  const copyString = `${url}\nPassword: ${password}`;
   tools.copyToClipboard(copyString, false);
   toast?.success("Copied all");
 }
@@ -189,9 +209,11 @@ function copyAll() {
           Publishing your changes...
         </AppModalTitle>
         <Timer
-          :start-date="identity.sharing?.shared_at"
-          :end-date="identity.sharing?.expires_at"
-          :is-one-time-view="identity.sharing?.onetimeview"
+          :start-date="props.sharing?.shared_at || identity.sharing?.shared_at"
+          :end-date="props.sharing?.expires_at || identity.sharing?.expires_at"
+          :is-one-time-view="
+            props.sharing?.onetimeview || identity.sharing?.onetimeview
+          "
           class="sharing-modal-published__timer"
         />
         <div class="sharing-modal-published__spinner">
@@ -242,12 +264,23 @@ function copyAll() {
           <div class="sharing-modal-published__input-row">
             <BorderInputText
               label="Link password"
-              :value="identity.sharing?.decryptedPassword"
+              :value="
+                props.sharing?.decryptedPassword ||
+                identity.sharing?.decryptedPassword ||
+                ''
+              "
               disabled
               class="sharing-modal-published__input"
               @click="
-                tools.copyToClipboard(identity.sharing?.decryptedPassword);
-                toast?.success('Link password copied.');
+                (props.sharing?.decryptedPassword ||
+                  identity.sharing?.decryptedPassword) &&
+                  tools.copyToClipboard(
+                    props.sharing?.decryptedPassword ||
+                      identity.sharing?.decryptedPassword
+                  );
+                (props.sharing?.decryptedPassword ||
+                  identity.sharing?.decryptedPassword) &&
+                  toast?.success('Link password copied.');
               "
             >
               <template #after>

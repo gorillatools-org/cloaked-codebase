@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, markRaw } from "vue";
 import { useToast } from "@/composables/useToast.js";
 import { useRoute } from "vue-router";
@@ -8,19 +8,22 @@ import DetailSection from "./DetailSection.vue";
 import CardsServices from "@/api/actions/cards-services";
 import IdentityService from "@/api/actions/identity-service";
 import PatchSelfDestructModal from "@/features/modals/Wallet/PatchSelfDestructModal.vue";
-import useVirtualCard from "@/composables/Wallet/useVirtualCard";
+import useVirtualCard from "@/features/VirtualCards/composables/useVirtualCard";
+import useVirtualCardModals from "@/features/VirtualCards/composables/useVirtualCardModals";
+import type { VirtualCard } from "@/types/Wallet/virtual-card";
 
 const route = useRoute();
 const toast = useToast();
-const { openFundingSourcePatchModal } = useVirtualCard(() => card);
+const { openFundingSourcePatchModal } = useVirtualCardModals(() => card.value);
+const { cardFundingSource } = useVirtualCard(() => card.value);
 
 const card = computed(() => {
   if (route.params.id && store.state.cards?.cards?.results) {
     return store.state.cards.cards.results.find(
-      (card) => card.id === route.params.id
+      (card: VirtualCard) => card.id === route.params.id
     );
   }
-  return {};
+  return undefined;
 });
 
 function toggleMerchantLock() {
@@ -87,51 +90,27 @@ function toggleCardLock() {
   }
 }
 
-const currentCard = computed(() => {
-  if (route.params.id && store.state.cards.cards.results) {
-    return store.state.cards.cards.results.find(
-      (card) => card.id === route.params.id
-    );
-  } else {
-    return "";
-  }
-});
-
-const fundingSources = computed(() => {
-  return store.state.cards.fundingSources.results;
-});
-
-const currentCardFundingSource = computed(() => {
-  if (currentCard.value?.funding_source) {
-    return fundingSources.value.find(
-      (source) => source.id === currentCard.value.funding_source
-    );
-  } else {
-    return null;
-  }
-});
-
 const openSelfDestruct = () => {
   store.dispatch("openModal", {
     customTemplate: {
       template: markRaw(PatchSelfDestructModal),
       props: {
         isVisible: true,
-        currentCardID: currentCard.value.id,
-        currentSource: currentCardFundingSource.value,
-        currentCard: currentCard.value,
+        currentCardID: card.value.id,
+        currentSource: cardFundingSource.value,
+        currentCard: card.value,
       },
     },
   });
 };
 
 const subtext = computed(() => {
-  const pan = "•••• " + currentCardFundingSource.value?.pan_last_four;
-  const nickname = currentCardFundingSource.value?.nickname;
+  const pan = "•••• " + cardFundingSource.value?.pan_last_four;
+  const nickname = cardFundingSource.value?.nickname;
 
   if (pan && nickname) {
     return `${pan} • ${nickname}`;
-  } else if (currentCardFundingSource.value?.pan_last_four) {
+  } else if (cardFundingSource.value?.pan_last_four) {
     return pan;
   } else {
     return null;
@@ -139,7 +118,7 @@ const subtext = computed(() => {
 });
 
 const loading = computed(() => {
-  if (!currentCardFundingSource.value) {
+  if (!cardFundingSource.value) {
     return true;
   } else {
     return false;
@@ -187,7 +166,7 @@ const cardState = computed(() => {
           :loading="loading"
           icon="bank"
           :description="
-            currentCardFundingSource?.card_brand + '\n' + subtext || 'Unknown'
+            cardFundingSource?.card_brand + '\n' + subtext || 'Unknown'
           "
           multi-line
           title="Funding Source"

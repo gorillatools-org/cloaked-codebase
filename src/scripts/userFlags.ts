@@ -77,7 +77,6 @@ export const DISMISSED_DATA_DELETE_ACTION = "has_dismissed_data_delete_action";
 export const DATA_DELETE_SEARCHED_EXPOSURES =
   "has_searched_data_delete_exposures";
 export const DATA_DELETE_REQUESTED = "has_requested_data_delete";
-export const CAME_FROM_BUY_CLOAKED = "came_from_buy_cloaked";
 
 // data delete meta product user flags
 

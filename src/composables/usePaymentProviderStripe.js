@@ -5,6 +5,7 @@ import UserService from "@/api/actions/user-service";
 import { toValue } from "@vueuse/core";
 import { useColorScheme } from "@/composables/useColorScheme";
 import { useChangeTracking } from "@/composables/useChangeTracking.js";
+import { generateConsistentFakeName } from "@/utils/generateFakeName";
 
 const appearanceBase = (variant) => ({
   theme: "flat",
@@ -185,15 +186,17 @@ export const usePaymentProviderStripe = (
       isProcessingStripePayment.value = true;
       stripeError.value = null;
 
+      const email =
+        contactInformation?.value?.email ?? stripeIntent.value.email;
+
       const subscriptionPayload = {
         elements,
         redirect: "if_required",
         confirmParams: {
           payment_method_data: {
             billing_details: {
-              name: "dashboard user",
-              email:
-                contactInformation?.value?.email ?? stripeIntent.value.email,
+              name: generateConsistentFakeName(email),
+              email,
             },
           },
         },
@@ -223,15 +226,17 @@ export const usePaymentProviderStripe = (
       isProcessingStripePayment.value = true;
       stripeError.value = null;
 
+      const email =
+        contactInformation?.value?.email ?? stripeIntent.value.email;
+
       const subscriptionPayload = {
         elements,
         redirect: "if_required",
         confirmParams: {
           payment_method_data: {
             billing_details: {
-              name: "dashboard user",
-              email:
-                contactInformation?.value?.email ?? stripeIntent.value.email,
+              name: generateConsistentFakeName(email),
+              email,
             },
           },
         },

@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from "vue";
+import store from "@/store";
 import NavigationTopBar from "@/features/Navigation/NavigationTopBar.vue";
 import NavigationSidebar from "@/features/Navigation/NavigationSidebar.vue";
 import NavigationTopBanners from "@/features/Navigation/NavigationTopBannersOld.vue";
@@ -11,22 +12,28 @@ const { isMobile } = useDisplay();
 const collapse = computed(() => {
   return useNavigationStore().collapse;
 });
+
+const isWebviewMode = computed(() => {
+  return store.state.ui.webviewMode;
+});
 </script>
 
 <template>
   <div
     class="app-layout"
+    :class="{ 'app-layout--webview': isWebviewMode }"
     role="application"
   >
-    <NavigationTopBanners />
+    <NavigationTopBanners v-if="!isWebviewMode" />
     <NavigationTopBar
+      v-if="!isWebviewMode"
       class="app-layout__header"
       role="banner"
       tabindex="-1"
     />
     <div class="app-layout__body">
       <div
-        v-if="!isMobile"
+        v-if="!isMobile && !isWebviewMode"
         class="app-layout__sidebar"
         :class="{ 'app-layout__sidebar--collapsed': collapse }"
       >

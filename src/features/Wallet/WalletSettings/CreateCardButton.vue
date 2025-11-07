@@ -1,14 +1,15 @@
 <script setup>
 import { ref, markRaw, computed, watch } from "vue";
 import Button from "./WalletSettingsButton";
-import { useRoute } from "vue-router";
 import store from "@/store";
 import GenerateCard from "@/features/modals/Wallet/GenerateCard.vue";
 import useFundingSource from "@/composables/Wallet/useFundingSource";
+import { useVirtualCardsWalletPageStore } from "@/features/VirtualCards/store/useVirtualCardsWalletPageStore";
 
 const emit = defineEmits(["newCardIssued"]);
 
-const route = useRoute();
+const { allowCardCreation } = useVirtualCardsWalletPageStore();
+
 const { openAddModal, fundingSources } = useFundingSource();
 const generating = ref(false);
 
@@ -107,7 +108,7 @@ watch(cardSettings, () => {
 
 <template>
   <Button
-    v-if="!route.params.id"
+    v-if="allowCardCreation"
     clickable
     :icon="generating ? 'loading-small' : 'plus'"
     text="Generate"

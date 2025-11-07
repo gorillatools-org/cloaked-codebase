@@ -234,7 +234,6 @@ onMounted(async () => {
       <template #input-before>
         <UiMenu
           v-if="!hasAddress"
-          width="300px"
           max-height="200px"
           placement="left-start"
           class="cloaked-address-section__menu"

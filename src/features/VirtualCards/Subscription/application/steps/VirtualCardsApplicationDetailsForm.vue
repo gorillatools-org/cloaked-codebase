@@ -5,7 +5,7 @@ import BaseButton from "@/library/BaseButton.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
 import UiTooltip from "@/features/ui/ui-tooltip.vue";
 import { ref, onMounted, watch } from "vue";
-import { useVirtualCardsApplicationStore } from "@/pinia/VirtualCards/useVirtualCardsApplicationStore";
+import { useVirtualCardsApplicationStore } from "@/features/VirtualCards/store/useVirtualCardsApplicationStore";
 import VirtualCardsProfileForm from "@/features/VirtualCards/Subscription/application/VirtualCardsProfileForm.vue";
 import { posthogCapture } from "@/scripts/posthog";
 

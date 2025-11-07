@@ -1,19 +1,11 @@
 <script setup>
 import AuthIframe from "./AuthIframe";
-import Iframe from "./Iframe";
 import { useRoute } from "vue-router";
 import { onMounted, onUnmounted, ref } from "vue";
 import router from "@/routes/router";
 
 const route = useRoute();
 const prevRoute = ref(route.query.prevRoute);
-
-const props = defineProps({
-  version: {
-    type: Number,
-    default: null,
-  },
-});
 
 const iFrameEventListener = (e) => {
   const originUrl = new URL(e.origin);
@@ -86,15 +78,7 @@ onUnmounted(() => {
 });
 </script>
 <template>
-  <Iframe
-    v-if="props.version === 2"
-    id="cloak-iframe"
-    use-legacy-route
-    source="auth/signup"
-    :prev-route="prevRoute"
-  />
   <AuthIframe
-    v-else
     id="cloak-iframe"
     source="auth/signup"
     :prev-route="prevRoute"

@@ -9,7 +9,7 @@ import VirtualCardsApplicationAgreements from "./steps/VirtualCardsApplicationAg
 import VirtualCardsApplicationSubmissionStatus from "./steps/VirtualCardsApplicationSubmissionStatus.vue";
 import { onBeforeMount, computed, ref, useTemplateRef, watch } from "vue";
 import { storeToRefs } from "pinia";
-import { useVirtualCardsApplicationStore } from "@/pinia/VirtualCards/useVirtualCardsApplicationStore";
+import { useVirtualCardsApplicationStore } from "@/features/VirtualCards/store/useVirtualCardsApplicationStore";
 import { onBeforeRouteLeave, useRouter } from "vue-router";
 import { posthogCapture } from "@/scripts/posthog.js";
 

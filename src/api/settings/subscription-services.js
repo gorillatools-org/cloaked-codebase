@@ -236,4 +236,13 @@ export default class SubscriptionService {
         return data;
       });
   }
+
+  static async getCloakedPaySubscriptionPlans() {
+    const endpoint = `/api/v2/subscription/cloaked-pay-products`;
+    return await api()
+      .get(endpoint)
+      .then(({ data }) => {
+        return data;
+      });
+  }
 }

@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from "vue";
+import store from "@/store";
 import SubscriptionFamilyPlansBanner from "@/routes/modals/preferences/SubscriptionFamilyPlansBanner.vue";
 import SubscriptionFamilyPlansBilling from "@/routes/modals/preferences/SubscriptionFamilyPlansBilling.vue";
 import SubscriptionFamilyPlansMembers from "@/routes/modals/preferences/SubscriptionFamilyPlansMembers.vue";
@@ -13,6 +15,17 @@ const { openPlansModal } = usePlansModal();
 
 const onSwitchPlans = () => openPlansModal();
 const onUpgradePlan = () => openPlansModal();
+
+const isCancelled = computed(() => {
+  return store.getters["settings/isCancelled"];
+});
+
+const shouldShowBanner = computed(() => {
+  if (isCancelled.value) {
+    return false;
+  }
+  return !activePlan.value || planType.value !== "Family";
+});
 </script>
 
 <template>
@@ -26,7 +39,7 @@ const onUpgradePlan = () => openPlansModal();
       :active-plan="activePlan"
     />
     <SubscriptionFamilyPlansBanner
-      v-if="!activePlan || planType !== 'Family'"
+      v-if="shouldShowBanner"
       :active-plan="activePlan"
       @upgrade-plan="onUpgradePlan"
     />

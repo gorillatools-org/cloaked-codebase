@@ -37,16 +37,46 @@ import DataDeletePageResults from "@/features/data-delete/DataDeletePageResults.
 import DataDeletePageEmailResults from "@/features/data-delete/DataDeletePageEmailResults.vue";
 import DataDeletePageAdditionalSearch from "@/features/data-delete/DataDeletePageAdditionalSearch.vue";
 import DataDeletePageLoader from "@/features/data-delete/DataDeletePageLoader.vue";
+import DataDeletePageQuestionnaire from "@/features/data-delete/DataDeletePageQuestionnaire.vue";
+import { useCustomerIo } from "@/features/data-delete/composables/useCustomerIo";
 import { useRoute } from "vue-router";
 import router from "@/routes/router";
 import { useToast } from "@/composables/useToast.js";
 import { useDisplay } from "@/composables/useDisplay";
-import { fetchFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
-import { PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1 } from "@/scripts/posthogEvents";
+import {
+  fetchFeatureFlag,
+  usePostHogFeatureFlag,
+} from "@/composables/usePostHogFeatureFlag.js";
+
+import {
+  checkoutDiagnosticThreeQuestions,
+  checkoutDiagnosticSingleQuestion,
+} from "@/features/data-delete/DataDeletePageQuestionnaireData.js";
+import {
+  PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1,
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT,
+} from "@/scripts/posthogEvents";
+
+const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
+);
+
+const isDiagnostic3Q = computed(
+  () =>
+    hasLoadedFeatureFlag.value &&
+    featureFlag.value === "pre-checkout-diagnostic-3q"
+);
+
+const isDiagnostic1Q = computed(
+  () =>
+    hasLoadedFeatureFlag.value &&
+    featureFlag.value === "pre-checkout-diagnostic-1q"
+);
 
 const toast = useToast();
 
 const route = useRoute();
+const { identify } = useCustomerIo();
 
 useThemeQueryParameter();
 usePostHogFunnelTracking();
@@ -105,7 +135,6 @@ async function searchPublicRecords({
   phoneNumber,
   age,
   email,
-  useArray = false,
 }) {
   if (!(firstName && lastName) && !phoneNumber) {
     forceNewSearch();
@@ -123,7 +152,6 @@ async function searchPublicRecords({
     phoneNumber,
     age,
     email,
-    useArray,
     redactAddress: !toValue(enrollmentV2Enabled), // if enrollment v2 is enabled, we don't redact address
   });
 
@@ -152,7 +180,6 @@ async function searchPublicRecords({
       state,
       phoneNumber,
       age,
-      useArray,
     });
   }
 
@@ -185,35 +212,6 @@ function forceNewSearch() {
   searchAlternateOptions(dataDeleteInputForm.value);
 }
 
-const nativeMobileAppHandoffPayload = computed(() => ({
-  userInput: {
-    phoneNumber: dataDeleteInputForm.value.phone,
-    firstName: dataDeleteInputForm.value.firstName || null,
-    lastName: dataDeleteInputForm.value.lastName || null,
-    age: dataDeleteInputForm.value.age
-      ? parseInt(dataDeleteInputForm.value.age)
-      : null,
-    // ios expects birthYear
-    birthYear: searchResults.value?.[0]?.DOB?.year
-      ? parseInt(searchResults.value?.[0]?.DOB?.year)
-      : null,
-    // android expects birth_year
-    birth_year: searchResults.value?.[0]?.DOB?.year
-      ? parseInt(searchResults.value?.[0]?.DOB?.year)
-      : null,
-    email: dataDeleteInputForm.value.email || null,
-    stateAbbreviation: dataDeleteInputForm.value.state || null,
-  },
-  searchResult: searchResults.value?.[0] || null,
-  numberOfResults: numTotalResults.value,
-}));
-
-const handOffSearchResultsToNativeMobileApp = () => {
-  const payload = JSON.stringify(nativeMobileAppHandoffPayload.value);
-  window.webkit?.messageHandlers?.searchCompleted?.postMessage(payload);
-  window.cloakedAndroid?.onReceiveMessage?.(payload);
-};
-
 onBeforeMount(() => {
   clearSearchProgressFromSessionStorage();
   store.dispatch("authentication/setGuestToken", null);
@@ -228,11 +226,9 @@ const storeSearchProgressInSessionStorage = () => {
   });
 };
 
-async function setSetup() {
-  handOffSearchResultsToNativeMobileApp();
+async function goToCheckout() {
   storeSearchProgressInSessionStorage();
 
-  // Use PostHog feature flag instead of backend user flags for consistency
   const { value: tieredPricingExperiment } = await fetchFeatureFlag(
     PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1
   );
@@ -248,6 +244,19 @@ async function setSetup() {
       query: route.query,
     });
   }
+}
+
+async function setSetup() {
+  if (isDiagnostic3Q.value || isDiagnostic1Q.value) {
+    openQuestionnaire();
+    return;
+  }
+
+  goToCheckout();
+}
+
+function openQuestionnaire() {
+  setStep(FUNNEL_STEP.QUESTIONNAIRE);
 }
 
 function setSearchStep(value) {
@@ -294,13 +303,24 @@ onMounted(async () => {
   if (source) persistSource(source);
   isBraveOtp.value = source === "brave";
 
+  // for enterprise scans
+  if (route.query?.email_address) {
+    identify({
+      email: route.query.email_address,
+      phone: route.query.phone,
+    });
+  }
+
   const mountIframePromise = mountIframe(headlessIframe.value.$el);
   const cloudflareToken = await cloudflareCaptcha.value.verify();
 
   await mountIframePromise;
   await createUser(cloudflareToken);
 
-  const queryToKeep = { phone: route?.query?.phone };
+  const queryToKeep = {
+    phone: route?.query?.phone,
+    email_address: route?.query?.email_address,
+  };
   if (route?.query?.email) {
     queryToKeep.email = route.query.email;
   }
@@ -359,8 +379,19 @@ async function loginPasswordlessUser({ phone, code }) {
     <DataDeletePageBackground />
     <DataDeletePageAlreadyStarted v-if="statusState.hasAlreadyStartedDD" />
     <template v-else>
+      <DataDeletePageQuestionnaire
+        v-if="step === FUNNEL_STEP.QUESTIONNAIRE"
+        class="data-delete__page"
+        :questions="
+          isDiagnostic3Q
+            ? checkoutDiagnosticThreeQuestions
+            : checkoutDiagnosticSingleQuestion
+        "
+        @complete="goToCheckout"
+        @skip="goToCheckout"
+      />
       <DataDeletePageOtpBrave
-        v-if="step === FUNNEL_STEP.OTP && isBraveOtp"
+        v-else-if="step === FUNNEL_STEP.OTP && isBraveOtp"
         class="data-delete__page"
         :headless-user="headlessUser"
         :formatted-phone="formattedPhoneNumber"

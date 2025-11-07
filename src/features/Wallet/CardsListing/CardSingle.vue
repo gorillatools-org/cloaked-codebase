@@ -6,9 +6,11 @@ import { useRoute } from "vue-router";
 import { useToast } from "@/composables/useToast.js";
 import IdentityIcon from "@/features/ui/IdentityIcon.vue";
 import { tools } from "@/scripts/tools";
+import useOutstandingBalance from "@/features/VirtualCards/composables/useOutstandingBalance";
 
 const route = useRoute();
 const toast = useToast();
+const { hasCollectionStatus } = useOutstandingBalance();
 
 function identity(id) {
   const identity = store.state.localdb.db_cloaks.find((item) => item.id === id);
@@ -69,6 +71,8 @@ const formatExpiryDate = (apiDate) => {
 };
 
 function copyToClipboard(text, data) {
+  if (!canToggle()) return;
+
   tools.copyToClipboard(data);
   toast.success(text + " copied to clipboard");
 }
@@ -78,15 +82,27 @@ const cardExpiryVisibility = ref(false);
 const cardCvvVisibility = ref(false);
 
 function toggleCardNumberVisibility() {
+  if (!canToggle()) return;
   cardNumberVisibility.value = !cardNumberVisibility.value;
 }
 
 function toggleCardCvvVisibility() {
+  if (!canToggle()) return;
   cardCvvVisibility.value = !cardCvvVisibility.value;
 }
 
 function toggleCardExpiryVisibility() {
+  if (!canToggle()) return;
   cardExpiryVisibility.value = !cardExpiryVisibility.value;
+}
+
+function canToggle() {
+  if (hasCollectionStatus.value) {
+    toast.error("Pay your outstanding balance to resume access to Cloaked Pay");
+    return false;
+  }
+
+  return true;
 }
 
 watch(route, () => {
@@ -101,7 +117,7 @@ watch(route, () => {
 <template>
   <router-link
     v-if="props.card"
-    :to="'/virtual-cards/card/' + card.id"
+    :to="'/virtual-cards/wallet/card/' + card.id"
     class="card"
     :class="{
       active: route.params.id === card.id,

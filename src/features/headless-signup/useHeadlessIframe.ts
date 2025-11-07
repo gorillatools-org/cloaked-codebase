@@ -4,8 +4,6 @@ import { headlessParams } from "@/api/api";
 import { useRoute } from "vue-router";
 import { useTrackingQueryParameters } from "@/composables/useTrackingQueryParameters";
 import { toValue } from "@vueuse/core";
-import { PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT } from "@/scripts/posthogEvents";
-import { fetchFeatureFlag } from "@/composables/usePostHogFeatureFlag";
 import {
   type IframeResponseStatus,
   type HeadlessIframeResponses,
@@ -53,23 +51,16 @@ export const useHeadlessIframe = () => {
     codeVerifier.value = verifier;
     codeChallenge.value = challenge;
 
-    const { value: featureFlagValue } = await fetchFeatureFlag(
-      PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
-    );
-
     const params = new URLSearchParams({
       cloaked_code_challenge: toValue(codeChallenge) ?? "",
       cloaked_client_id: import.meta.env.VITE_HEADLESS_ID ?? "",
       secret: import.meta.env.VITE_SECRET ?? "",
       cloaked_redirect_uri: import.meta.env.VITE_REDIRECT_URI ?? "",
       enable_delete: "true",
+      vpn_customer: "true",
       ...route.query,
       ...headlessParams(),
     });
-
-    if (featureFlagValue === "checkout-feature-vpn") {
-      params.append("vpn_customer", "true");
-    }
 
     element.src = withTrackingParams(
       `${

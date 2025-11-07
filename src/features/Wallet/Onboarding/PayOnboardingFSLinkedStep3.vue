@@ -107,15 +107,16 @@ const openAboutAutoPayModal = () => {
       variant="headline-6-medium"
       class="pay-on-fs-linked-step-3__description"
     >
-      Virtual card payments linked to your
-      <span class="pay-on-fs-linked-step-3__description-brand">
-        {{ fundingSource?.card_brand }}
-      </span>
-      ending in
-      <strong>{{ fundingSource?.pan_last_four }}</strong>
-      are now
-      <strong>cloaked.</strong>
-      By default,
+      <strong>
+        Virtual card payments are now linked to your
+        <span class="pay-on-fs-linked-step-3__description-brand">
+          {{ fundingSource?.card_brand }}
+        </span>
+        ending in
+        {{ fundingSource?.pan_last_four }}.
+      </strong>
+      For your convenience,
+      <!-- eslint-disable -->
       <span
         class="pay-on-fs-linked-step-3__description--underline"
         role="button"
@@ -123,10 +124,10 @@ const openAboutAutoPayModal = () => {
         @click="openAboutAutoPayModal"
         @keydown.enter="openAboutAutoPayModal"
         @keydown.space.prevent="openAboutAutoPayModal"
-      >
-        AutoPay
-      </span>
-      is enabled for linked funding sources.
+      >AutoPay</span>
+      <!-- eslint-enable -->
+      is enabled for linked payment methods. You may disable AutoPay in Settings
+      anytime
     </BaseText>
     <BaseButton
       variant="primary"

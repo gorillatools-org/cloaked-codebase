@@ -1,21 +1,25 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from "vue";
-import Button from "./WalletSettingsButton";
+import Button from "@/features/Wallet/WalletSettings/WalletSettingsButton.vue";
 import { useRoute } from "vue-router";
 import store from "@/store";
-import useVirtualCard from "@/composables/Wallet/useVirtualCard";
+import useVirtualCard from "@/features/VirtualCards/composables/useVirtualCard";
 import useFundingSource from "@/composables/Wallet/useFundingSource";
+import useVirtualCardModals from "@/features/VirtualCards/composables/useVirtualCardModals";
+import type { VirtualCard } from "@/types/Wallet/virtual-card";
 
 const route = useRoute();
-const { openFundingSourcePatchModal, cardFundingSource } = useVirtualCard(
-  () => currentCard
+const { cardFundingSource } = useVirtualCard(() => currentCard.value);
+const { openFundingSourcePatchModal } = useVirtualCardModals(
+  () => currentCard.value
 );
+
 const { fundingSources } = useFundingSource();
 
 const currentCard = computed(() => {
   if (route.params.id && store.state.cards.cards.results) {
     return store.state.cards.cards.results.find(
-      (card) => card.id === route.params.id
+      (card: VirtualCard) => card.id === route.params.id
     );
   } else {
     return "";

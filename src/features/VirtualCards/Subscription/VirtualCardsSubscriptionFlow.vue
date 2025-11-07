@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import VirtualCardsSubscriptionIntro from "./intro/VirtualCardsSubscriptionIntro.vue";
 import VirtualCardsApplicationFlow from "./application/VirtualCardsApplicationFlow.vue";
-import { useVirtualCardsApplicationStore } from "@/pinia/VirtualCards/useVirtualCardsApplicationStore";
+import { useVirtualCardsApplicationStore } from "@/features/VirtualCards/store/useVirtualCardsApplicationStore";
 
 const virtualCardsApplication = useVirtualCardsApplicationStore();
 

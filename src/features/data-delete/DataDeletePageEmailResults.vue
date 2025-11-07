@@ -261,7 +261,7 @@ const goToPage = (page) => {
               class="data-delete-email-results__error"
             >
               <BaseText
-                variant="body-2"
+                variant="headline-4-medium"
                 class="data-delete-email-results__error-text"
               >
                 {{ error }}

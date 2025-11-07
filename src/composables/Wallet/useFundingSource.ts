@@ -25,9 +25,17 @@ export default function useFundingSource() {
   const toast = useToast();
 
   const fundingSources = computed(() => {
-    return store.state.cards.fundingSources?.results as
-      | FundingSource[]
-      | undefined;
+    // The default funding source is always first, rest sorted alphabetically
+    return [...(store.state.cards.fundingSources?.results || [])].sort(
+      (a, b) => {
+        if (a.primary && !b.primary) return -1;
+        if (!a.primary && b.primary) return 1;
+
+        const nameA = (a.nickname || a.name_on_card || "").toLowerCase();
+        const nameB = (b.nickname || b.name_on_card || "").toLowerCase();
+        return nameA.localeCompare(nameB);
+      }
+    ) as FundingSource[];
   });
 
   const defaultFundingSource = computed(() => {
@@ -57,6 +65,22 @@ export default function useFundingSource() {
   const hasExpiredFundingSources = computed(() => {
     return (expiredFundingSources.value?.length || 0) > 0;
   });
+
+  const newestFundingSource = computed(() => {
+    return [...(fundingSources.value || [])].sort((a, b) => {
+      return moment(b.created_at).diff(moment(a.created_at));
+    })[0];
+  });
+
+  const checkExpiredFundingSource = (fundingSource: string | FundingSource) => {
+    const fundingSourceId =
+      typeof fundingSource === "string" ? fundingSource : fundingSource?.id;
+    return (
+      !!expiredFundingSources.value?.some(
+        (fundingSource) => fundingSource.id === fundingSourceId
+      ) || false
+    );
+  };
 
   const refetchFundingSources = () => {
     return CardsServices.getFundingSources();
@@ -207,7 +231,7 @@ export default function useFundingSource() {
     }
 
     router.push({
-      name: "VirtualCardsFundingSourceUpdate",
+      name: "VirtualCardsWalletFundingSourceUpdate",
       params: { fsId: fundingSourceId },
     });
   };
@@ -647,6 +671,8 @@ export default function useFundingSource() {
     enabledFundingSourceTypes,
     expiredFundingSources,
     hasExpiredFundingSources,
+    checkExpiredFundingSource,
+    newestFundingSource,
     getLightningCheckAmount,
     getFundingSourcesByType,
     refetchFundingSources,

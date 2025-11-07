@@ -13,6 +13,10 @@ const information = computed(() => {
   return store.state.cards?.cardInformation;
 });
 
+const user = computed(() => {
+  return store.state.authentication?.user;
+});
+
 const loading = ref(true);
 
 function getCardInformation() {
@@ -28,7 +32,7 @@ function getCardInformation() {
 }
 
 onMounted(() => {
-  if (!information.value) {
+  if (!information.value && !!user.value) {
     getCardInformation();
   } else {
     loading.value = false;

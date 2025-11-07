@@ -2,24 +2,31 @@
 import VCBaseCard from "./base/card/VCBaseCard.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
-import { ref, computed, useTemplateRef, watch } from "vue";
+import { ref, computed, useTemplateRef, watch, markRaw } from "vue";
 import VCBaseTabs, { type TabItem } from "./base/VCBaseTabs.vue";
 import VCBaseAmountInput from "./base/VCBaseAmountInput.vue";
 import Button from "@/features/Button.vue";
 import useFundingSource from "@/composables/Wallet/useFundingSource";
 import useVirtualCardGenerate, {
   type GenerateCardParams,
-} from "@/composables/Wallet/useVirtualCardGenerate";
+} from "@/features/VirtualCards/composables/useVirtualCardGenerate";
 import { useToast } from "@/composables/useToast.js";
 import { posthogCapture } from "@/scripts/posthog";
 import store from "@/store";
+import type { VirtualCardPeriod } from "@/types/Wallet/virtual-card";
+import {
+  CARD_PERIOD_TYPE_TO_API_TYPE,
+  CARD_PERIOD_TO_CARD_TYPE,
+} from "./constants/virtual-card-constants";
+
+import useOutstandingBalance from "@/features/VirtualCards/composables/useOutstandingBalance";
+import VCBalanceDueModal from "@/features/VirtualCards/modals/balance-due/VCBalanceDueModal.vue";
+
+type Period = Extract<VirtualCardPeriod, "monthly" | "one-time">;
 
 const emit = defineEmits<{
   (e: "newCardIssued", cardId: string): void;
-  (
-    e: "showAdvancedModal",
-    payload: { period: "monthly" | "one-time"; amount?: number }
-  ): void;
+  (e: "showAdvancedModal", payload: { period: Period; amount?: number }): void;
 }>();
 
 const {
@@ -29,13 +36,15 @@ const {
   fundingSources,
 } = useFundingSource();
 
+const { hasCollectionStatus } = useOutstandingBalance();
 const { generateCard } = useVirtualCardGenerate();
+
 const toast = useToast();
 
 const isFocused = ref(false);
 const isCreating = ref(false);
 const amount = ref<number>();
-const tab = ref<"monthly" | "one-time">("monthly");
+const tab = ref<Period>("monthly");
 const createError = ref<string>();
 const amountInputRef =
   useTemplateRef<typeof VCBaseAmountInput>("amountInputRef");
@@ -45,11 +54,15 @@ const items: TabItem[] = [
   { id: "one-time", label: "One-Time" },
 ];
 
+const allowedToCreateCard = computed(() => {
+  return !hasCollectionStatus.value;
+});
+
 const cardBorderConfig = computed(() => ({
   focused: isFocused.value,
   loading: isCreating.value,
   borderRadius: 24,
-  enableSpotlight: true,
+  enableSpotlight: allowedToCreateCard.value,
 }));
 
 const cardSettings = computed(() => {
@@ -58,6 +71,11 @@ const cardSettings = computed(() => {
 
 const createCard = () => {
   if (!amount.value) return;
+
+  if (!allowedToCreateCard.value) {
+    openBalanceDueModal();
+    return;
+  }
 
   // No funding sources, open add funding source modal
   if ((fundingSources.value?.length ?? 0) === 0) {
@@ -74,10 +92,10 @@ const createCard = () => {
   }
 
   const payload: GenerateCardParams = {
-    type: tab.value === "monthly" ? "MULTI_USE" : "SINGLE_USE",
+    type: CARD_PERIOD_TO_CARD_TYPE[tab.value],
     funding_source: defaultFundingSource.value.id,
     transaction_period_limit: amount.value * 100, // Convert to cents
-    transaction_period: tab.value === "monthly" ? "monthly" : "forever",
+    transaction_period: CARD_PERIOD_TYPE_TO_API_TYPE[tab.value],
   };
 
   clearErrors();
@@ -109,10 +127,26 @@ const clearErrors = () => {
 };
 
 const handleMoreOptionsClick = () => {
+  if (!allowedToCreateCard.value) {
+    openBalanceDueModal();
+    return;
+  }
+
   clearErrors();
   emit("showAdvancedModal", {
     period: tab.value,
     amount: amount.value ? amount.value * 100 : undefined,
+  });
+};
+
+const openBalanceDueModal = () => {
+  posthogCapture(
+    "dashboard_pay_balance_due_payment_opened_by_express_card_generation_modal_viewed"
+  );
+  store.dispatch("openModal", {
+    customTemplate: {
+      template: markRaw(VCBalanceDueModal),
+    },
   });
 };
 
@@ -133,65 +167,92 @@ defineExpose({
 
 <template>
   <VCBaseCard
-    class="vc-express-generation"
+    :class="[
+      'vc-express-generation',
+      { 'vc-express-generation--not-allowed': !allowedToCreateCard },
+    ]"
     :border="cardBorderConfig"
   >
-    <div class="vc-express-generation__content">
-      <BaseText variant="headline-5-bold">Create New Card</BaseText>
-      <div class="vc-express-generation__input-container">
-        <VCBaseAmountInput
-          ref="amountInputRef"
-          v-model="amount"
-          class="vc-express-generation__amount-input"
-          placeholder="$25"
-          :input-error="!!createError"
-          :error-message="createError"
-          :readonly="isCreating"
-          @focus="isFocused = true"
-          @blur="isFocused = false"
-          @input="clearErrors"
-          @keydown.enter="createCard"
-        >
-          <template #after>
-            <VCBaseTabs
-              v-model="tab"
-              :full-width="false"
-              :items="items"
-              :height="35"
-              :width="190"
-              @select="
-                clearErrors();
-                amountInputRef?.focus();
-              "
-            ></VCBaseTabs>
-          </template>
-        </VCBaseAmountInput>
-      </div>
-      <footer class="vc-express-generation__footer">
+    <div class="vc-express-generation__wrapper">
+      <div class="vc-express-generation__content">
+        <BaseText variant="headline-5-bold">Create New Card</BaseText>
+        <div class="vc-express-generation__input-container">
+          <VCBaseAmountInput
+            ref="amountInputRef"
+            v-model="amount"
+            class="vc-express-generation__amount-input"
+            placeholder="$25"
+            :input-error="!!createError"
+            :error-message="createError"
+            :readonly="isCreating"
+            @focus="isFocused = true"
+            @blur="isFocused = false"
+            @input="clearErrors"
+            @keydown.enter="createCard"
+          >
+            <template #after>
+              <VCBaseTabs
+                v-model="tab"
+                :full-width="false"
+                :items="items"
+                :height="35"
+                :width="190"
+                @select="
+                  clearErrors();
+                  amountInputRef?.focus();
+                "
+              ></VCBaseTabs>
+            </template>
+          </VCBaseAmountInput>
+        </div>
+        <footer class="vc-express-generation__footer">
+          <div
+            class="vc-express-generation__advanced-container"
+            role="button"
+            tabindex="0"
+            @click="handleMoreOptionsClick"
+            @keydown.enter="handleMoreOptionsClick"
+            @keydown.space.prevent="handleMoreOptionsClick"
+          >
+            <BaseIcon
+              name="plus"
+              class="vc-express-generation__advanced-icon"
+            />
+            <BaseText variant="body-3-semibold">More options</BaseText>
+          </div>
+          <Button
+            size="lg"
+            class="vc-express-generation__create-button"
+            :disabled="!amount || isCreating"
+            @click="createCard"
+          >
+            Create
+          </Button>
+        </footer>
+        <!-- Not allowed to create card -->
         <div
-          class="vc-express-generation__advanced-container"
-          role="button"
-          tabindex="0"
-          @click="handleMoreOptionsClick"
-          @keydown.enter="handleMoreOptionsClick"
-          @keydown.space.prevent="handleMoreOptionsClick"
+          v-if="!allowedToCreateCard"
+          class="vc-express-generation__not-allowed-container"
         >
           <BaseIcon
-            name="plus"
-            class="vc-express-generation__advanced-icon"
+            name="lock-filled"
+            class="vc-express-generation__not-allowed-icon"
           />
-          <BaseText variant="body-3-semibold">More options</BaseText>
+          <BaseText
+            variant="headline-5-bold"
+            class="vc-express-generation__not-allowed-title"
+          >
+            Card creation is disabled
+          </BaseText>
+          <Button
+            type="danger"
+            class="vc-express-generation__not-allowed-pay-button"
+            @click="openBalanceDueModal"
+          >
+            Pay full balance to unlock
+          </Button>
         </div>
-        <Button
-          variant="secondary"
-          size="lg"
-          class="vc-express-generation__create-button"
-          :disabled="!amount || isCreating"
-          @click="createCard"
-        >
-          Create
-        </Button>
-      </footer>
+      </div>
     </div>
   </VCBaseCard>
 </template>
@@ -201,6 +262,10 @@ defineExpose({
   width: 100%;
   margin: 10px 0;
   overflow: hidden;
+
+  &__wrapper {
+    position: relative;
+  }
 
   &__content {
     display: flex;
@@ -262,6 +327,36 @@ defineExpose({
 
     &:disabled {
       color: $color-primary-70;
+    }
+  }
+
+  &__not-allowed {
+    &-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      gap: 16px;
+      top: 8px;
+      left: 8px;
+      width: calc(100% - 15px);
+      height: calc(100% - 15px);
+      padding: 16px;
+      background-color: transparent;
+      backdrop-filter: blur(8px);
+      z-index: 1;
+    }
+
+    &-icon {
+      font-size: 24px;
+    }
+
+    &-pay-button {
+      display: inline-block;
+      font-weight: 600;
+      font-size: 14px;
+      width: max-content;
     }
   }
 }

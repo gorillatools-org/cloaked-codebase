@@ -48,7 +48,7 @@ function navToApp() {
       size="lg"
       class="navto-app-button"
       :class="{ 'is-mobile': isMobile }"
-      icon="arrow-long-right"
+      icon="arrow-right"
       @click="navToApp"
     >
       Take me to the Cloaked app

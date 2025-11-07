@@ -1,6 +1,6 @@
 <script setup>
 import InlineSvg from "@/features/InlineSvg.vue";
-import UiTooltip from "@/features/ui/ui-tooltip";
+import UiTooltip from "@/features/ui/ui-tooltip.vue";
 import store from "@/store";
 import UserService from "@/api/actions/user-service";
 import MfaService from "@/api/actions/mfa-service";
@@ -36,16 +36,6 @@ onBeforeMount(async () => {
   }
   DataDeleteService.getEnrollmentData();
   store.dispatch("subscription/fetchInvitations");
-});
-
-const ddInAppSearchEnabled = computed(
-  () => store.getters["dataDelete/getDdInAppSearchEnabled"]
-);
-
-const hasDDScan = computed(() => {
-  return (
-    store.getters["dataDelete/enrollmentData"]?.enrollmentDataFetched ?? false
-  );
 });
 
 const usedMobileRecently = computed(() => {
@@ -86,21 +76,10 @@ const showSendInvite = computed(() => {
   );
 });
 
-const showDataDeletion = computed(() => {
-  if (ddInAppSearchEnabled.value) {
-    if (hasDDScan.value) {
-      return false;
-    }
-    return !store.getters.getFlag(userFlags.DISMISSED_DATA_DELETE_ACTION);
-  }
-  return false;
-});
-
 const allActionsObj = computed(() => {
   return {
     showSendInvite: showSendInvite.value,
 
-    showDataDeletion: showDataDeletion.value,
     showDownloadMobile: showDownloadMobile.value,
     showImportPasswords: showImportPasswords.value,
     show2FA: show2FA.value,
@@ -164,11 +143,6 @@ function onClick2FA() {
 function onClickSendInvite() {
   sendPosthogEvent("send_invite");
   router.push({ name: "settings.subscription" });
-}
-
-function onClickDataDelete() {
-  sendPosthogEvent("data_deletion");
-  window.dispatchEvent(new CustomEvent("focus-data-deletion-input"));
 }
 
 function sendPosthogEvent(eventName) {
@@ -243,42 +217,6 @@ function sendPosthogEvent(eventName) {
             key="homeaction-delete-1"
             name="delete"
           />
-        </UiTooltip>
-      </div>
-
-      <div
-        v-if="visibleActions.includes('showDataDeletion')"
-        class="action-row"
-        @click="onClickDataDelete"
-      >
-        <div class="icon pink reverse">
-          <InlineSvg name="data-delete/remove-data" />
-        </div>
-
-        <div class="text-section">
-          <BaseText
-            as="div"
-            variant="headline-6-medium"
-          >
-            Scan your phone number for data leaks
-          </BaseText>
-          <div class="action-subtitle">
-            <BaseText
-              variant="body-3-semibold"
-              underline
-            >
-              Start free scan
-            </BaseText>
-            <InlineSvg name="chevron-right" />
-          </div>
-        </div>
-        <UiTooltip
-          class="delete"
-          @click.stop.prevent="
-            removeRow(userFlags.DISMISSED_DATA_DELETE_ACTION)
-          "
-        >
-          <InlineSvg name="delete" />
         </UiTooltip>
       </div>
 

@@ -5,7 +5,7 @@ import SubscriptionPlanCard from "@/features/Subscription/SubscriptionPlanCard.v
 import SubscriptionBillingDetails from "@/features/Subscription/Billing/SubscriptionBillingDetails.vue";
 import type { BillingDetailsProps } from "@/features/Subscription/Billing/SubscriptionBillingDetails.vue";
 import { reactive, watch, computed, markRaw, nextTick, ref } from "vue";
-import { useVirtualCardsApplicationStore } from "@/pinia/VirtualCards/useVirtualCardsApplicationStore";
+import { useVirtualCardsApplicationStore } from "@/features/VirtualCards/store/useVirtualCardsApplicationStore";
 import store from "@/store";
 import VirtualCardsSubscriptionPlanSelectModal from "@/features/modals/VirtualCards/Subscription/VirtualCardsSubscriptionPlanSelectModal.vue";
 import {
@@ -62,14 +62,16 @@ const higherAnnualSavingsPercentage = computed(() => {
 
 const annualPlans = computed(() => {
   const filteredPlans = plans.value.filter(
-    (plan) => plan.recurring_interval === "annually"
+    (plan) =>
+      plan.recurring_interval === "annually" && plan.provider !== "paypal"
   );
   return getSortedPlans(filteredPlans);
 });
 
 const monthlyPlans = computed(() => {
   const filteredPlans = plans.value.filter(
-    (plan) => plan.recurring_interval === "monthly"
+    (plan) =>
+      plan.recurring_interval === "monthly" && plan.provider !== "paypal"
   );
   return getSortedPlans(filteredPlans);
 });

@@ -421,7 +421,7 @@ const src = computed(() => {
           :key="path"
           ref="keywindow"
           :src="src"
-          allow="clipboard-read; clipboard-write"
+          allow="clipboard-read; clipboard-write; camera"
           frameborder="0"
           :style="{
             width: iframeDimensions.width,

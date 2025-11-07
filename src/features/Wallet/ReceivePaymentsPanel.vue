@@ -5,7 +5,6 @@ import store from "@/store";
 import InlineSvg from "@/features/InlineSvg.vue";
 import CardsServices from "@/api/actions/cards-services";
 import { useToast } from "@/composables/useToast.js";
-import MultiCardPaymentPanel from "@/features/Wallet/MultiCardPaymentPanel.vue";
 import router from "../../routes/router/index.js";
 import PatchDefaultFundingSource from "@/features/modals/Wallet/PatchDefaultFundingSource.vue";
 
@@ -27,8 +26,6 @@ const sources = computed(() => {
 });
 
 const receivePaymentsActive = ref(props.active);
-
-const multiCardPaymentPanelActivated = ref(false);
 
 const buttonDisabled = ref(false);
 
@@ -78,10 +75,6 @@ const openDefaultFundingSources = () => {
 </script>
 
 <template>
-  <div v-if="multiCardPaymentPanelActivated">
-    <MultiCardPaymentPanel :outstanding-balance="props.outstandingBalance" />
-  </div>
-
   <div
     v-if="sources && receivePaymentsActive"
     class="receive-payments-panel"
@@ -137,15 +130,12 @@ const openDefaultFundingSources = () => {
 /* stylelint-disable */
 .receive-payments-panel {
   z-index: 1;
-  background-color: $color-base-white-100;
-  padding-top: 10px;
-  padding-bottom: 1px;
+  padding-bottom: 15px;
 
   .receive-payments {
     padding: 24px;
-    border: 1px solid $color-primary-10;
+    border: 1px solid $color-base-black-10;
     border-radius: 20px;
-    margin: 15px 15px 0;
 
     > * {
       margin-top: 16px;
@@ -165,7 +155,7 @@ const openDefaultFundingSources = () => {
       }
 
       p {
-        margin-top: 16px;
+        margin-top: 4px;
         font-size: 16px;
         line-height: 24px;
         color: $color-primary-70;
@@ -180,15 +170,15 @@ const openDefaultFundingSources = () => {
       margin-top: 24px;
 
       .funding-source {
-        border: 1px solid $color-primary-10;
+        border: 1px solid $color-base-black-10;
         border-radius: 16px;
         padding: 16px;
         margin-top: 4px;
         position: relative;
-        color: $color-primary-100;
+        color: $color-base-black-100;
 
         &:hover {
-          background-color: $color-primary-5;
+          background-color: $color-base-black-5;
           cursor: pointer;
         }
 
@@ -199,7 +189,7 @@ const openDefaultFundingSources = () => {
               display: block;
               width: 8px;
               height: 8px;
-              background-color: $color-primary-100;
+              background-color: $color-base-black-100;
               border-radius: 50%;
               position: absolute;
               top: 50%;
@@ -232,7 +222,7 @@ const openDefaultFundingSources = () => {
             font-style: normal;
             font-weight: 500;
             line-height: normal;
-            color: $color-primary-100;
+            color: $color-base-black-100;
             text-transform: capitalize;
           }
 
@@ -276,7 +266,7 @@ const openDefaultFundingSources = () => {
           width: 16px;
           height: 16px;
           border-radius: 50%;
-          border: 2px solid $color-primary-100;
+          border: 2px solid $color-base-black-100;
         }
       }
     }

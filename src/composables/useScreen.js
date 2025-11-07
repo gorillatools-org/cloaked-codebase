@@ -97,8 +97,16 @@ export const useScreen = () => {
     const isMobile = toValue(isMobileDevice);
     const isNotSubscriptionPage = route.path !== "/settings/subscription";
     const isNotInvitationPage = !route.path.includes("/invitation/");
+    const isNotExposureStatus = !route.path.includes("/exposure-status");
+    const isNotExposuresEnroll = !route.path.includes("/exposures-enroll");
 
-    return isMobile && isNotSubscriptionPage && isNotInvitationPage;
+    return (
+      isMobile &&
+      isNotSubscriptionPage &&
+      isNotInvitationPage &&
+      isNotExposureStatus &&
+      isNotExposuresEnroll
+    );
   });
 
   /**

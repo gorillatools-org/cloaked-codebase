@@ -90,7 +90,7 @@ onMounted(() => {
   }
 
   &.data-delete-no-results {
-    padding-bottom: 140px + 8px !important;
+    padding-bottom: 92px + 8px !important;
   }
 
   @media all and (min-width: $screen-xl) {

@@ -90,7 +90,7 @@ const loading = computed(() => {
 .progress-bar {
   width: 100%;
   height: 10px;
-  background-color: $color-primary-20;
+  background-color: $color-base-black-10;
   border-radius: 4px;
   margin-top: 8px;
   margin-bottom: 8px;
@@ -118,7 +118,7 @@ const loading = computed(() => {
   }
 
   .loading & {
-    background-color: $color-primary-5;
+    background-color: $color-base-black-10;
   }
 }
 </style>

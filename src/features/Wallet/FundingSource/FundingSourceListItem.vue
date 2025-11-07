@@ -46,6 +46,18 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  borderRadius: {
+    type: String,
+    default: "24px",
+  },
+  plain: {
+    type: Boolean,
+    default: false,
+  },
+  noEffects: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const { getProviderIcon, getCardBrandImgURL, expiredFundingSources } =
@@ -56,7 +68,7 @@ const actionsList = computed<DropdownMenuItem[][]>(() => {
     [
       {
         id: "update",
-        label: "Update",
+        label: "Update card",
         icon: isExpired.value ? "info" : "edit",
         color: isExpired.value ? "danger" : undefined,
         onClick: () => emit("update"),
@@ -135,7 +147,10 @@ const handleSelect = () => {
       'fs-list-item--disabled': isDisabled,
       'fs-list-item--selected': isSelected,
       'fs-list-item--expired': isExpired,
+      'fs-list-item--plain': plain,
+      'fs-list-item--no-effects': noEffects,
     }"
+    :style="{ borderRadius: plain ? '0' : props.borderRadius }"
     @click="handleSelect"
   >
     <!--Loading-->
@@ -183,9 +198,16 @@ const handleSelect = () => {
             ({{ fundingSource.nickname }})
           </template>
         </BaseText>
-        <transition name="fade">
+        <transition
+          name="fade"
+          :css="props.plain || props.noEffects ? false : true"
+        >
           <div
-            v-if="isDefaultFundingSource && showDefaultBadge && showActions"
+            v-if="
+              isDefaultFundingSource &&
+              showDefaultBadge &&
+              (showActions || $slots.actions)
+            "
             class="fs-list-item__infos-brand-default-badge-container"
           >
             <div class="fs-list-item__infos-brand-default-badge">
@@ -209,9 +231,16 @@ const handleSelect = () => {
       </BaseText>
     </div>
 
-    <transition name="fade">
+    <transition
+      name="fade"
+      :css="!props.noEffects"
+    >
       <div
-        v-if="isDefaultFundingSource && showDefaultBadge && !showActions"
+        v-if="
+          isDefaultFundingSource &&
+          showDefaultBadge &&
+          !(showActions || $slots.actions)
+        "
         class="fs-list-item__infos-brand-default-badge-container fs-list-item__infos-brand-default-badge-container--end"
       >
         <div class="fs-list-item__infos-brand-default-badge">
@@ -226,31 +255,33 @@ const handleSelect = () => {
       </div>
     </transition>
     <div
-      v-if="showActions"
+      v-if="showActions || $slots.actions"
       class="fs-list-item__actions-container"
     >
-      <VCBaseDropdownMenu
-        :popper="{
-          placement: 'bottom-start',
-          zIndex: 10001,
-          offsetAway: 5,
-          width: '150px',
-        }"
-        :items="actionsList"
-        @click.stop
-      >
-        <template #default="{ open }">
-          <span
-            class="fs-list-item__actions-toggle"
-            :class="{ 'fs-list-item__actions-toggle--open': open }"
-          >
-            <BaseIcon
-              name="more-filled"
-              class="fs-list-item__actions-toggle-icon"
-            />
-          </span>
-        </template>
-      </VCBaseDropdownMenu>
+      <slot name="actions">
+        <VCBaseDropdownMenu
+          :popper="{
+            placement: 'bottom-start',
+            zIndex: 10001,
+            offsetAway: 5,
+            width: '150px',
+          }"
+          :items="actionsList"
+          @click.stop
+        >
+          <template #default="{ open }">
+            <span
+              class="fs-list-item__actions-toggle"
+              :class="{ 'fs-list-item__actions-toggle--open': open }"
+            >
+              <BaseIcon
+                name="more-filled"
+                class="fs-list-item__actions-toggle-icon"
+              />
+            </span>
+          </template>
+        </VCBaseDropdownMenu>
+      </slot>
     </div>
   </div>
 </template>
@@ -263,20 +294,38 @@ $component-name: "fs-list-item";
   align-items: center;
   height: 75px;
   padding: 16px;
-  border-radius: 24px;
   border: 1px solid var(--color-base-black-15);
   box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.05);
+  background-color: $color-base-white-100;
   position: relative;
   transition:
-    opacity 0.15s ease-in-out,
-    background-color 0.15s ease-in-out,
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out;
+    opacity 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    border-color 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 0.16s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-  &:hover,
-  &--loading {
+  &:not(&--selected):hover:not(&--no-effects),
+  &--loading:not(&--selected):not(&--no-effects) {
     border-color: var(--color-base-black-50);
     box-shadow: 0px 10px 24px 0px rgba(0, 0, 0, 0.15);
+  }
+
+  &--select-mode.#{$component-name}--selected {
+    border-color: var(--color-primary-100);
+    box-shadow: 0px 10px 24px 0px rgba(0, 0, 0, 0.15);
+  }
+
+  &--plain {
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+    padding: 0;
+    height: auto;
+
+    &:hover:not(&--no-effects),
+    &--loading:not(&--no-effects) {
+      border: none;
+      box-shadow: none;
+    }
   }
 
   &--select-mode:not(&--selected) {
@@ -427,8 +476,8 @@ $component-name: "fs-list-item";
         }
       }
 
-      &:hover,
-      &--open {
+      .#{$component-name}:not(.#{$component-name}--no-effects) &:hover,
+      .#{$component-name}:not(.#{$component-name}--no-effects) &--open {
         @at-root .theme-dark & {
           background-color: rgba($color-primary-100-dark, 0.1);
         }
@@ -459,13 +508,13 @@ $component-name: "fs-list-item";
 .fade-enter-active,
 .fade-leave-active {
   transition:
-    opacity 0.15s ease-in-out,
-    transform 0.15s ease-in-out;
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-  transform: translateX(-5px);
+  transform: translateX(-10px);
 }
 </style>

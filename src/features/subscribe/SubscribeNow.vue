@@ -11,30 +11,27 @@ import { useThemeQueryParameter } from "@/composables/useThemeQueryParameter";
 import { usePostHogFunnelTracking } from "@/composables/usePosthogFunnelTracking";
 import { useHeadlessUser } from "@/features/headless-signup/useHeadlessUser";
 import { useFunnel } from "@/features/subscribe/composables/useFunnel";
-import { cameFromBuyCloaked, FUNNEL_STEP } from "@/features/data-delete/utils";
+import { FUNNEL_STEP } from "@/features/data-delete/utils";
 import { useStripeIntentPrefetch } from "@/features/subscribe/composables/useStripeIntentPrefetch.js";
-import {
-  DATA_DELETE_REQUESTED,
-  CAME_FROM_BUY_CLOAKED,
-  FROM_SUBSCRIBE_NOW,
-} from "@/scripts/userFlags";
+import { DATA_DELETE_REQUESTED, FROM_SUBSCRIBE_NOW } from "@/scripts/userFlags";
 import { useRoute, useRouter } from "vue-router";
 import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag";
-import {
-  PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1,
-  PH_FEATURE_FLAG_CLOAKED_PAY_ENABLE_SUBSCRIPTION,
-} from "@/scripts/posthogEvents";
-
+import { PH_FEATURE_FLAG_TIERED_PRICING_EXPERIMENT_1 } from "@/scripts/posthogEvents";
+import { PH_FEATURE_FLAG_CLOAKED_PAY_ENABLE_SUBSCRIPTION } from "@/features/VirtualCards/constants/posthog-feature-flag";
+import PageCheckoutBanner from "@/routes/checkout/PageCheckoutBanner.vue";
 // Guard flag to prevent double initialization
 let didInit = false;
 
 const route = useRoute();
 const router = useRouter();
 
+const isCloakedPayCustomerRoute = computed(() => {
+  return route.query.pay_customer === "true";
+});
+
 useThemeQueryParameter();
 usePostHogFunnelTracking();
 
-// Load PostHog feature flag for tiered pricing experiment
 const {
   featureFlag: tieredPricingExperiment,
   hasLoadedFeatureFlag: hasTieredPricingFlagLoaded,
@@ -49,7 +46,6 @@ const { prefetchIntents } = useStripeIntentPrefetch();
 
 const { step, setStep } = useFunnel(FUNNEL_STEP.PAYMENT);
 
-// Watch for PostHog feature flag to either redirect or initialize based on variant
 watch(
   () => ({
     flagLoaded: hasTieredPricingFlagLoaded.value,
@@ -90,12 +86,6 @@ watch(
   },
   { immediate: true, flush: "post" }
 );
-
-// Auth reset moved to initializeControlFlow to only run for control variant
-// onBeforeMount(() => {
-//   store.dispatch("authentication/setGuestToken", null);
-//   store.commit("authentication/setUser", null);
-// });
 
 const {
   createHeadlessUserError,
@@ -176,15 +166,6 @@ const createUser = async (cloudflareToken) => {
     );
   }
 
-  if (cameFromBuyCloaked()) {
-    afterCreatePromises.push(
-      UserService.setFlag({
-        name: CAME_FROM_BUY_CLOAKED,
-        value: true,
-      })
-    );
-  }
-
   await Promise.allSettled(afterCreatePromises);
   prefetchIntents();
 };
@@ -238,6 +219,7 @@ const setUser = async ({ username, password, email, phone }, paymentMethod) => {
 };
 
 async function onSubscribed() {
+  sessionStorage.removeItem("questionnaire-skipped");
   setStep(FUNNEL_STEP.SUCCESS);
 }
 
@@ -246,6 +228,7 @@ const checkoutRef = ref(null);
 
 <template>
   <div class="subscribe-now">
+    <PageCheckoutBanner />
     <PageCheckout
       v-if="step === FUNNEL_STEP.PAYMENT"
       ref="checkoutRef"
@@ -258,6 +241,7 @@ const checkoutRef = ref(null);
     <PageCheckoutSuccessSignup
       v-else
       :account="account"
+      :is-cloaked-pay-customer-route="isCloakedPayCustomerRoute"
     />
     <CloudflareCaptcha ref="cloudflareCaptcha" />
     <HeadlessSignup ref="headlessIframe" />

@@ -123,11 +123,6 @@ export default {
     cardInformation(state, data) {
       state.cardInformation = Object.assign({}, data);
     },
-    addCard(state, data) {
-      state.rightPanel.card = Object.assign({}, data);
-      state.rightPanel.transaction = null;
-      state.rightPanel.show = true;
-    },
     openSettings(state) {
       state.rightPanel.settings = true;
       state.rightPanel.transaction = null;
@@ -231,9 +226,6 @@ export default {
     cardInformation({ commit }, data) {
       commit("cardInformation", data);
     },
-    addCard({ commit }, data) {
-      commit("addCard", data);
-    },
     closeRightPanel({ commit }) {
       commit("closeRightPanel");
     },
@@ -262,11 +254,6 @@ export default {
   },
 
   getters: {
-    verifiedFunding(state) {
-      return state.fundingSources.filter(
-        (fundingSource) => fundingSource.verifed === true
-      );
-    },
     virtualCardModal(state) {
       return state.virtualCardModal;
     },
