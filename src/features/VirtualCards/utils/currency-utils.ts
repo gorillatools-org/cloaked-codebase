@@ -1,4 +1,6 @@
-export const currencyFormatConfig: Intl.NumberFormatOptions = {
+import type { Format } from "@number-flow/vue";
+
+export const currencyFormatConfig: Format = {
   style: "currency",
   currency: "USD",
   currencyDisplay: "narrowSymbol",

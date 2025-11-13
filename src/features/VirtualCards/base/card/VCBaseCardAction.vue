@@ -3,7 +3,7 @@ import BaseIcon from "@/library/BaseIcon.vue";
 import type { VCBaseCardInfoProps } from "./VCBaseCardInfo.vue";
 import VCBaseCardInfo from "./VCBaseCardInfo.vue";
 
-const props = defineProps<VCBaseCardInfoProps>();
+const props = defineProps<VCBaseCardInfoProps & { hideChevron?: boolean }>();
 
 const emit = defineEmits<{
   click: [event: MouseEvent];
@@ -25,11 +25,21 @@ const handleClick = (event: MouseEvent) => {
     @keydown.enter.prevent="handleClick"
     @keydown.space.prevent="handleClick"
   >
-    <template #left>
+    <template #icon>
+      <slot name="icon" />
+    </template>
+    <template #description>
+      <slot name="description" />
+    </template>
+    <template
+      v-if="$slots.left"
+      #left
+    >
       <slot name="left" />
     </template>
     <template #right>
       <BaseIcon
+        v-if="!props.hideChevron"
         :class="{
           'vc-base-card-action__icon--no-effect': props.border?.focused,
         }"

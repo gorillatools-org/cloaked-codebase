@@ -1,75 +1,42 @@
-<script setup>
-import store from "@/store";
+<script setup lang="ts">
 import IdentityIcon from "@/features/ui/IdentityIcon.vue";
+import type { Transaction } from "@/types/Wallet/transaction";
+import useWalletTransaction from "@/features/VirtualCards/composables/useWalletTransaction";
 
-const props = defineProps({
-  information: {
-    type: Object,
-    required: true,
-  },
-});
+type Props = {
+  transaction: Transaction;
+};
 
-function identity(id) {
-  const identity = store.state.localdb.db_cloaks.find((item) => item.id === id);
-  return identity;
-}
+const props = defineProps<Props>();
 
-function convertToDollar(amount) {
-  return (amount / 100)
-    .toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-    })
-    .replace(/(\.0+|(?<=\.\d)0+)$/, ""); // Removes .00 or trailing 0 in decimals
-}
-
-function status(status) {
-  if (status === "pending") {
-    return "Pending final amount";
-  } else if (status === "settled") {
-    return "Purchase";
-  } else if (status === "refunded") {
-    return "Refunded";
-  } else if (status === "declined") {
-    return "Declined";
-  }
-}
+const { transactionIdentity, amountFormatted, statusDescription } =
+  useWalletTransaction(() => props.transaction.id);
 </script>
 
 <template>
   <div
-    v-if="props.information"
+    v-if="transaction"
     class="information"
   >
     <IdentityIcon
-      :identity="
-        identity(props.information?.identity || props.information?.identity_id)
-      "
+      :identity="transactionIdentity"
       class="identity-icon"
     />
     <h1
-      v-if="props.information?.status"
-      :class="props.information?.status"
+      v-if="statusDescription"
+      :class="statusDescription"
     >
-      {{ convertToDollar(props.information?.display_amount) }}
+      {{ amountFormatted }}
     </h1>
-    <p
-      v-if="
-        identity(props.information?.identity || props.information?.identity_id)
-          ?.website_url
-      "
-    >
-      {{
-        identity(props.information?.identity || props.information?.identity_id)
-          ?.website_url
-      }}
+    <p v-if="transactionIdentity?.website_url">
+      {{ transactionIdentity?.website_url }}
     </p>
     <div
-      v-if="props.information?.status"
+      v-if="statusDescription"
       class="button"
-      :class="props.information?.status"
+      :class="transaction?.status"
     >
-      {{ status(props.information?.status) }}
+      {{ statusDescription }}
     </div>
   </div>
 </template>

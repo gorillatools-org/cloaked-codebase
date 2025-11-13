@@ -50,25 +50,21 @@ const trackEl = useTemplateRef<HTMLElement>("trackEl");
 const btnRefs = ref<HTMLElement[]>([]);
 const indicatorLeft = ref(0);
 const indicatorWidth = ref(0);
-
+const hasInitialMeasurement = ref(false);
 const ready = ref(false);
 
-onMounted(async () => {
+onMounted(() => {
   if (!current.value && props.items[0]) current.value = props.items[0].id;
 
-  await nextTick();
-  measure();
-
-  // Enable transitions only after the initial one
   setTimeout(() => {
     ready.value = true;
   }, 300);
 
-  window.addEventListener("resize", onResize, { passive: true });
+  window.addEventListener("resize", measure, { passive: true });
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener("resize", onResize);
+  window.removeEventListener("resize", measure);
 });
 
 const cssVars = computed(() => ({ "--tabs-h": `${props.height}px` }));
@@ -101,28 +97,33 @@ function select(id: string) {
 }
 
 function measure() {
-  const track = trackEl.value;
-  if (!track || !selectedId.value) return;
+  if (!trackEl.value || !selectedId.value) return;
 
   const btn = btnRefs.value.find((el) => el?.id === `tab-${selectedId.value}`);
   if (!btn) return;
 
-  const trackRect = track.getBoundingClientRect();
-  const buttonRect = btn.getBoundingClientRect();
-  indicatorLeft.value = Math.max(0, buttonRect.left - trackRect.left);
-  indicatorWidth.value = Math.max(0, buttonRect.width);
-}
+  indicatorLeft.value = btn.offsetLeft;
+  indicatorWidth.value = btn.offsetWidth;
 
-function onResize() {
-  measure();
+  if (!hasInitialMeasurement.value) {
+    hasInitialMeasurement.value = true;
+  }
 }
 
 watch(
-  () => [current.value, props.items.length],
-  async () => {
-    await nextTick();
-    measure();
-  }
+  () => [current.value, btnRefs.value.length],
+  () => {
+    if (
+      current.value &&
+      btnRefs.value.length === props.items.length &&
+      trackEl.value
+    ) {
+      nextTick(() => {
+        requestAnimationFrame(measure);
+      });
+    }
+  },
+  { immediate: true }
 );
 </script>
 
@@ -181,6 +182,7 @@ watch(
 
       <div
         class="vc-base-tabs__indicator"
+        :class="{ 'vc-base-tabs__indicator--visible': hasInitialMeasurement }"
         :style="{
           transform: `translateX(${indicatorLeft}px)`,
           width: indicatorWidth + 'px',
@@ -283,6 +285,19 @@ watch(
     background-color: $color-primary-1;
     border: 1px solid $color-base-black-15;
     will-change: transform, width;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity 0.15s ease,
+      visibility 0s 0.15s;
+
+    &--visible {
+      visibility: visible;
+      opacity: 1;
+      transition:
+        opacity 0.15s ease,
+        visibility 0s 0s;
+    }
 
     @at-root .theme-dark & {
       background-color: $color-primary-100-light;
@@ -301,7 +316,8 @@ watch(
     .vc-base-tabs--ready & {
       transition:
         transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-        width 200ms ease;
+        width 200ms ease,
+        opacity 0.1s ease;
     }
   }
 

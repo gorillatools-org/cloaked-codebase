@@ -6,6 +6,7 @@ import BaseMedallion from "@/library/BaseMedallion.vue";
 import store from "@/store";
 import { useToast } from "@/composables/useToast.js";
 import { useFormattedDate } from "@/composables/useFormattedDate";
+import { useIdentityTheftProtection } from "@/composables/useIdentityTheftProtection";
 
 interface Props {
   show: boolean;
@@ -27,6 +28,8 @@ const subscriptionEndDate = useFormattedDate(
   computed(() => subscription.value?.expires_date)
 );
 
+const { millions } = useIdentityTheftProtection();
+
 // Modal content
 const modalContent = computed(() => {
   const formattedDate = subscriptionEndDate.value
@@ -34,8 +37,8 @@ const modalContent = computed(() => {
     : null;
 
   const description = formattedDate
-    ? `If you cancel this subscription, your access will end on ${formattedDate} and you will no longer have access to $1 million in identity theft insurance after this date.`
-    : "If you cancel this subscription, your access will end at the end of your current billing period and you will no longer have access to $1 million in identity theft insurance.";
+    ? `If you cancel this subscription, your access will end on ${formattedDate} and you will no longer have access to $${millions.value} million in identity theft insurance after this date.`
+    : `If you cancel this subscription, your access will end at the end of your current billing period and you will no longer have access to $${millions.value} million in identity theft insurance.`;
 
   return {
     medallionIcon: "exclamation-mark-triangle" as const,

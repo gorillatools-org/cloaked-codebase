@@ -64,9 +64,33 @@ const cursorStyle = computed(() => {
 <style scoped lang="scss">
 .vc-base-card-border {
   position: relative;
-  background-color: $color-base-black-10;
-  padding: 1px;
   border-radius: var(--vc-base-card-border-radius);
+
+  &:not(.vc-base-card-border--spotlight) {
+    border: 1px solid $color-base-black-10;
+  }
+
+  &--spotlight {
+    background-color: $color-base-black-10;
+    padding: 1.3px; // Fake border
+
+    &[class*="vc-base-card-border--focused"] {
+      background-color: $color-primary-70;
+      transition: background-color 0.4s ease-in;
+      transition-delay: 0.4s;
+    }
+
+    &:not(.vc-base-card-border--focused, .vc-base-card-border--loading) {
+      &[class*="vc-base-card-border--clickable"] {
+        cursor: pointer;
+        transition: background-color 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &:hover {
+          background-color: $color-primary-30;
+        }
+      }
+    }
+  }
 
   &--loading,
   &--focused,
@@ -74,27 +98,21 @@ const cursorStyle = computed(() => {
     overflow: hidden;
   }
 
-  &--spotlight {
-    padding: 1.4px;
+  &--focused:not(.vc-base-card-border--spotlight) {
+    border-color: $color-primary-70;
+    transition: border-color 0.15s ease-in;
   }
 
-  &--focused {
-    background-color: $color-primary-70;
-    transition: background-color 0.4s ease-in;
-    transition-delay: 0.4s;
-  }
-
-  &--focused:not(&--spotlight) {
-    transition: background-color 0.15s ease-in;
-    transition-delay: unset;
-  }
-
-  &--clickable:not(&--focused, &--loading) {
+  &--clickable:not(
+      .vc-base-card-border--focused,
+      .vc-base-card-border--loading,
+      .vc-base-card-border--spotlight
+    ) {
     cursor: pointer;
-    transition: background-color 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: border-color 0.1s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
-      background-color: $color-primary-30;
+      border-color: $color-primary-30;
     }
   }
 
@@ -115,6 +133,8 @@ const cursorStyle = computed(() => {
     .vc-base-card-border--loading & {
       left: 0%;
       top: 0%;
+      width: 130px;
+      height: 180px;
       background-color: $color-primary-100;
       animation: loading 1.7s linear infinite;
     }

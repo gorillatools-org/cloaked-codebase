@@ -237,6 +237,15 @@ const props = withDefaults(defineProps<Props>(), {
   }
 
   &__description {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+
+    .vc-base-alert--center-content & {
+      text-align: center;
+    }
+
     .vc-base-alert--yield & {
       color: $color-primary-70;
     }

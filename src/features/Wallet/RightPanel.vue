@@ -1,25 +1,16 @@
-<script setup>
-import { computed, ref, onMounted, onBeforeUnmount } from "vue";
+<script setup lang="ts">
+import { computed, onMounted, onBeforeUnmount } from "vue";
 import store from "@/store";
 import inlineSvg from "@/features/InlineSvg.vue";
 import TransactionDetails from "./RightPanel/TransactionDetails.vue";
-import CardDetails from "./RightPanel/CardDetails.vue";
 import SettingsDetails from "./RightPanel/SettingsDetails.vue";
-import DeleteCard from "./RightPanel/DeleteCard.vue";
 import { useToast } from "@/composables/useToast.js";
-import router from "@/routes/router";
-import CardsServices from "@/api/actions/cards-services";
 import { tools } from "@/scripts/tools";
 
-const isDeleting = ref(false);
 const toast = useToast();
 
 const transaction = computed(() => {
   return store.state.cards.rightPanel?.transaction;
-});
-
-const card = computed(() => {
-  return store.state.cards.rightPanel?.card;
 });
 
 const settings = computed(() => {
@@ -38,63 +29,17 @@ onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeydown);
 });
 
-function identity(id) {
-  const identity = store.state.localdb.db_cloaks.find((item) => item.id === id);
-  return identity;
-}
-
 function close() {
-  if (isDeleting.value) return;
   store.commit("closeRightPanel");
 }
 
-function copyToClipboard(text) {
+function copyToClipboard(text: string) {
   tools.copyToClipboard(text);
   toast.success("Copied to clipboard");
 }
 
-function showDeleteModal() {
-  return store.dispatch("openModal", {
-    header: "Cancel card",
-    paragraphs: [
-      "Are you sure you want to cancel this card? This card's activity will still be accessible should you need to download it later.",
-    ],
-    button: {
-      text: "Yes, cancel card",
-      danger: true,
-      onClick: deleteCard,
-    },
-  });
-}
-
-function deleteCard() {
-  isDeleting.value = true;
-
-  CardsServices.deleteCard(card.value.identity_id, card.value.id)
-    .then(() => {
-      router
-        .push("/wallet")
-        .then(() => {
-          setTimeout(() => {
-            store.dispatch("addCardList", "");
-            store.dispatch("closeRightPanel");
-            CardsServices.getCardList();
-          }, 1);
-        })
-        .catch((e) => e);
-    })
-    .catch((err) => {
-      toast.error(
-        err.response?.data?.message || "Failed to cancel Virtual Card."
-      );
-    })
-    .finally(() => {
-      isDeleting.value = false;
-    });
-}
-
-function handleKeydown(e) {
-  if (e.key === "Escape" && active.value && !isDeleting.value) {
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === "Escape" && active.value) {
     close();
   }
 }
@@ -105,15 +50,11 @@ function handleKeydown(e) {
     <div
       class="right-panel"
       tabindex="0"
-      :class="{ active: active, loading: isDeleting }"
+      :class="{ active: active }"
     >
       <div class="container">
         <div class="header">
           <h1 v-if="transaction">Transaction details</h1>
-          <h1 v-if="card">
-            {{ identity(card.identity_id)?.nickname || "New identity" }}
-            settings
-          </h1>
           <h1 v-if="settings">Wallet settings</h1>
 
           <div
@@ -125,31 +66,17 @@ function handleKeydown(e) {
         </div>
 
         <TransactionDetails v-if="transaction" />
-        <CardDetails v-if="card" />
         <SettingsDetails v-if="settings" />
 
         <div class="footer">
-          <DeleteCard
-            v-if="card"
-            :loading="isDeleting"
-            @show-delete-modal="showDeleteModal"
-          />
-
           <div class="id">
             <h1 v-if="transaction">Transaction ID</h1>
-            <h1 v-if="card">Virtual Card ID</h1>
 
             <span
               v-if="transaction"
               @click="copyToClipboard(transaction.id)"
             >
               {{ transaction.id }}
-            </span>
-            <span
-              v-if="card"
-              @click="copyToClipboard(card.id)"
-            >
-              {{ card.id }}
             </span>
           </div>
         </div>
@@ -183,10 +110,6 @@ function handleKeydown(e) {
   @include transform(translateX(550px));
 
   border-left: 1px solid $color-primary-10;
-
-  &.loading {
-    pointer-events: none;
-  }
 
   &.active {
     @include transform(translateX(0));

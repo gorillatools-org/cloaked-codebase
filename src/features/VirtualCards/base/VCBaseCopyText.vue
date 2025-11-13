@@ -143,7 +143,7 @@ watch(
     justify-content: center;
     overflow: hidden;
     opacity: 0.4;
-    transform: translateX(6px);
+    transform: translateX(-6px);
     transition:
       opacity 0.1s ease-out,
       transform 0.1s ease-out;

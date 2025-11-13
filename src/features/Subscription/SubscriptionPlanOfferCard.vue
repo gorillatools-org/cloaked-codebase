@@ -43,7 +43,7 @@ const props = withDefaults(
     description: undefined,
     features: () => [
       { label: "Virtual Cards", new: true },
-      { label: "$5 million in Identity Theft Insurance", new: true },
+      { label: "$3 million in Identity Theft Insurance", new: true },
       { label: "Automated Exposure Clean Up", new: false },
       { label: "Password & Identity Manager", new: false },
       { label: "Data Removal & Dark Web Monitoring", new: false },

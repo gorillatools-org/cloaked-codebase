@@ -1,35 +1,36 @@
 <script setup lang="ts">
 import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
-import {
-  PH_VIRTUAL_CARDS_FEATURE_FLAG_EXPRESS_CARD_GENERATION,
-  PH_VIRTUAL_CARDS_FEATURE_FLAG_SUMMARY_VIEW_DETAILS,
-} from "@/features/VirtualCards/constants/posthog-feature-flag";
-import VCWalletCreationLimitSummaryCard from "@/features/VirtualCards/Wallet/page-components/index/VCWalletCreationLimitSummaryCard.vue";
+import { PH_VIRTUAL_CARDS_FEATURE_FLAG_EXPRESS_CARD_GENERATION } from "@/features/VirtualCards/constants/posthog-feature-flag";
+import VCWalletProtectionSummaryTile from "@/features/VirtualCards/Wallet/page-components/index/VCWalletProtectionSummaryTile.vue";
 import CreateCard from "@/features/Wallet/WalletSettings/CreateCardButton.vue";
-import { useWalletPageContext } from "@/features/VirtualCards/composables/pages-context/useWalletPageContext";
+import { useWalletRouterViewContext } from "@/features/VirtualCards/composables/pages-context/useWalletRouterViewContext";
 import { computed, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import DefaultFundingSource from "@/features/Wallet/WalletSettings/DefaultFundingSourceButton.vue";
 import CardInformationButton from "@/features/Wallet/WalletSettings/CardInformationButton.vue";
 import VCWalletActivityHeaderActions from "@/features/VirtualCards/Wallet/page-components/index/activity/VCWalletActivityHeaderActions.vue";
 import VCWalletTransactionsList from "@/features/VirtualCards/Wallet/VCWalletTransactionsList.vue";
 import VCWalletSummaryBreakdownList from "@/features/VirtualCards/Wallet/page-components/summary/VCWalletSummaryBreakdownList.vue";
-import VCFreeUpCreationLimitModal from "@/features/VirtualCards/modals/cards/VCFreeUpCreationLimitModal.vue";
-import store from "@/store";
-import { markRaw } from "vue";
 import VCWalletPurchasesChart from "@/features/VirtualCards/Wallet/page-components/index/VCWalletPurchasesChart.vue";
+import VCWalletTransactionsListOLD from "@/features/VirtualCards/Wallet/VCWalletTransactionsListOLD.vue";
+import useVirtualCards from "@/features/VirtualCards/composables/useVirtualCards";
 
-const { featureFlag: isExpressCardGenerationEnabled } = usePostHogFeatureFlag(
+const {
+  featureFlag: isExpressCardGenerationEnabled,
+  hasLoadedFeatureFlag: isExpressCardGenerationEnabledLoaded,
+} = usePostHogFeatureFlag(
   PH_VIRTUAL_CARDS_FEATURE_FLAG_EXPRESS_CARD_GENERATION
 );
 
-const { featureFlag: isSummaryViewDetailsEnabled } = usePostHogFeatureFlag(
-  PH_VIRTUAL_CARDS_FEATURE_FLAG_SUMMARY_VIEW_DETAILS
-);
+const {
+  handleNewCardIssued,
+  setSlot,
+  setNavigation,
+  routerViewScrollContainer,
+} = useWalletRouterViewContext();
 
-const { handleNewCardIssued, setSlot, setNavigation } = useWalletPageContext();
+const { cardsList } = useVirtualCards();
 const route = useRoute();
-const router = useRouter();
 
 const section = computed<"summary" | "activity">(() => {
   if (route.name === "VirtualCardsWalletSummary") {
@@ -39,30 +40,13 @@ const section = computed<"summary" | "activity">(() => {
   return "activity";
 });
 
-const viewDetails = () => {
-  if (section.value === "summary") {
-    router.push(`/virtual-cards/wallet`);
-    return;
-  }
-
-  router.push(`/virtual-cards/wallet/summary`);
-};
-
-const freeUpSpace = () => {
-  store.dispatch("openModal", {
-    customTemplate: {
-      template: markRaw(VCFreeUpCreationLimitModal),
-    },
-  });
-};
-
 watch(
-  section,
+  [section, () => route.name],
   () => {
     if (section.value === "summary") {
       setSlot("header-actions", undefined);
       setNavigation({
-        title: "Activity",
+        title: "Summary",
         showBackButton: true,
         backTo: "/virtual-cards/wallet",
       });
@@ -84,13 +68,7 @@ watch(
         'vc-wallet-page__actions--with-chart': isExpressCardGenerationEnabled,
       }"
     >
-      <VCWalletCreationLimitSummaryCard
-        v-if="isExpressCardGenerationEnabled"
-        :detailed="section === 'summary'"
-        :show-view-details="isSummaryViewDetailsEnabled ?? false"
-        @view-details="viewDetails"
-        @free-up-space="freeUpSpace"
-      />
+      <VCWalletProtectionSummaryTile v-if="isExpressCardGenerationEnabled" />
       <!-- TODO: Remove this when Express Card Generation is enabled -->
       <CreateCard
         v-else
@@ -105,15 +83,26 @@ watch(
       </template>
     </div>
 
-    <div class="vc-wallet-page__body">
+    <div
+      v-if="isExpressCardGenerationEnabledLoaded && routerViewScrollContainer"
+      class="vc-wallet-page__body"
+    >
       <transition
         name="fade"
         mode="out-in"
       >
-        <VCWalletTransactionsList
-          v-if="section === 'activity'"
-          key="activity"
-        />
+        <template v-if="section === 'activity'">
+          <VCWalletTransactionsList
+            v-if="isExpressCardGenerationEnabled"
+            key="activity"
+            :show-empty-carousel="(cardsList?.length || 0) < 2"
+            :scroll-container="routerViewScrollContainer"
+          />
+          <VCWalletTransactionsListOLD
+            v-else
+            key="activity-old"
+          />
+        </template>
         <VCWalletSummaryBreakdownList
           v-else
           key="summary"

@@ -3,6 +3,9 @@ import BaseSheet from "@/library/BaseSheet.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseProgressTag from "@/library/BaseProgressTag.vue";
 import IdentityTheftProtectionContent from "@/features/IdentityTheftProtection/IdentityTheftProtectionContent.vue";
+import { useIdentityTheftProtection } from "@/composables/useIdentityTheftProtection";
+
+const { insuranceAmountFormattedM } = useIdentityTheftProtection();
 </script>
 
 <template>
@@ -13,7 +16,7 @@ import IdentityTheftProtectionContent from "@/features/IdentityTheftProtection/I
         as="h4"
         class="identity-theft-protection-block__title-text"
       >
-        $1M Insurance
+        {{ insuranceAmountFormattedM }} Insurance
       </BaseText>
       <BaseProgressTag>Active</BaseProgressTag>
       <BaseText
@@ -21,8 +24,8 @@ import IdentityTheftProtectionContent from "@/features/IdentityTheftProtection/I
         as="p"
         class="identity-theft-protection-block__title-description"
       >
-        We've got you covered with $1M insurance for your identity theft
-        protection.
+        We've got you covered with {{ insuranceAmountFormattedM }} insurance for
+        your identity theft protection.
       </BaseText>
     </div>
     <IdentityTheftProtectionContent

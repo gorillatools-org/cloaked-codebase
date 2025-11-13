@@ -261,15 +261,6 @@ watch(
     flex-direction: column;
     gap: 8px;
     position: relative;
-
-    // Staggered delays for organic reordering effect
-    &:not(&--canceled) {
-      @for $i from 1 through 30 {
-        > :nth-child(#{$i}).card-move {
-          transition-delay: #{$i * 0.02}s;
-        }
-      }
-    }
   }
 
   &__empty {
@@ -352,12 +343,13 @@ watch(
 }
 
 .skeleton-fade-enter-from {
-  opacity: 0.7;
-  filter: blur(1px);
+  opacity: 0.8;
+  filter: blur(0.8px);
 }
 
 .skeleton-fade-leave-to {
-  filter: blur(1px);
+  opacity: 0.8;
+  filter: blur(0.8px);
 }
 
 .card-enter-active {
@@ -375,14 +367,15 @@ watch(
 }
 
 .card-enter-from {
-  opacity: 0.2;
-  filter: blur(0.5px);
+  opacity: 0.5;
+  filter: blur(0.6px);
   transform-origin: center;
   transform: translateY(-10px) scale(0.97);
 }
 
 .card-leave-to {
-  opacity: 0.2;
+  opacity: 0.6;
+  filter: blur(0.6px);
   transform: translateY(10px);
 }
 

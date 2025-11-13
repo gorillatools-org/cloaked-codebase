@@ -129,7 +129,8 @@ watch(
   fundingSources,
   () => {
     // If the funding source is not found after funding sources are fetched, close the modal
-    if (!!fundingSources.value && !fundingSource.value) {
+    // We check for length because fundingSources are required to have at least one funding source
+    if (!!fundingSources.value?.length && !fundingSource.value) {
       toast.error("Funding source not found");
       posthogCapture(
         "dashboard_pay_wallet_funding_source_update_modal_not_found"

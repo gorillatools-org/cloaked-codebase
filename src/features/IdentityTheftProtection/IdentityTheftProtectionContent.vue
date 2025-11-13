@@ -5,6 +5,7 @@ import BaseText from "@/library/BaseText.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
 import BaseSheet from "@/library/BaseSheet.vue";
 import { posthogCapture } from "@/scripts/posthog.js";
+import { useIdentityTheftProtection } from "@/composables/useIdentityTheftProtection";
 
 defineProps({
   largePadding: {
@@ -12,6 +13,8 @@ defineProps({
     default: false,
   },
 });
+
+const { phoneNumber } = useIdentityTheftProtection();
 
 const scrollContainer = ref(null);
 const scrollContent = ref(null);
@@ -182,7 +185,7 @@ const openLink = () => {
       class="identity-theft-protection-content__caption"
     >
       To file a claim, call
-      <strong>1-866-434-3572</strong>
+      <strong>{{ phoneNumber }}</strong>
     </BaseText>
   </div>
 </template>

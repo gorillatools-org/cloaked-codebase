@@ -207,9 +207,16 @@ watch(
         store.dispatch("authentication/getUser");
       }, 4000);
     }
+  },
+  { immediate: true }
+);
 
-    if (newPage === "WALLET" && route.name === "VirtualCardsIndex") {
-      router.push({
+// Redirect to wallet page if user is on virtual cards index page and current page is wallet
+watch(
+  () => route.name,
+  (routeName) => {
+    if (routeName === "VirtualCardsIndex" && currentPage.value === "WALLET") {
+      router.replace({
         name: "VirtualCardsWalletIndex",
         query: route.query,
       });

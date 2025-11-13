@@ -8,10 +8,11 @@ import FundingSourceButton from "@/features/Wallet/WalletSettings/FundingSourceB
 import useVirtualCards from "@/features/VirtualCards/composables/useVirtualCards";
 import useVirtualCard from "@/features/VirtualCards/composables/useVirtualCard";
 import VCWalletTransactionsList from "@/features/VirtualCards/Wallet/VCWalletTransactionsList.vue";
-import { useWalletPageContext } from "@/features/VirtualCards/composables/pages-context/useWalletPageContext";
+import { useWalletRouterViewContext } from "@/features/VirtualCards/composables/pages-context/useWalletRouterViewContext";
 import VCWalletCardPageHeader from "@/features/VirtualCards/Wallet/page-components/card/VCWalletCardPageHeader.vue";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag";
 import { PH_VIRTUAL_CARDS_FEATURE_FLAG_EXPRESS_CARD_GENERATION } from "@/features/VirtualCards/constants/posthog-feature-flag";
+import VCWalletTransactionsListOLD from "@/features/VirtualCards/Wallet/VCWalletTransactionsListOLD.vue";
 import VCWalletCardLimitTile from "@/features/VirtualCards/Wallet/page-components/card/VCWalletCardLimitTile.vue";
 import VCWalletCardTile from "@/features/VirtualCards/Wallet/page-components/card/VCWalletCardTile.vue";
 import VCWalletCardSkeletonTile from "@/features/VirtualCards/Wallet/page-components/card/VCWalletCardSkeletonTile.vue";
@@ -24,10 +25,13 @@ const { featureFlag: isExpressCardGenerationEnabled } = usePostHogFeatureFlag(
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
-const { setSlot, setNavigation } = useWalletPageContext();
+
+const { setSlot, setNavigation, routerViewScrollContainer } =
+  useWalletRouterViewContext();
 const { card, isCanceled, getCardInformation } = useVirtualCard(
   () => cardId.value
 );
+
 const { cardsList } = useVirtualCards();
 
 const cardId = computed<string>(() => {
@@ -60,7 +64,7 @@ onMounted(() => {
 
 watch(
   () => [cardId.value, cardsList.value],
-  () => {
+  ([newCardId, oldCardId]) => {
     if (cardId.value && !!cardsList.value && !card.value) {
       router.push("/virtual-cards/wallet");
       toast.error("Card not found");
@@ -68,8 +72,19 @@ watch(
     }
 
     if (cardId.value && !!cardsList.value && !!card.value) {
-      getCardInformation().then(() => {
-        posthogCapture("dashboard_pay_wallet_card_viewed");
+      if (!isCanceled.value) {
+        getCardInformation().then(() => {
+          posthogCapture("dashboard_pay_wallet_card_viewed");
+        });
+      } else {
+        posthogCapture("dashboard_pay_wallet_card_canceled_viewed");
+      }
+    }
+
+    if (newCardId && !!cardsList.value && newCardId !== oldCardId) {
+      routerViewScrollContainer.value.scrollTo({
+        top: 0,
+        behavior: "instant",
       });
     }
   },
@@ -99,7 +114,16 @@ watch(
       <FundingSourceButton />
     </div>
   </div>
-  <VCWalletTransactionsList :card-id="cardId" />
+  <VCWalletTransactionsList
+    v-if="isExpressCardGenerationEnabled"
+    :card-id="cardId"
+    :scroll-container="routerViewScrollContainer"
+    :show-empty-carousel="false"
+  />
+  <VCWalletTransactionsListOLD
+    v-else
+    :card-id="cardId"
+  />
 </template>
 
 <style lang="scss" scoped>

@@ -14,7 +14,7 @@ const emit = defineEmits<{
 const features = [
   "Single-use or recurring cards",
   "Custom spend controls",
-  "Up to $5 million in Identity Theft Insurance",
+  "Up to $3 million in Identity Theft Insurance",
 ];
 
 onMounted(() => {

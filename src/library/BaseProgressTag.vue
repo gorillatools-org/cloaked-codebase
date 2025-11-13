@@ -17,6 +17,8 @@ defineProps({
         "spam-protection",
         "safe-zone-blue",
         "safe-zone-green",
+        "status-error",
+        "status-yield",
       ].includes(value),
   },
   variant: {
@@ -40,6 +42,7 @@ defineProps({
     >
       <slot />
     </BaseText>
+    <slot name="right"></slot>
   </div>
 </template>
 
@@ -127,6 +130,16 @@ defineProps({
   &--safe-zone-green {
     --tag-color: #{$color-safe-zone-green};
     --tag-bg-color: #{$color-safe-zone-green-15};
+  }
+
+  &--status-error {
+    --tag-color: #{$color-status-error};
+    --tag-bg-color: #{$color-status-error-15};
+  }
+
+  &--status-yield {
+    --tag-color: #{$color-status-yield};
+    --tag-bg-color: #{$color-status-yield-15};
   }
 
   &--purple {

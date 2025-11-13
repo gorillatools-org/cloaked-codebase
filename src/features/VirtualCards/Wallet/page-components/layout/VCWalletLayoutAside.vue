@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-  ref,
-  onMounted,
-  computed,
-  watch,
-  useTemplateRef,
-  nextTick,
-  markRaw,
-} from "vue";
+import { ref, onMounted, computed, watch, useTemplateRef, nextTick } from "vue";
 import store from "@/store";
 import { useRouter } from "vue-router";
 import VCExpressGeneration from "@/features/VirtualCards/VCExpressGeneration.vue";
@@ -24,13 +16,15 @@ import type { DropdownSelectOption } from "@/features/VirtualCards/base/VCBaseDr
 import VCBaseDropdownSelect from "@/features/VirtualCards/base/VCBaseDropdownSelect.vue";
 import BaseInput from "@/library/BaseInput.vue";
 import { posthogCapture } from "@/scripts/posthog.js";
-import VCAdvancedCardGenerationModal from "@/features/VirtualCards/modals/cards/VCAdvancedCardGenerationModal.vue";
-import useFundingSource from "@/composables/Wallet/useFundingSource";
+import { useWalletPageContext } from "@/features/VirtualCards/composables/pages-context/useWalletPageContext";
+import type { VirtualCardPeriod } from "@/types/Wallet/virtual-card";
 
 export type CardsListSortOption = "newest" | "oldest" | "amount-available";
 export type CardsListFilterOption = "active" | "canceled";
 
 const emit = defineEmits(["addCard", "newCardIssued"]);
+
+const { showAdvancedCardGenerationModal } = useWalletPageContext();
 
 const { featureFlag: isExpressCardGenerationEnabled } = usePostHogFeatureFlag(
   PH_VIRTUAL_CARDS_FEATURE_FLAG_EXPRESS_CARD_GENERATION
@@ -38,8 +32,6 @@ const { featureFlag: isExpressCardGenerationEnabled } = usePostHogFeatureFlag(
 
 const router = useRouter();
 const { refetchCards } = useVirtualCards();
-const { fundingSources, openAddModal: openAddFundingSourceModal } =
-  useFundingSource();
 
 const asideRef = useTemplateRef<HTMLElement>("asideRef");
 const cardsListContentRef = useTemplateRef<HTMLElement>("cardsListContentRef");
@@ -188,33 +180,13 @@ const clearSearch = () => {
   focusSearchInput();
 };
 
-function handleShowAdvancedModal(options: {
-  period?: string;
+const handleShowAdvancedModal = (payload?: {
+  period?: VirtualCardPeriod;
   amount?: number;
-}) {
-  if ((fundingSources.value?.length ?? 0) === 0) {
-    openAddFundingSourceModal(() => {
-      openAdvancedModal(options);
-    });
-    return;
-  }
-
-  openAdvancedModal(options);
-}
-
-const openAdvancedModal = (options?: { period?: string; amount?: number }) => {
-  store.dispatch("openModal", {
-    customTemplate: {
-      template: markRaw(VCAdvancedCardGenerationModal),
-      props: {
-        isVisible: true,
-        initialPeriod: options?.period,
-        initialAmount: options?.amount,
-        onNewCardIssued: (cardId: string) => {
-          onNewCardIssued(cardId);
-        },
-      },
-    },
+}) => {
+  showAdvancedCardGenerationModal({
+    period: payload?.period,
+    amount: payload?.amount,
   });
 };
 
@@ -425,6 +397,12 @@ $only-cards-scroll-min-height: 800px;
 
 .vc-wallet-aside {
   height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  @include custom-scroll-bar;
 
   &--loaded {
     @include custom-scroll-bar;
@@ -438,12 +416,18 @@ $only-cards-scroll-min-height: 800px;
     }
   }
 
+  @media all and (min-height: $only-cards-scroll-min-height) {
+    overflow-y: hidden;
+  }
+
   &__wrapper {
     display: flex;
     flex-direction: column;
     gap: 24px;
     height: 100%;
     padding-top: 24px;
+    min-height: 0;
+    flex: 1;
 
     .vc-wallet-aside--loaded & {
       height: auto;

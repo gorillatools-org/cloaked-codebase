@@ -5,6 +5,7 @@ import BaseIcon from "@/library/BaseIcon.vue";
 import Logo from "@/assets/icons/cloaked-logo-orange-white.svg";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { PH_EVENT_PERSONALIZED_QUESTIONS_LOADING_VIEWED } from "@/scripts/posthogEvents";
+import { useIdentityTheftProtection } from "@/composables/useIdentityTheftProtection";
 
 const props = defineProps({
   duration: {
@@ -18,6 +19,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["complete"]);
+
+const { insuranceAmountFormattedM } = useIdentityTheftProtection();
 const currentStep = ref(0);
 const visibleSteps = ref(0);
 const stepsHeight = ref(0);
@@ -25,7 +28,7 @@ const stepsContainer = ref(null);
 const steps = [
   "Stop spam with Call Guard",
   "Clean your digital footprint with Data Removal and Identity Monitoring",
-  "Protect your past mistakes with $1M Identity Theft Insurance",
+  `Protect your past mistakes with ${insuranceAmountFormattedM.value} Identity Theft Insurance`,
 ];
 
 let timerId;

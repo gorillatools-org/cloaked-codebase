@@ -1,23 +1,27 @@
 import { computed } from "vue";
 import store from "@/store";
 
-/**
- * Composable to determine if Cloaked Pay subscription features should be enabled
- * for the current user.
- *
- * Logic:
- * - New users (status "new"): Only need cloaked_pay_enable_subscription flag
- * - Existing users upgrading: Need both cloaked_pay_enable_subscription AND cloaked_pay_offer_upgrade flags
- */
 export function useCloakedPaySubscription() {
+  const user = computed(() => {
+    return store.state.authentication?.user;
+  });
+
+  /**
+   * Computed property to determine if Cloaked Pay subscription features should be enabled
+   * for the current user.
+   *
+   * Logic:
+   * - New users (status "new"): Only need cloaked_pay_enable_subscription flag
+   * - Existing users upgrading: Need both cloaked_pay_enable_subscription AND cloaked_pay_offer_upgrade flags
+   */
   const isCloakedPaySubscriptionEnabled = computed(() => {
-    const user = store.state.authentication?.user;
     const hasEnableSubscription =
-      !!user?.flags?.cloaked_pay_enable_subscription;
-    const hasOfferUpgrade = !!user?.flags?.cloaked_pay_offer_upgrade;
+      !!user.value?.flags?.cloaked_pay_enable_subscription;
+    const hasOfferUpgrade = !!user.value?.flags?.cloaked_pay_offer_upgrade;
 
     // New users who just subscribed to Cloaked Pay have status "new"
-    const isNewCloakedPayUser = user?.cloaked_card_enabled_status === "new";
+    const isNewCloakedPayUser =
+      user.value?.cloaked_card_enabled_status === "new";
 
     // For new Cloaked Pay subscribers: only need enable_subscription flag
     // For existing users upgrading: need both flags
@@ -26,7 +30,12 @@ export function useCloakedPaySubscription() {
       : hasEnableSubscription && hasOfferUpgrade;
   });
 
+  const isSubscribedToCloakedPay = computed(() => {
+    return user.value?.cloaked_card_has_cloaked_pay_subscription_plan;
+  });
+
   return {
     isCloakedPaySubscriptionEnabled,
+    isSubscribedToCloakedPay,
   };
 }

@@ -132,29 +132,95 @@ export default class CardsServices {
     );
   }
 
-  static async getTransactions() {
+  static async getTransactions(
+    pageSize = 100,
+    page = 1,
+    shouldStore = true,
+    sort = "created_at",
+    search = "",
+    signal
+  ) {
+    const params = new URLSearchParams({
+      page_size: pageSize.toString(),
+      page: page.toString(),
+      ordering: sort,
+    });
+
+    if (search?.trim()) {
+      params.append("search", search.trim());
+    }
+
     return await api()
-      .get(`/api/v1/cloaked/card/transaction/?page_size=100`)
-      .then((response) => {
-        store.dispatch("setTransactions", response?.data);
+      .get(
+        `/api/v1/cloaked/card/transaction/?${params.toString()}`,
+        signal ? { signal } : undefined
+      )
+      .then(async (response) => {
+        if (shouldStore) {
+          await store.dispatch("setTransactions", response.data);
+        }
         return response;
       })
-      .catch((error) => {
-        store.dispatch("setTransactions", { count: 0, results: [] });
+      .catch(async (error) => {
+        if (shouldStore) {
+          await store.dispatch("setTransactions", { count: 0, results: [] });
+        }
         return error;
       });
   }
 
-  static async getTransactionsByCardId(id) {
+  static async getTransactionsByCardId(
+    id,
+    pageSize = 100,
+    page = 1,
+    shouldStore = true,
+    sort = "created_at",
+    search = "",
+    signal
+  ) {
+    const params = new URLSearchParams({
+      card: id,
+      page_size: pageSize.toString(),
+      page: page.toString(),
+      ordering: sort,
+    });
+
+    if (search?.trim()) {
+      params.append("search", search.trim());
+    }
+
     return await api()
-      .get(`/api/v1/cloaked/card/transaction/?card=${id}&page_size=100`)
-      .then((response) => {
-        store.dispatch("setTransactions", response?.data);
+      .get(
+        `/api/v1/cloaked/card/transaction/?${params.toString()}`,
+        signal ? { signal } : undefined
+      )
+      .then(async (response) => {
+        if (shouldStore) {
+          await store.dispatch("setTransactions", response.data);
+        }
         return response;
       })
-      .catch((error) => {
-        store.dispatch("setTransactions", { count: 0, results: [] });
+      .catch(async (error) => {
+        if (shouldStore) {
+          await store.dispatch("setTransactions", { count: 0, results: [] });
+        }
         return error;
+      });
+  }
+
+  static async getWeeklyBreakdown() {
+    return await api()
+      .get(`/api/v1/cloaked/card/transaction/weekly-breakdown/`)
+      .then((response) => {
+        return response.data;
+      });
+  }
+
+  static async getBlockedTransactionStats() {
+    return await api()
+      .get(`/api/v1/cloaked/card/transaction/blocked-stats/`)
+      .then((response) => {
+        return response.data;
       });
   }
 
@@ -249,7 +315,7 @@ export default class CardsServices {
     return api().get(`/api/v1/card/report/statement/${id}/`);
   }
 
-  static async exportTransactions() {
+  static async exportTransactions(signal) {
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().split("T")[0];
 
@@ -260,11 +326,12 @@ export default class CardsServices {
     // Convert back to YYYY-MM-DD format
     const finalEndDate = adjustedEndDate.toISOString().split("T")[0];
     return api().get(
-      `/api/v1/cloaked/card/transaction/export?start_date=2023-01-01&end_date=${finalEndDate}`
+      `/api/v1/cloaked/card/transaction/export?start_date=2023-01-01&end_date=${finalEndDate}`,
+      signal ? { signal } : undefined
     );
   }
 
-  static async exportTransactionsForCard(cardId) {
+  static async exportTransactionsForCard(cardId, signal) {
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().split("T")[0];
 
@@ -275,7 +342,8 @@ export default class CardsServices {
     // Convert back to YYYY-MM-DD format
     const finalEndDate = adjustedEndDate.toISOString().split("T")[0];
     return api().get(
-      `/api/v1/cloaked/card/transaction/export?card=${cardId}&start_date=2023-01-01&end_date=${finalEndDate}`
+      `/api/v1/cloaked/card/transaction/export?card=${cardId}&start_date=2023-01-01&end_date=${finalEndDate}`,
+      signal ? { signal } : undefined
     );
   }
 

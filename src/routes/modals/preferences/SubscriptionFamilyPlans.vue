@@ -26,10 +26,15 @@ const shouldShowBanner = computed(() => {
   }
   return !activePlan.value || planType.value !== "Family";
 });
+
+const isWebviewMode = computed(() => store.state.ui.webviewMode);
 </script>
 
 <template>
-  <div class="subscription-family-plans">
+  <div
+    class="subscription-family-plans"
+    :class="{ 'subscription-family-plans--webview': isWebviewMode }"
+  >
     <SubscriptionFamilyPlansBilling
       :active-plan="activePlan"
       @switch-plans="onSwitchPlans"
@@ -54,6 +59,14 @@ const shouldShowBanner = computed(() => {
 
   @media all and (min-width: 768px) {
     padding: 40px 80px;
+  }
+
+  &--webview {
+    padding-top: 70px;
+
+    @media all and (min-width: 768px) {
+      padding-top: 70px;
+    }
   }
 }
 </style>

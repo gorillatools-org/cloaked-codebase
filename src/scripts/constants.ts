@@ -46,6 +46,7 @@ export const WEBSITE_PAY_AGREEMENTS_URL = `${BASE_WEBSITE_URL}/cloaked-pay/legal
 export const WEBSITE_REFERRAL_TERMS_URL = `${BASE_WEBSITE_URL}/referral-terms-exclusions`;
 export const WEBSITE_WAYS_TO_USE_UTL = `${BASE_WEBSITE_URL}/faq/5-exciting-ways-to-use-the-cloaked-mobile-app`;
 export const WEBSITE_ID_THEFT_URL = `${BASE_WEBSITE_URL}/id-theft-protection-terms-and-conditions`;
+export const WEBSITE_ID_THEFT_ASSURANT_URL = `${BASE_WEBSITE_URL}/assurant-identity-theft-protection-summary-of-benefits`;
 export const WEBSITE_ID_THEFT_ABOUT_URL = `${BASE_WEBSITE_URL}/features/id-theft-protection`;
 export const WEBSITE_NUMBER_LOCK_FAQ_URL = `${BASE_WEBSITE_URL}/faq/what-is-number-locking-and-how-do-i-use-it`;
 export const WEBSITE_BLOG_URL = `${BASE_WEBSITE_URL}/blog`;
@@ -94,6 +95,9 @@ export const FREE_SHIRT_URL = "https://shop.keepitcloaked.com/";
 export const SUPPORT_EMAIL = "support@cloaked.com";
 
 export const SUPPORT_PHONE = "+18559751028";
+
+export const IDENTITY_THEFT_PROTECTION_PHONE_CLOAKED_PAY = "1-833-568-6249";
+export const IDENTITY_THEFT_PROTECTION_PHONE_REGULAR = "1-866-434-3572";
 
 export const POSTHOG_URL = "https://mississippi.cloaked.com";
 
@@ -363,9 +367,6 @@ export const EXTENSION_MESSAGE_TYPES = {
   EXTENSION_REQUESTED_TOKEN: "EXTENSION_REQUESTED_TOKEN",
 };
 
-export const BRAVE_SITE_PRIVACY_POLICY_URL =
-  "https://brave.cloaked.com/privacy-policy";
-
 export const constants = {
   CONTACT_TYPE,
   CONTACT_CARD_MODE,
@@ -405,6 +406,9 @@ export const constants = {
   TYPEFORM_WAITLIST_URL,
   FREE_SHIRT_URL,
   SUPPORT_EMAIL,
+  SUPPORT_PHONE,
+  IDENTITY_THEFT_PROTECTION_PHONE_CLOAKED_PAY,
+  IDENTITY_THEFT_PROTECTION_PHONE_REGULAR,
   POSTHOG_URL,
   NO_URL_IDENTITY_DOMAIN,
   FILE_PERMISSIONS,
@@ -440,7 +444,6 @@ export const constants = {
   CARD_PROVIDER_TYPE_UNKNOWN,
   EXTENSION_MESSAGE_TYPES,
   AUTO_PAY_TERMS_URL,
-  BRAVE_SITE_PRIVACY_POLICY_URL,
 };
 
 // Data Deletion Limits

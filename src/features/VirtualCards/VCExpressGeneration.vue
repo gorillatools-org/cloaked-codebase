@@ -21,6 +21,8 @@ import {
 
 import useOutstandingBalance from "@/features/VirtualCards/composables/useOutstandingBalance";
 import VCBalanceDueModal from "@/features/VirtualCards/modals/balance-due/VCBalanceDueModal.vue";
+import { capitalizeFirstLetter } from "@/scripts/format";
+import { useWalletPageContext } from "./composables/pages-context/useWalletPageContext";
 
 type Period = Extract<VirtualCardPeriod, "monthly" | "one-time">;
 
@@ -32,12 +34,15 @@ const emit = defineEmits<{
 const {
   openAddModal: openAddFundingSourceModal,
   openListModal: openListFundingSourceModal,
+  getProviderIcon,
+  getCardBrandImgURL,
   defaultFundingSource,
   fundingSources,
 } = useFundingSource();
 
 const { hasCollectionStatus } = useOutstandingBalance();
 const { generateCard } = useVirtualCardGenerate();
+const { showAdvancedCardGenerationModal } = useWalletPageContext();
 
 const toast = useToast();
 
@@ -67,6 +72,26 @@ const cardBorderConfig = computed(() => ({
 
 const cardSettings = computed(() => {
   return store.state.cards?.cardSettings;
+});
+
+const fundingSourceDisplayName = computed(() => {
+  return (
+    capitalizeFirstLetter(defaultFundingSource.value?.card_brand ?? "") +
+    " •••• " +
+    defaultFundingSource.value?.pan_last_four
+  );
+});
+
+const fundingSourceFallbackIconName = computed(() => {
+  if (!defaultFundingSource.value) {
+    return "wallet";
+  }
+
+  return getProviderIcon(defaultFundingSource.value?.provider ?? "");
+});
+
+const fundingSourceBrandImgURL = computed(() => {
+  return getCardBrandImgURL(defaultFundingSource.value?.card_brand ?? "");
 });
 
 const createCard = () => {
@@ -139,6 +164,20 @@ const handleMoreOptionsClick = () => {
   });
 };
 
+const handleFundingSourceClick = () => {
+  posthogCapture(
+    defaultFundingSource.value
+      ? "dashboard_pay_wallet_express_card_generation_funding_source_clicked"
+      : "dashboard_pay_wallet_express_card_generation_no_funding_sources_added_clicked"
+  );
+
+  showAdvancedCardGenerationModal({
+    period: tab.value,
+    amount: amount.value ? amount.value * 100 : undefined,
+    selectedTab: "funding",
+  });
+};
+
 const openBalanceDueModal = () => {
   posthogCapture(
     "dashboard_pay_balance_due_payment_opened_by_express_card_generation_modal_viewed"
@@ -175,7 +214,43 @@ defineExpose({
   >
     <div class="vc-express-generation__wrapper">
       <div class="vc-express-generation__content">
-        <BaseText variant="headline-5-bold">Create New Card</BaseText>
+        <header class="vc-express-generation__header">
+          <BaseText variant="headline-5-bold">New Card</BaseText>
+          <div
+            class="vc-express-generation__funding-source"
+            :class="{
+              'vc-express-generation__funding-source--no-funding-source':
+                !defaultFundingSource,
+            }"
+            @click="handleFundingSourceClick"
+          >
+            <div class="vc-express-generation__funding-source-brand-container">
+              <img
+                v-if="defaultFundingSource && fundingSourceBrandImgURL"
+                :src="fundingSourceBrandImgURL"
+                alt="brand"
+                class="vc-express-generation__funding-source-brand-img"
+              />
+              <BaseIcon
+                v-else
+                :name="
+                  defaultFundingSource ? fundingSourceFallbackIconName : 'plus'
+                "
+                class="vc-express-generation__funding-source-brand-img-fallback"
+              />
+            </div>
+            <BaseText
+              class="vc-express-generation__funding-source-name"
+              variant="caption-semibold"
+            >
+              {{
+                defaultFundingSource
+                  ? fundingSourceDisplayName
+                  : "Add funding source"
+              }}
+            </BaseText>
+          </div>
+        </header>
         <div class="vc-express-generation__input-container">
           <VCBaseAmountInput
             ref="amountInputRef"
@@ -260,18 +335,18 @@ defineExpose({
 <style scoped lang="scss">
 .vc-express-generation {
   width: 100%;
-  margin: 10px 0;
   overflow: hidden;
 
   &__wrapper {
     position: relative;
+    min-height: 206px;
   }
 
   &__content {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 24px;
+    padding: 17px;
     overflow: hidden;
   }
 
@@ -290,6 +365,63 @@ defineExpose({
       ):hover
   ) {
     border: 1px solid $color-primary-30;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 34px;
+  }
+
+  &__funding-source {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 8px 4px 4px;
+    border: 1px solid $color-background;
+    border-radius: 999px;
+    background-color: $color-background;
+    cursor: pointer;
+    transition:
+      border 0.12s ease-in-out,
+      background-color 0.12s ease-in-out;
+
+    &--no-funding-source {
+      gap: 6px;
+    }
+
+    &:hover {
+      border: 1px solid $color-primary-20;
+      background-color: $color-primary-10;
+    }
+
+    &-name {
+      color: $color-primary-50;
+      line-height: 0;
+    }
+
+    &-brand {
+      &-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 19px;
+        height: 19px;
+        border-radius: 50%;
+        overflow: hidden;
+        background-color: $color-white;
+      }
+
+      &-img {
+        &-fallback {
+          font-size: 14px;
+          margin-top: -1px;
+          color: $color-primary-100-light;
+        }
+      }
+    }
   }
 
   &__footer {

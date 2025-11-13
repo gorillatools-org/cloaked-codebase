@@ -2,7 +2,7 @@
 import WalletSupportContact from "@/features/Wallet/WalletSupportContact.vue";
 import CardExampleGroup from "@/features/Wallet/CardExampleGroup.vue";
 import { posthogCapture } from "@/scripts/posthog";
-import ListStatements from "@/features/modals/Wallet/ListStatements.vue";
+import VCWalletStatementsModal from "@/features/VirtualCards/modals/VCWalletStatementsModal.vue";
 import { markRaw, ref } from "vue";
 import store from "@/store";
 import CardsServices from "@/api/actions/cards-services";
@@ -28,7 +28,7 @@ async function viewStatements() {
 
       store.dispatch("openModal", {
         customTemplate: {
-          template: markRaw(ListStatements),
+          template: markRaw(VCWalletStatementsModal),
           props: {
             isVisible: true,
           },

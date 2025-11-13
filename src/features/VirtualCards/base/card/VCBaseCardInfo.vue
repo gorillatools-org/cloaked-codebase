@@ -32,11 +32,13 @@ const props = withDefaults(defineProps<VCBaseCardInfoProps>(), {
     >
       <div class="vc-base-card-info__left-container">
         <slot name="left">
-          <BaseIcon
-            v-if="props.icon"
-            :name="props.icon"
-            class="vc-base-card-info__icon"
-          />
+          <slot name="icon">
+            <BaseIcon
+              v-if="props.icon"
+              :name="props.icon"
+              class="vc-base-card-info__icon"
+            />
+          </slot>
           <div class="vc-base-card-info__infos">
             <transition
               name="text"
@@ -55,14 +57,19 @@ const props = withDefaults(defineProps<VCBaseCardInfoProps>(), {
               name="text"
               mode="out-in"
             >
-              <BaseText
-                v-if="props.description"
+              <slot
                 :key="props.description"
-                class="vc-base-card-info__description"
-                variant="body-small-medium"
+                name="description"
               >
-                {{ props.description }}
-              </BaseText>
+                <BaseText
+                  v-if="props.description"
+                  :key="props.description"
+                  class="vc-base-card-info__description"
+                  variant="body-small-medium"
+                >
+                  {{ props.description }}
+                </BaseText>
+              </slot>
             </transition>
           </div>
         </slot>

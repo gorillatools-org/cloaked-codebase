@@ -8,7 +8,6 @@ import {
   watch,
   reactive,
   nextTick,
-  toValue,
   useTemplateRef,
 } from "vue";
 
@@ -32,7 +31,6 @@ import { useFunnel } from "@/features/subscribe/composables/useFunnel";
 import { FUNNEL_STEP } from "./utils";
 import { PH_EVENT_USER_CLICKED_DATA_DELETION_SETUP_ACCOUNT_BUTTON } from "@/scripts/posthogEvents";
 import DataDeletePageOtp from "@/features/data-delete/DataDeletePageOtp.vue";
-import DataDeletePageOtpBrave from "@/features/data-delete/DataDeletePageOtpBrave.vue";
 import DataDeletePageResults from "@/features/data-delete/DataDeletePageResults.vue";
 import DataDeletePageEmailResults from "@/features/data-delete/DataDeletePageEmailResults.vue";
 import DataDeletePageAdditionalSearch from "@/features/data-delete/DataDeletePageAdditionalSearch.vue";
@@ -81,25 +79,6 @@ const { identify } = useCustomerIo();
 useThemeQueryParameter();
 usePostHogFunnelTracking();
 
-const SOURCE_STORAGE_KEY = "browser-type";
-
-function persistSource(source) {
-  if (!source) return;
-  try {
-    localStorage.setItem(SOURCE_STORAGE_KEY, source);
-  } catch {
-    return null;
-  }
-}
-
-function getPersistedSource() {
-  try {
-    return localStorage.getItem(SOURCE_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
 const { dataDeleteInputForm } = useDataDeleteInput();
 const { formattedPhoneNumber, formattedUserName } =
   useDataDeleteFormatting(dataDeleteInputForm);
@@ -115,7 +94,6 @@ const searchStep = ref("initial");
 const searchResults = ref([]);
 const numTotalResults = ref(0);
 const verifiedUserInfo = ref(null);
-const isBraveOtp = ref(false);
 
 const {
   clearSearchProgressFromSessionStorage,
@@ -142,9 +120,6 @@ async function searchPublicRecords({
   }
 
   isFetching.value = true;
-  const { value: enrollmentV2Enabled } = await fetchFeatureFlag(
-    "enrollment_v2_enabled"
-  );
   const { data } = await DataDeleteService.getPublicRecords({
     firstName,
     lastName,
@@ -152,7 +127,7 @@ async function searchPublicRecords({
     phoneNumber,
     age,
     email,
-    redactAddress: !toValue(enrollmentV2Enabled), // if enrollment v2 is enabled, we don't redact address
+    redactAddress: false,
   });
 
   if (data.in_progress) {
@@ -297,12 +272,6 @@ const headlessIframe = useTemplateRef("headlessIframe");
 const cloudflareCaptcha = useTemplateRef("cloudflareCaptcha");
 
 onMounted(async () => {
-  const sourceFromUrl = route.query?.source;
-  const source = sourceFromUrl ?? getPersistedSource();
-
-  if (source) persistSource(source);
-  isBraveOtp.value = source === "brave";
-
   // for enterprise scans
   if (route.query?.email_address) {
     identify({
@@ -389,21 +358,6 @@ async function loginPasswordlessUser({ phone, code }) {
         "
         @complete="goToCheckout"
         @skip="goToCheckout"
-      />
-      <DataDeletePageOtpBrave
-        v-else-if="step === FUNNEL_STEP.OTP && isBraveOtp"
-        class="data-delete__page"
-        :headless-user="headlessUser"
-        :formatted-phone="formattedPhoneNumber"
-        :is-fetching="isFetching"
-        :is-verifying-code="isVerifyingCode"
-        :verify-code-error="verifyCodeError"
-        :verified-user-info="verifiedUserInfo"
-        :login-user-error="loginUserError"
-        @verify-code="verifyOTPCode"
-        @search-public-records="searchPublicRecords"
-        @create-user="createUser"
-        @login-passwordless-user="loginPasswordlessUser"
       />
       <DataDeletePageOtp
         v-else-if="step === FUNNEL_STEP.OTP"

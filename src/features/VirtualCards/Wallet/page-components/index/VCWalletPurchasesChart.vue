@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  onBeforeUnmount,
+  watch,
+  onBeforeMount,
+} from "vue";
 // @ts-ignore - D3 types not available
 import * as d3 from "d3";
 import moment from "moment";
 import { debounce } from "lodash-es";
 import VCBaseCard from "@/features/VirtualCards/base/card/VCBaseCard.vue";
 import BaseText from "@/library/BaseText.vue";
-import store from "@/store";
 import { formatCurrency } from "@/features/VirtualCards/utils/currency-utils";
 import { posthogCapture } from "@/scripts/posthog";
-import type { Transaction } from "@/types/Wallet/transaction";
+import type { WeeklyBreakdown } from "@/types/Wallet/weekly-breakdown";
+import CardsServices from "@/api/actions/cards-services";
+import { useToast } from "@/composables/useToast";
 
 type DailyPurchaseData = {
   date: Date;
@@ -19,91 +27,56 @@ type DailyPurchaseData = {
 };
 
 type WeeklyData = {
-  startDate: Date;
-  endDate: Date;
   dailyData: DailyPurchaseData[];
   weeklyTotalInCents: number;
   totalPurchases: number;
 };
 
-type Props = {
-  weekStartISO?: string;
-  useCurrentWeek?: boolean;
-};
-
-const props = withDefaults(defineProps<Props>(), {
-  weekStartISO: undefined,
-  useCurrentWeek: true,
-});
-
 const UNFILLED_BAR_COLOR = "var(--color-base-black-10, #0000001A)";
 const FILL_BAR_COLOR = "var(--color-primary-100, #000000)";
 const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
+const toast = useToast();
 const container = ref<HTMLElement | null>(null);
 const isLoading = ref(true);
+const weeklyBreakdownData = ref<WeeklyBreakdown | null>(null);
 
-// Week range using moment (ISO week Mon-Sun)
-const weekStart = computed(() =>
-  props.useCurrentWeek
-    ? moment.utc().startOf("isoWeek")
-    : moment.utc(props.weekStartISO).startOf("isoWeek")
-);
-
-const weekEnd = computed(() => weekStart.value.clone().utc().endOf("isoWeek"));
-
-const weekTitle = computed(
-  () => `Week of ${weekStart.value.clone().utc().format("MMMM D, YYYY")}`
-);
-
-const transactions = computed(() => {
-  return store.state.cards.transactions?.results || [];
+const weekTitle = computed(() => {
+  if (weeklyBreakdownData.value?.monday?.date) {
+    const mondayDate = moment.utc(weeklyBreakdownData.value.monday.date);
+    return `Week of ${mondayDate.format("M/D/YYYY")}`;
+  }
+  // Show current week during loading
+  const currentWeekStart = moment.utc().startOf("isoWeek");
+  return `Week of ${currentWeekStart.format("M/D/YYYY")}`;
 });
 
 const summaryParts = computed(() => {
   if (!weeklyPurchaseData.value?.totalPurchases)
-    return { text: "No purchases this week.", amount: "" };
+    return { text: "No purchases this week.", amount: "", purchaseCount: "" };
 
-  const purchaseCountText = `${weeklyPurchaseData.value.totalPurchases} purchases`;
+  const purchaseCount = weeklyPurchaseData.value.totalPurchases;
   const totalAmount = formatCurrency(
     weeklyPurchaseData.value.weeklyTotalInCents
   );
 
   return {
-    text: `${purchaseCountText} this week totaling `,
+    text: ` purchases this week totaling `,
     amount: totalAmount,
+    purchaseCount: purchaseCount.toString(),
   };
 });
 
-const weeklyPurchaseData = computed((): WeeklyData | null => {
+const weeklyPurchaseData = computed((): WeeklyData => {
   // Always build a 7-day scaffold so the chart can render labels/bars
-  const startUtc = weekStart.value.clone().utc().startOf("day");
-  const endUtc = weekEnd.value.clone().utc().endOf("day");
-
-  // Filter transactions within week range
-  const transactionsInRange = transactions.value.filter(
-    (transaction: Transaction) => {
-      const transactionMoment = moment.utc(transaction.created_at ?? "");
-      return transactionMoment.isBetween(startUtc, endUtc, undefined, "[]");
-    }
-  );
-
-  // Amounts consider settled (add) and refunded (subtract)
-  const amountTransactions = transactionsInRange.filter(
-    (t: Transaction) => t.status === "settled" || t.status === "refunded"
-  );
-
-  // Purchases count considers only settled
-  const settledTransactions = transactionsInRange.filter(
-    (t: Transaction) => t.status === "settled"
-  );
-
-  if (!amountTransactions.length && !settledTransactions.length) {
-    // Still return zeroed structure for labels and total
+  if (!weeklyBreakdownData.value) {
+    // Return zeroed structure when no data is available
+    // Use current week for proper X-axis positioning during loading
+    const currentWeekStart = moment.utc().startOf("isoWeek");
     const zeroDailyData: DailyPurchaseData[] = Array.from(
       { length: 7 },
       (_, i) => ({
-        date: weekStart.value.clone().utc().add(i, "days").toDate(),
+        date: currentWeekStart.clone().utc().add(i, "days").toDate(),
         totalAmountInCents: 0,
         totalPurchases: 0,
         dayLabel: WEEKDAY_LABELS[i],
@@ -111,79 +84,56 @@ const weeklyPurchaseData = computed((): WeeklyData | null => {
     );
 
     return {
-      startDate: weekStart.value.clone().utc().toDate(),
-      endDate: weekEnd.value.clone().utc().toDate(),
       dailyData: zeroDailyData,
       weeklyTotalInCents: 0,
       totalPurchases: 0,
     };
   }
 
-  // Group totals by YYYY-MM-DD with separate counts
-  const dailyTotalsMap = new Map<
-    string,
-    {
-      amount: number;
-      settledCount: number;
-      refundedCount: number;
-    }
-  >();
+  // Build week daily data from API response
+  const data: DailyPurchaseData[] = [];
+  let weekTotal = 0;
+  let totalPurchases = 0;
 
-  amountTransactions.forEach((transaction: Transaction) => {
-    const transactionMoment = moment
-      .utc(transaction.created_at ?? "")
-      .startOf("day");
-    const dateKey = transactionMoment.format("YYYY-MM-DD");
-    const rawAmount = transaction.transaction_amount ?? 0;
-    const signedAmount =
-      transaction.status === "refunded" ? -rawAmount : rawAmount;
+  // Process each day in the API response
+  const breakdown = weeklyBreakdownData.value;
+  const days = [
+    breakdown.monday,
+    breakdown.tuesday,
+    breakdown.wednesday,
+    breakdown.thursday,
+    breakdown.friday,
+    breakdown.saturday,
+    breakdown.sunday,
+  ];
 
-    const existing = dailyTotalsMap.get(dateKey) || {
-      amount: 0,
-      settledCount: 0,
-      refundedCount: 0,
-    };
+  days.forEach((day, index) => {
+    // Calculate net amount: settled - refunded
+    const dayDate = moment.utc(day.date).toDate();
+    const netAmount = day.settled.total_amount - day.refunded.total_amount;
+    const totalAmountInCents = Math.max(0, netAmount);
+    const purchases = day.settled.count;
 
-    dailyTotalsMap.set(dateKey, {
-      amount: existing.amount + signedAmount,
-      settledCount:
-        transaction.status === "settled"
-          ? existing.settledCount + 1
-          : existing.settledCount,
-      refundedCount:
-        transaction.status === "refunded"
-          ? existing.refundedCount + 1
-          : existing.refundedCount,
+    weekTotal += totalAmountInCents;
+    totalPurchases += purchases;
+
+    data.push({
+      date: dayDate,
+      totalAmountInCents,
+      totalPurchases: purchases,
+      dayLabel: WEEKDAY_LABELS[index],
     });
   });
 
-  // Build week daily data
-  const data: DailyPurchaseData[] = [];
-  let weekTotal = 0;
-
-  for (let i = 0; i < 7; i++) {
-    const dayMoment = weekStart.value.clone().utc().add(i, "days");
-    const key = dayMoment.format("YYYY-MM-DD");
-    const netAmount = dailyTotalsMap.get(key)?.amount || 0;
-    const totalAmountInCents = Math.max(0, netAmount);
-    const settledCount = dailyTotalsMap.get(key)?.settledCount || 0;
-    weekTotal += totalAmountInCents;
-
-    data.push({
-      date: dayMoment.toDate(),
-      totalAmountInCents,
-      totalPurchases: settledCount,
-      dayLabel: WEEKDAY_LABELS[i],
-    });
-  }
-
   return {
-    startDate: weekStart.value.clone().utc().toDate(),
-    endDate: weekEnd.value.clone().utc().toDate(),
     dailyData: data,
     weeklyTotalInCents: weekTotal,
-    totalPurchases: settledTransactions.length,
+    totalPurchases,
   };
+});
+
+onBeforeMount(() => {
+  fetchWeeklyBreakdown();
 });
 
 onMounted(() => {
@@ -199,6 +149,23 @@ onBeforeUnmount(() => {
 const debouncedResize = debounce(() => {
   drawChart();
 }, 150);
+
+const fetchWeeklyBreakdown = async () => {
+  isLoading.value = true;
+  CardsServices.getWeeklyBreakdown()
+    .then((response) => {
+      weeklyBreakdownData.value = response as WeeklyBreakdown;
+    })
+    .catch(() => {
+      toast.error(
+        "We were unable to fetch the weekly breakdown. Please try again later."
+      );
+      weeklyBreakdownData.value = null;
+    })
+    .finally(() => {
+      isLoading.value = false;
+    });
+};
 
 function createXAxis(weekData: WeeklyData, width: number) {
   return d3
@@ -507,10 +474,6 @@ function drawLoadingBars(
 }
 
 function drawChart() {
-  if (!weeklyPurchaseData.value) {
-    return;
-  }
-
   // Clear existing chart and tooltip
   d3.select("#purchasesChart").selectAll("*").remove();
   d3.select("#chart-tooltip").remove();
@@ -534,20 +497,10 @@ function drawChart() {
 }
 
 watch(
-  () => [props.weekStartISO, transactions.value, isLoading.value],
+  () => [weeklyBreakdownData.value, isLoading.value],
   () => {
     drawChart();
   }
-);
-
-watch(
-  () => transactions.value,
-  (newTransactions) => {
-    if (newTransactions.length) {
-      isLoading.value = false;
-    }
-  },
-  { immediate: true }
 );
 </script>
 
@@ -575,6 +528,9 @@ watch(
             variant="headline-6-medium"
             class="vc-wallet-purchases-chart__summary-text"
           >
+            <span class="vc-wallet-purchases-chart__summary-amount">
+              {{ summaryParts.purchaseCount }}
+            </span>
             {{ summaryParts.text }}
             <span class="vc-wallet-purchases-chart__summary-amount">
               {{ summaryParts.amount }}
@@ -600,11 +556,11 @@ watch(
 
   &__summary {
     min-height: 14px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 
     &-text {
       color: $color-primary-70;
-      font-size: clamp(13px, 5.1cqw, 16px);
+      font-size: clamp(14px, 4cqw, 16px);
     }
 
     &-amount {

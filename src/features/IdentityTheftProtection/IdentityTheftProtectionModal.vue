@@ -5,7 +5,10 @@ import BaseSheet from "@/library/BaseSheet.vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseMedallion from "@/library/BaseMedallion.vue";
 import BaseProgressTag from "@/library/BaseProgressTag.vue";
-import { WEBSITE_ID_THEFT_URL } from "@/scripts/constants";
+import { useIdentityTheftProtection } from "@/composables/useIdentityTheftProtection";
+
+const { insuranceAmountFormattedMillion, termsLink } =
+  useIdentityTheftProtection();
 
 defineProps({
   show: {
@@ -51,9 +54,9 @@ const handleClose = () => {
           variant="body-3-semibold"
           as="div"
         >
-          Thank you for being a subscriber of Cloaked. You now have $1 million
-          dollars in comprehensive Identity Theft insurance coverage* with
-          additional features.
+          Thank you for being a subscriber of Cloaked. You now have
+          {{ insuranceAmountFormattedMillion }} in comprehensive Identity Theft
+          insurance coverage* with additional features.
         </BaseText>
       </BaseSheet>
 
@@ -72,7 +75,7 @@ const handleClose = () => {
           may not be available in all jurisdictions.
           <a
             class="identity-theft-protection-modal__terms-link"
-            :href="WEBSITE_ID_THEFT_URL"
+            :href="termsLink"
             target="_blank"
           >
             View terms and conditions.

@@ -29,7 +29,7 @@ function openNoteModal() {
 
 <template>
   <div>
-    <InformationHeader :information="transaction" />
+    <InformationHeader :transaction="transaction" />
 
     <div class="details">
       <DetailSection

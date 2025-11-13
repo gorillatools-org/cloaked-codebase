@@ -5,7 +5,6 @@ import { useRoute, useRouter } from "vue-router";
 const SCREEN_ROUTES = {
   [SCREEN.APP]: null,
   [SCREEN.DOWNLOAD_MOBILE_APP]: null,
-  [SCREEN.DATA_DELETE_ENROLLMENT]: "Enrollment",
 };
 
 export const useScreenRouting = (screen) => {

@@ -8,17 +8,12 @@ import DataDeleteService from "@/api/actions/data-delete-service.js";
 import ExposureStatusGraph from "@/features/ExposureStatus/ExposureStatusGraph.vue";
 import EmailVerificationBlock from "@/features/emailVerification/EmailVerificationBlock.vue";
 import { useDisplay } from "@/composables/useDisplay";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 import { useRouter, useRoute } from "vue-router";
 import store from "@/store";
 import { posthogCapture } from "@/scripts/posthog.js";
 
 const router = useRouter();
 const route = useRoute();
-const {
-  hasLoadedFeatureFlag: hasLoadedEnrollmentV2Flag,
-  featureFlag: enrollmentV2Enabled,
-} = usePostHogFeatureFlag("enrollment_v2_enabled");
 
 const rawGraphData = computed(
   () => store.getters["dataDelete/getGraphData"] || {}
@@ -101,11 +96,7 @@ const isEnrolled = computed(() => {
 });
 
 onMounted(async () => {
-  if (
-    toValue(hasLoadedEnrollmentV2Flag) &&
-    toValue(enrollmentV2Enabled) &&
-    !toValue(isEnrolled)
-  ) {
+  if (!toValue(isEnrolled)) {
     router.push({ name: "ExposureStatusEnrollExposures" });
   }
   posthogCapture("user_viewed_exposure_status_page");
@@ -139,14 +130,9 @@ onUnmounted(() => {
 });
 
 const unwatch = watch(
-  () => [hasLoadedEnrollmentV2Flag.value, isLoading.value],
-  ([hasLoadedFlag, isLoadingPage]) => {
-    if (
-      !isLoadingPage &&
-      hasLoadedFlag &&
-      enrollmentV2Enabled.value &&
-      !isEnrolled.value
-    ) {
+  () => [isLoading.value],
+  ([isLoadingPage]) => {
+    if (!isLoadingPage && !isEnrolled.value) {
       router.push({ name: "ExposureStatusEnrollExposures" });
       unwatch();
     }

@@ -6,29 +6,17 @@ import BaseMedallion from "@/library/BaseMedallion.vue";
 import BaseButton from "@/library/BaseButton.vue";
 import MonitoringFeaturesSheet from "@/features/monitoring/MonitoringFeaturesSheet.vue";
 import MonitoringTerms from "@/features/monitoring/MonitoringTerms.vue";
-import { useDataDeleteOverlay } from "@/routes/DataDeletion/composables/useDataDeleteOverlay.js";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 
 const isOpen = defineModel({ type: Boolean });
 
-const { openDataDeleteOverlay } = useDataDeleteOverlay();
-
-const { featureFlag: enrollmentV2Enabled } = usePostHogFeatureFlag(
-  "enrollment_v2_enabled"
-);
-
 const onSetUp = () => {
   isOpen.value = false;
 
   setTimeout(() => {
-    if (enrollmentV2Enabled.value) {
-      router.push({ name: "ExposureStatusEnrollExposures" });
-    } else {
-      openDataDeleteOverlay();
-    }
+    router.push({ name: "ExposureStatusEnrollExposures" });
   }, 400);
 };
 </script>

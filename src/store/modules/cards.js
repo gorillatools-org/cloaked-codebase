@@ -16,12 +16,15 @@ const defaultState = () => ({
   rightPanel: {
     show: false,
     transaction: null,
-    card: null,
     settings: false,
   },
   cardSettings: {},
   statements: [],
-  transactions: [],
+  transactions: {
+    count: 0,
+    results: null,
+  },
+  rightPanelTimeout: null,
 });
 export default {
   state: defaultState(),
@@ -111,14 +114,10 @@ export default {
         }
       });
     },
-    addTransaction: (state, data) => {
+    openTransactionRightPanel: (state, data) => {
+      clearTimeout(state.rightPanelTimeout);
       state.rightPanel.transaction = Object.assign({}, data);
-      state.rightPanel.card = null;
       state.rightPanel.show = true;
-    },
-    removeTransaction: (state) => {
-      state.rightPanel.transaction = null;
-      state.rightPanel.show = false;
     },
     cardInformation(state, data) {
       state.cardInformation = Object.assign({}, data);
@@ -126,14 +125,14 @@ export default {
     openSettings(state) {
       state.rightPanel.settings = true;
       state.rightPanel.transaction = null;
-      state.rightPanel.card = null;
       state.rightPanel.show = true;
     },
     closeRightPanel(state) {
+      clearTimeout(state.rightPanelTimeout);
       state.rightPanel.show = false;
-      setTimeout(() => {
+
+      state.rightPanelTimeout = setTimeout(() => {
         state.rightPanel.transaction = null;
-        state.rightPanel.card = null;
         state.rightPanel.settings = false;
       }, 500);
     },
@@ -142,6 +141,11 @@ export default {
     },
     setTransactions(state, data) {
       state.transactions = data;
+    },
+    addMoreTransactions(state, data) {
+      const existingResults = state.transactions.results || [];
+      state.transactions.results = existingResults.concat(data.results || []);
+      state.transactions.count = data.count;
     },
     resetState(state) {
       Object.assign(state, defaultState());
@@ -217,11 +221,8 @@ export default {
     updateCard({ commit }, data) {
       commit("updatePartialCard", data);
     },
-    addTransaction({ commit }, data) {
-      commit("addTransaction", data);
-    },
-    removeTransaction({ commit }) {
-      commit("removeTransaction");
+    openTransactionRightPanel({ commit }, data) {
+      commit("openTransactionRightPanel", data);
     },
     cardInformation({ commit }, data) {
       commit("cardInformation", data);
@@ -237,6 +238,9 @@ export default {
     },
     setTransactions({ commit }, data) {
       commit("setTransactions", data);
+    },
+    addMoreTransactions({ commit }, data) {
+      commit("addMoreTransactions", data);
     },
     updateTransactions({ commit, state }, data) {
       let allTransactions = [...state.transactions.results];

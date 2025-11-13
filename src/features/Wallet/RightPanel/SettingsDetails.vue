@@ -1,15 +1,18 @@
 <script setup>
-import { computed, markRaw } from "vue";
+import { computed, markRaw, ref } from "vue";
 import store from "@/store";
 import DetailSection from "./DetailSection.vue";
 import PatchBillingAddress from "@/features/modals/Wallet/PatchBillingAddress.vue";
-import ListStatements from "@/features/modals/Wallet/ListStatements.vue";
+import VCWalletStatementsModal from "@/features/VirtualCards/modals/VCWalletStatementsModal.vue";
 import { StateList } from "@/scripts/countries/states";
 import { capitalizeFirstLetter } from "@/scripts/format";
 import CardsServices from "@/api/actions/cards-services";
 import { useToast } from "@/composables/useToast.js";
+import { posthogCapture } from "@/scripts/posthog.js";
 
 const toast = useToast();
+const isFetchingStatements = ref(false);
+const isExportingTransactions = ref(false);
 
 const information = computed(() => {
   return store.state.cards?.cardInformation;
@@ -45,29 +48,53 @@ function toggleBillingAddressModal() {
 }
 
 function toggleStatementModal() {
-  store.dispatch("openModal", {
-    customTemplate: {
-      template: markRaw(ListStatements),
-      props: {
-        isVisible: true,
-      },
-    },
-  });
+  isFetchingStatements.value = true;
+  CardsServices.getStatements()
+    .then(() => {
+      posthogCapture("dashboard_pay_wallet_settings_statements_modal_viewed");
+      store.dispatch("openModal", {
+        customTemplate: {
+          template: markRaw(VCWalletStatementsModal),
+          props: {
+            isVisible: true,
+          },
+        },
+      });
+    })
+    .finally(() => {
+      isFetchingStatements.value = false;
+    });
 }
 
 function exportTransactions() {
-  CardsServices.exportTransactions().then((response) => {
-    const csvData = response.data;
-    const blob = new Blob([csvData], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "cloaked-pay-transactions.csv");
-    document.body.appendChild(link);
-    link.click();
-    URL.revokeObjectURL(url);
-    toast.success("Transactions exported successfully");
-  });
+  if (isExportingTransactions.value) return;
+
+  isExportingTransactions.value = true;
+  CardsServices.exportTransactions()
+    .then((response) => {
+      const csvData = response.data;
+      const blob = new Blob([csvData], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "cloaked-pay-transactions.csv");
+      document.body.appendChild(link);
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("Transactions exported successfully");
+      posthogCapture(
+        `dashboard_pay_wallet_settings_export_transactions_success`
+      );
+    })
+    .catch((error) => {
+      toast.error(error.message || "Error exporting transactions");
+      posthogCapture(
+        `dashboard_pay_wallet_settings_export_transactions_failed`
+      );
+    })
+    .finally(() => {
+      isExportingTransactions.value = false;
+    });
 }
 </script>
 
@@ -99,14 +126,18 @@ function exportTransactions() {
       <DetailSection
         title="Statements"
         icon="document"
-        link
+        :style="{ pointerEvents: isFetchingStatements ? 'none' : 'auto' }"
+        :link="!isFetchingStatements"
+        :loading="isFetchingStatements"
         @toggle-clicked="toggleStatementModal"
       />
 
       <DetailSection
         title="Export transactions"
         icon="list"
-        download
+        :style="{ pointerEvents: isExportingTransactions ? 'none' : 'auto' }"
+        :download="!isExportingTransactions"
+        :loading="isExportingTransactions"
         @click="exportTransactions"
       />
     </div>

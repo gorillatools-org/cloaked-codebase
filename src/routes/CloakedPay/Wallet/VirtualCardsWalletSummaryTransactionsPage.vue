@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
 import { computed, onMounted } from "vue";
-import { useWalletPageContext } from "@/features/VirtualCards/composables/pages-context/useWalletPageContext";
+import { useWalletRouterViewContext } from "@/features/VirtualCards/composables/pages-context/useWalletRouterViewContext";
 import VCWalletSummaryTransactionItem from "@/features/VirtualCards/Wallet/page-components/summary/VCWalletSummaryTransactionItem.vue";
 
 export type TransactionsSummaryType = "payments" | "refunds" | "blocked";
@@ -13,7 +13,7 @@ const validTypes: TransactionsSummaryType[] = [
 ];
 const route = useRoute();
 const router = useRouter();
-const { setNavigation } = useWalletPageContext();
+const { setNavigation } = useWalletRouterViewContext();
 
 onMounted(() => {
   if (!type.value || !validTypes.includes(type.value)) {

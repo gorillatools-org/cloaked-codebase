@@ -5,11 +5,20 @@ import DataDeleteSticky from "@/features/data-delete/atoms/DataDeleteSticky.vue"
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
-import { onMounted } from "vue";
+import { computed, onMounted } from "vue";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { PH_EVENT_USER_VIEWED_DATA_DELETION_NO_RESULTS } from "@/scripts/posthogEvents.js";
+import { useIdentityTheftProtection } from "@/composables/useIdentityTheftProtection";
 
 defineEmits(["complete"]);
+
+const { insuranceAmountFormattedCoverage } = useIdentityTheftProtection();
+
+const protectionFeatures = computed(() => [
+  `Ongoing defense from fraud and identity theft with ${insuranceAmountFormattedCoverage.value}.`,
+  "Identity protection with unlimited generated phone numbers, emails, and credit cards.",
+  "Ultimate safety and security with encrypted messaging, integrated password manager, and more.",
+]);
 
 onMounted(() => {
   posthogCapture(PH_EVENT_USER_VIEWED_DATA_DELETION_NO_RESULTS);
@@ -56,11 +65,7 @@ onMounted(() => {
           class="data-delete-no-results__list data-delete-no-results__list--how"
         >
           <li
-            v-for="(item, index) in [
-              'Ongoing defense from fraud and identity theft with $1 million coverage.',
-              'Identity protection with unlimited generated phone numbers, emails, and credit cards.',
-              'Ultimate safety and security with encrypted messaging, integrated password manager, and more.',
-            ]"
+            v-for="(item, index) in protectionFeatures"
             :key="index"
           >
             <DataDeleteCard

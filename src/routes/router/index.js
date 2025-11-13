@@ -94,18 +94,6 @@ import { useEncryptionGate } from "@/composables/useEncryptionGate";
 import CheckVerificationEmail from "@/features/verification/CheckVerificationEmail.vue";
 
 // enrollment
-import PageEnrollment from "@/routes/enrollment/PageEnrollment.vue";
-import PageEnrollmentNames from "@/routes/enrollment/PageEnrollmentNames.vue";
-import PageEnrollmentContacts from "@/routes/enrollment/PageEnrollmentContacts.vue";
-import PageEnrollmentAddresses from "@/routes/enrollment/PageEnrollmentAddresses.vue";
-import PageEnrollmentAddressesAutocomplete from "@/routes/enrollment/PageEnrollmentAddressesAutocomplete.vue";
-import PageEnrollmentAddressesManual from "@/routes/enrollment/PageEnrollmentAddressesManual.vue";
-import PageEnrollmentConfirm from "@/routes/enrollment/PageEnrollmentConfirm.vue";
-import PageEnrollmentPersonal from "@/routes/enrollment/PageEnrollmentPersonal.vue";
-import PageEnrollmentReady from "@/routes/enrollment/PageEnrollmentReady.vue";
-import PageEnrollmentActivated from "@/routes/enrollment/PageEnrollmentActivated.vue";
-
-// enrollment v2
 import PageExposureStatusEnroll from "@/routes/enrollmentV2/PageExposureStatusEnroll.vue";
 import PageExposureStatusEnrollExposures from "@/routes/enrollmentV2/PageExposureStatusEnrollExposures.vue";
 import PageExposureStatusEnrollMonitoring from "@/routes/enrollmentV2/PageExposureStatusEnrollMonitoring.vue";
@@ -519,7 +507,7 @@ const routes = [
               {
                 path: "card/:id",
                 name: "VirtualCardsWalletCard",
-                alias: ["/virtual-cards/card/:id"], // Legacy route
+                alias: ["/virtual-cards/card/:id", "/wallet/card/:id"], // Legacy route
                 component: VirtualCardsWalletCardPage,
                 meta: {
                   title: "Virtual Cards",
@@ -1113,82 +1101,6 @@ const routes = [
     component: DataDeletePageGuestOtp,
     meta: { title: "Delete Data" },
     beforeEnter: allowOnlyGuests,
-  },
-  {
-    path: "/enrollment",
-    name: "Enrollment",
-    component: PageEnrollment,
-    meta: { title: "Enrollment" },
-    redirect: "/enrollment/names",
-    beforeEnter: allowOnlyAuthenticatedUsers,
-    children: [
-      {
-        path: "names",
-        name: "EnrollmentNames",
-        component: PageEnrollmentNames,
-        meta: { title: "Names", scheme: "light" },
-        beforeEnter: allowOnlyAuthenticatedUsers,
-      },
-      {
-        path: "contacts",
-        name: "EnrollmentContacts",
-        component: PageEnrollmentContacts,
-        meta: { title: "Contacts", scheme: "light" },
-        beforeEnter: allowOnlyAuthenticatedUsers,
-      },
-      {
-        path: "addresses",
-        name: "EnrollmentAddresses",
-        component: PageEnrollmentAddresses,
-        meta: { title: "Addresses", scheme: "light" },
-        beforeEnter: allowOnlyAuthenticatedUsers,
-        redirect: "/enrollment/addresses/autocomplete",
-        children: [
-          {
-            path: "autocomplete",
-            name: "EnrollmentAddressesAutocomplete",
-            component: PageEnrollmentAddressesAutocomplete,
-            meta: { title: "Addresses", scheme: "light" },
-            beforeEnter: allowOnlyAuthenticatedUsers,
-          },
-          {
-            path: "manual",
-            name: "EnrollmentAddressesManual",
-            component: PageEnrollmentAddressesManual,
-            meta: { title: "Addresses", scheme: "light" },
-            beforeEnter: allowOnlyAuthenticatedUsers,
-          },
-        ],
-      },
-      {
-        path: "confirm",
-        name: "EnrollmentConfirm",
-        component: PageEnrollmentConfirm,
-        meta: { title: "Confirm", scheme: "light" },
-        beforeEnter: allowOnlyAuthenticatedUsers,
-      },
-      {
-        path: "personal",
-        name: "EnrollmentPersonal",
-        component: PageEnrollmentPersonal,
-        meta: { title: "Personal", scheme: "light" },
-        beforeEnter: allowOnlyAuthenticatedUsers,
-      },
-      {
-        path: "ready",
-        name: "EnrollmentReady",
-        component: PageEnrollmentReady,
-        meta: { title: "Ready", scheme: "dark" },
-        beforeEnter: allowOnlyAuthenticatedUsers,
-      },
-      {
-        path: "activated",
-        name: "EnrollmentActivated",
-        component: PageEnrollmentActivated,
-        meta: { title: "Activated", scheme: "light" },
-        beforeEnter: allowOnlyAuthenticatedUsers,
-      },
-    ],
   },
   {
     path: "/data-remove",

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router";
-import { onMounted, watch, markRaw, useTemplateRef } from "vue";
+import { onMounted, watch, markRaw, useTemplateRef, provide } from "vue";
 import store from "@/store";
+import { WalletPageKey } from "@/features/VirtualCards/composables/pages-context/useWalletPageContext";
 import CardsServices from "@/api/actions/cards-services";
 import RightPanel from "@/features/Wallet/RightPanel.vue";
-import ListStatements from "@/features/modals/Wallet/ListStatements.vue";
+import VCWalletStatementsModal from "@/features/VirtualCards/modals/VCWalletStatementsModal.vue";
 import router from "@/routes/router";
 import { posthogCapture } from "@/scripts/posthog.js";
 import useFundingSource from "@/composables/Wallet/useFundingSource";
@@ -16,6 +17,9 @@ import useOutstandingBalance from "@/features/VirtualCards/composables/useOutsta
 import VCBannerBalanceDue from "@/features/VirtualCards/VCBannerBalanceDue.vue";
 import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 import { PH_VIRTUAL_CARDS_FEATURE_FLAG_EXPRESS_CARD_GENERATION } from "@/features/VirtualCards/constants/posthog-feature-flag";
+import RightPanelTransactionDetails from "@/features/VirtualCards/right-panels/VCTransactionDetailsRightPanel.vue";
+import VCAdvancedCardGenerationModal from "@/features/VirtualCards/modals/cards/VCAdvancedCardGenerationModal.vue";
+import type { AdvancedCardGenerationTabName } from "@/features/VirtualCards/modals/cards/VCAdvancedCardGenerationModal.vue";
 
 const route = useRoute();
 
@@ -24,11 +28,14 @@ const { featureFlag: isExpressCardGenerationEnabled } = usePostHogFeatureFlag(
 );
 
 const { hasExpiredFundingSources } = useFundingSource();
-
 const { hasCollectionStatus, outstandingBalance } = useOutstandingBalance();
+const { fundingSources, openAddModal: openAddFundingSourceModal } =
+  useFundingSource();
 
 const asideRef =
   useTemplateRef<InstanceType<typeof VCWalletLayoutAside>>("asideRef");
+
+const scrollContainer = useTemplateRef<HTMLDivElement>("scrollContainer");
 
 onMounted(() => {
   posthogCapture("dashboard_pay_wallet_home");
@@ -39,7 +46,7 @@ function getStatementsAndCheckStatementsQuery() {
     if (route.query?.statements === null) {
       store.dispatch("openModal", {
         customTemplate: {
-          template: markRaw(ListStatements),
+          template: markRaw(VCWalletStatementsModal),
           props: {
             isVisible: true,
           },
@@ -52,6 +59,42 @@ function getStatementsAndCheckStatementsQuery() {
 function handleNewCardIssued() {
   void asideRef.value?.switchToActiveAndFetchCards(true);
 }
+
+function handleShowAdvancedModal(options?: {
+  period?: string;
+  amount?: number;
+  selectedTab?: AdvancedCardGenerationTabName;
+}) {
+  if (!fundingSources.value?.length) {
+    openAddFundingSourceModal(() => {
+      openAdvancedModal(options);
+    });
+    return;
+  }
+
+  openAdvancedModal(options);
+}
+
+const openAdvancedModal = (options?: {
+  period?: string;
+  amount?: number;
+  selectedTab?: AdvancedCardGenerationTabName;
+}) => {
+  store.dispatch("openModal", {
+    customTemplate: {
+      template: markRaw(VCAdvancedCardGenerationModal),
+      props: {
+        isVisible: true,
+        initialPeriod: options?.period,
+        initialAmount: options?.amount,
+        initialTab: options?.selectedTab,
+        onNewCardIssued: () => {
+          handleNewCardIssued();
+        },
+      },
+    },
+  });
+};
 
 const openUpdateFundingSourceModal = () => {
   store.dispatch("openModal", {
@@ -85,6 +128,10 @@ watch(
   },
   { immediate: true }
 );
+
+provide(WalletPageKey, {
+  showAdvancedCardGenerationModal: handleShowAdvancedModal,
+});
 </script>
 
 <template>
@@ -118,10 +165,17 @@ watch(
         />
       </aside>
       <main class="vc-wallet-layout-page__router-view">
-        <div class="vc-wallet-layout-page__router-view-container">
-          <VCWalletLayoutRouteView @new-card-issued="handleNewCardIssued" />
+        <div
+          ref="scrollContainer"
+          class="vc-wallet-layout-page__router-view-container"
+        >
+          <VCWalletLayoutRouteView
+            :scroll-container="scrollContainer!"
+            @new-card-issued="handleNewCardIssued"
+          />
         </div>
       </main>
+      <RightPanelTransactionDetails />
       <RightPanel />
     </div>
   </section>
@@ -189,6 +243,11 @@ watch(
     flex: 1;
     min-height: 0;
     padding-bottom: 8px;
+    overflow: hidden;
+
+    @media all and (width <= $screen-xl) {
+      flex-direction: column;
+    }
   }
 
   &__aside-container {
@@ -196,6 +255,17 @@ watch(
     width: 380px;
     background-color: $color-primary-5;
     border-radius: 20px;
+    flex-shrink: 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    @media all and (width <= $screen-xl) {
+      width: 100%;
+      flex: 0 1 auto;
+      max-height: 40%;
+    }
 
     @media all and (width > 1280px) {
       width: 410px;
@@ -214,6 +284,15 @@ watch(
     padding-left: 18px;
     padding-right: 5px;
     overflow-y: hidden;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    @media all and (width <= $screen-xl) {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
 
     &-container {
       @include custom-scrollbar;
@@ -223,6 +302,9 @@ watch(
       padding-right: calc(18px - 5px);
       overflow-y: auto;
       max-height: 100%;
+      height: 100%;
+      min-height: 0;
+      flex: 1;
 
       &:hover,
       &:focus-within {

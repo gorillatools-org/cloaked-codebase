@@ -42,7 +42,10 @@ import { posthogCapture } from "@/scripts/posthog.js";
 type Props = {
   initialPeriod: VirtualCardPeriod;
   initialAmount: number;
+  initialTab: AdvancedCardGenerationTabName;
 };
+
+export type AdvancedCardGenerationTabName = "controls" | "funding";
 
 const DEFAULT_FIXED_USES = 5;
 const MIN_AMOUNT = 0.5;
@@ -63,11 +66,13 @@ const { fundingSources, defaultFundingSource } = useFundingSource();
 const { generateCard } = useVirtualCardGenerate();
 const toast = useToast();
 const isCreatingCard = ref(false);
-const selectedTab = ref<"controls" | "funding">("controls");
+const selectedTab = ref<AdvancedCardGenerationTabName>(
+  props.initialTab || "controls"
+);
 
 const selectedMerchant = ref<MerchantDropdownModel>("");
 const amount = ref<number | undefined>(
-  props.initialAmount ? props.initialAmount / 100 : undefined
+  props.initialAmount ? props.initialAmount / 100 : 25
 );
 const period = ref<VirtualCardPeriod>(props.initialPeriod || "monthly");
 const fixedUses = ref<number>(DEFAULT_FIXED_USES);
@@ -339,7 +344,10 @@ watch(deactivateOption, (option) => {
           :height="40"
         >
           <template #panel-controls>
-            <div class="vc-advanced-cg-modal__tab-content">
+            <div
+              v-if="selectedTab === 'controls'"
+              class="vc-advanced-cg-modal__tab-content"
+            >
               <VCBaseCardDropdownSelect
                 v-model="deactivateOption"
                 :border="cardBorderConfig"
@@ -364,7 +372,10 @@ watch(deactivateOption, (option) => {
             </div>
           </template>
           <template #panel-funding>
-            <div class="vc-advanced-cg-modal__tab-content">
+            <div
+              v-if="selectedTab === 'funding'"
+              class="vc-advanced-cg-modal__tab-content"
+            >
               <FundingSourceListItem
                 v-if="selectedFundingSourceObject"
                 border-radius="30px"
@@ -394,10 +405,10 @@ watch(deactivateOption, (option) => {
       </div>
       <div class="vc-advanced-cg-modal__alert-container">
         <VCBaseAlert
-          icon="info"
+          :icon="null"
           icon-position="right"
           center-content
-          description="A temporary pre-authorization will be placed for this amount"
+          description="A temporary pre-authorization will be placed for the amount of the card created"
         />
       </div>
     </template>

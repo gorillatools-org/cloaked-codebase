@@ -12,10 +12,10 @@ import {
 } from "vue";
 import { useVirtualCardsWalletPageStore } from "@/features/VirtualCards/store/useVirtualCardsWalletPageStore";
 import {
-  WalletContextKey,
-  type WalletNavigation,
+  WalletRouterViewKey,
+  type WalletRouterViewNavigation,
   type WalletPageSlot,
-} from "@/features/VirtualCards/composables/pages-context/useWalletPageContext";
+} from "@/features/VirtualCards/composables/pages-context/useWalletRouterViewContext";
 import BaseIcon from "@/library/BaseIcon.vue";
 import BaseText from "@/library/BaseText.vue";
 
@@ -23,7 +23,11 @@ const emit = defineEmits<{
   (e: "newCardIssued"): void;
 }>();
 
-const defaultNavigation: WalletNavigation = {
+const props = defineProps<{
+  scrollContainer: HTMLDivElement;
+}>();
+
+const defaultNavigation: WalletRouterViewNavigation = {
   showBackButton: false,
   backTo: "",
   preserveWhileSameViewKey: false,
@@ -32,10 +36,11 @@ const defaultNavigation: WalletNavigation = {
 const route = useRoute();
 const walletPageStore = useVirtualCardsWalletPageStore();
 const shouldRouteTransition = ref(false);
+
 let navigationResetTimeout: ReturnType<typeof setTimeout> | undefined =
   undefined;
 
-const navigation = ref<WalletNavigation>({
+const navigation = ref<WalletRouterViewNavigation>({
   ...defaultNavigation,
 });
 
@@ -51,6 +56,8 @@ const slots = ref<
 >({
   "header-actions": null,
 });
+
+const routerViewScrollContainer = computed(() => props.scrollContainer);
 
 onMounted(() => {
   setTimeout(() => {
@@ -87,7 +94,9 @@ const setSlot = (
   };
 };
 
-const setNavigation = (walletNavigation: Partial<WalletNavigation>) => {
+const setNavigation = (
+  walletNavigation: Partial<WalletRouterViewNavigation>
+) => {
   clearTimeout(navigationResetTimeout);
   navigationResetTimeout = undefined;
   navigation.value = { ...defaultNavigation, ...walletNavigation };
@@ -96,28 +105,40 @@ const setNavigation = (walletNavigation: Partial<WalletNavigation>) => {
 // Clear all slots and navigation on route change
 watch(
   [() => route.path, () => currentViewKey.value],
-  ([, newViewKey], [, oldViewKey]) => {
-    if (newViewKey === oldViewKey) {
-      if (!navigation.value.preserveWhileSameViewKey) {
-        navigation.value = { ...defaultNavigation };
-      }
+  ([newPath, newViewKey], [oldPath, oldViewKey]) => {
+    const isSameViewKey = newViewKey === oldViewKey;
+    const isSamePath = newPath === oldPath;
+    const shouldPreserveNavigation =
+      isSameViewKey && navigation.value.preserveWhileSameViewKey;
 
-      if (!slots.value["header-actions"]?.preserveWhileSameViewKey) {
-        slots.value["header-actions"] = null;
-      }
-
+    // Preserve navigation if same viewKey and preserveWhileSameViewKey is true
+    if (shouldPreserveNavigation) {
       return;
     }
 
-    slots.value = {
-      "header-actions": null,
-    };
+    // Clear slots if needed
+    if (
+      !isSameViewKey ||
+      !slots.value["header-actions"]?.preserveWhileSameViewKey
+    ) {
+      slots.value = {
+        "header-actions": null,
+      };
+    }
 
-    // if the next route set the navigation, cancel the timeout avoiding UI flashing
-    clearTimeout(navigationResetTimeout);
-    navigationResetTimeout = setTimeout(() => {
-      navigation.value = { ...defaultNavigation };
-    }, 150);
+    // Clear navigation if needed
+    if (!isSameViewKey || !navigation.value.preserveWhileSameViewKey) {
+      clearTimeout(navigationResetTimeout);
+      if (isSameViewKey && isSamePath) {
+        // Same viewKey and path - clear immediately
+        navigation.value = { ...defaultNavigation };
+      } else {
+        // Different viewKey or path - delay to allow component to set it first
+        navigationResetTimeout = setTimeout(() => {
+          navigation.value = { ...defaultNavigation };
+        }, 150);
+      }
+    }
   }
 );
 
@@ -128,10 +149,11 @@ watch(
   }
 );
 
-provide(WalletContextKey, {
+provide(WalletRouterViewKey, {
   handleNewCardIssued: () => emit("newCardIssued"),
   setSlot,
   setNavigation,
+  routerViewScrollContainer,
 });
 </script>
 
@@ -298,19 +320,30 @@ provide(WalletContextKey, {
   transform: translateY(8px);
 }
 
-.header-icon-enter-active,
-.header-icon-leave-active {
+.header-icon-enter-active {
   transition:
-    opacity 0.11s cubic-bezier(0.86, 0, 0.07, 1),
-    transform 0.11s cubic-bezier(0.86, 0, 0.07, 1),
-    filter 0.11s cubic-bezier(0.86, 0, 0.07, 1);
+    opacity 0.19s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.19s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.19s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.header-icon-enter-from,
+.header-icon-leave-active {
+  transition:
+    opacity 0.14s cubic-bezier(0.4, 0, 1, 1),
+    transform 0.14s cubic-bezier(0.4, 0, 1, 1),
+    filter 0.14s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.header-icon-enter-from {
+  opacity: 0;
+  transform: translateX(-12px) scale(0.86);
+  filter: blur(2px);
+}
+
 .header-icon-leave-to {
-  opacity: 0.1;
-  transform: translateX(-5px);
-  filter: blur(1px);
+  opacity: 0;
+  transform: translateX(12px) scale(0.86);
+  filter: blur(2px);
 }
 
 .header-title-enter-active,

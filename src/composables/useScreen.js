@@ -14,7 +14,6 @@ import {
 export const SCREEN = {
   APP: "SCREEN_APP",
   DOWNLOAD_MOBILE_APP: "SCREEN_DOWNLOAD_MOBILE_APP",
-  DATA_DELETE_ENROLLMENT: "SCREEN_DATA_DELETE_ENROLLMENT",
 };
 
 /**
@@ -31,10 +30,6 @@ export const useScreen = () => {
   const { hasLoadedFeatureFlag: hasLoadedPostHogFlags } = usePostHogFeatureFlag(
     "identity-monitoring-enabled"
   );
-  const {
-    hasLoadedFeatureFlag: hasLoadedEnrollmentV2Flag,
-    featureFlag: enrollmentV2Enabled,
-  } = usePostHogFeatureFlag("enrollment_v2_enabled");
 
   // Check if all flags have loaded
   const areAllFlagsLoaded = computed(
@@ -42,8 +37,7 @@ export const useScreen = () => {
       toValue(hasLoadedUserProperties) &&
       toValue(hasLoadedUserFlags) &&
       toValue(hasLoadedOnboardingFlags) &&
-      toValue(hasLoadedPostHogFlags) &&
-      toValue(hasLoadedEnrollmentV2Flag)
+      toValue(hasLoadedPostHogFlags)
   );
 
   // Data Delete Enrollment flags
@@ -125,10 +119,7 @@ export const useScreen = () => {
       toValue(hasRequestedDataDeleteEnrollment) &&
       !toValue(hasExitedDataDeleteEnrollment)
     ) {
-      if (toValue(enrollmentV2Enabled)) {
-        return SCREEN.APP;
-      }
-      return SCREEN.DATA_DELETE_ENROLLMENT;
+      return SCREEN.APP;
     }
 
     if (toValue(shouldShowMobileAppDownload)) {

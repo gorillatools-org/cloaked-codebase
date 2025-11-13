@@ -364,6 +364,7 @@ export const useVirtualCardsApplicationStore = defineStore(
                 }
               }
               store.dispatch("authentication/getUser").then(() => {
+                void SubscriptionService.getSubscription();
                 restartApplicationFlow();
               });
             }, 300);
