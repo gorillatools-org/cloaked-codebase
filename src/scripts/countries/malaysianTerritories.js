@@ -1,0 +1,18 @@
+export const MalaysianTerritoriesList = [
+  { label: "Johor", value: "MY-01" },
+  { label: "Kedah", value: "MY-02" },
+  { label: "Kelantan", value: "MY-03" },
+  { label: "Terengganu", value: "MY-04" },
+  { label: "Pahang", value: "MY-05" },
+  { label: "Perak", value: "MY-06" },
+  { label: "Selangor", value: "MY-07" },
+  { label: "Negeri Sembilan", value: "MY-08" },
+  { label: "Malacca", value: "MY-09" },
+  { label: "Penang", value: "MY-10" },
+  { label: "Perlis", value: "MY-11" },
+  { label: "Sarawak", value: "MY-12" },
+  { label: "Sabah", value: "MY-13" },
+  { label: "Kuala Lumpur", value: "MY-14" },
+  { label: "Putrajaya", value: "MY-15" },
+  { label: "Labuan", value: "MY-16" },
+];

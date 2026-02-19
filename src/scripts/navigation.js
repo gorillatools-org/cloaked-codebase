@@ -1,0 +1,150 @@
+export const createNavigationItems = ({
+  basicModeEnabled,
+  hasDataDeleteScan,
+  showEsimGetStarted,
+  hasEsimsWithNumbers,
+  hasIdentityMonitoring,
+  hasAutoPasswordChange,
+  isPayFlowPending,
+  allUnread,
+  unreadCount,
+  hasExposureStatus,
+}) => [
+  {
+    title: "",
+    items: [
+      {
+        url: "/data-remove",
+        icon: "name-card",
+        text: "Data removal",
+        active: hasDataDeleteScan && !hasExposureStatus,
+      },
+      {
+        url: "/exposure-status",
+        icon: "data-broker",
+        text: "Exposure Status",
+        active: hasExposureStatus,
+      },
+      {
+        url: "/identity-monitoring",
+        icon: "search-user",
+        text: "Identity Monitoring",
+        active: hasIdentityMonitoring,
+      },
+      {
+        url: "/virtual-cards",
+        icon: "wallet",
+        text: "Virtual Cards",
+        active: true,
+        dot: isPayFlowPending,
+      },
+    ],
+    active: basicModeEnabled,
+  },
+  {
+    title: "",
+    items: [{ url: "/", icon: "home", text: "Home" }],
+    active: !basicModeEnabled,
+  },
+  {
+    title: "Products",
+    items: [
+      {
+        url: "/data-remove",
+        icon: "name-card",
+        text: "Data removal",
+        active: hasDataDeleteScan && !hasExposureStatus,
+      },
+      {
+        url: "/exposure-status",
+        icon: "data-broker",
+        text: "Exposure Status",
+        active: hasExposureStatus,
+      },
+      {
+        url: "/identity-monitoring",
+        icon: "search-user",
+        text: "Identity Monitoring",
+        active: hasIdentityMonitoring,
+      },
+      {
+        url: "/auto-password-change",
+        icon: "key",
+        text: "Auto Password Change",
+        active: hasAutoPasswordChange,
+      },
+      {
+        url: "/esim/get-started",
+        icon: "phone-shield",
+        text: "Setup eSIM",
+        active: showEsimGetStarted,
+      },
+      {
+        url: "/esim",
+        icon: "phone-shield",
+        text: "Manage eSIM",
+        active: hasEsimsWithNumbers,
+      },
+      {
+        url: "/virtual-cards",
+        icon: "wallet",
+        text: "Virtual Cards",
+        active: true,
+        dot: isPayFlowPending,
+      },
+    ],
+    active: !basicModeEnabled,
+  },
+  {
+    title: "Identities",
+    items: [
+      { url: "/identities", icon: "family", text: "All identities" },
+      { url: "/favorites", icon: "bookmark", text: "Favorites" },
+      { url: "/ignored", icon: "user-block", text: "Ignored" },
+      { url: "/trash", icon: "trash", text: "Trash" },
+    ],
+    active: !basicModeEnabled,
+  },
+  {
+    title: "Inbox",
+    items: [
+      {
+        url: "/inbox",
+        icon: "empty-inbox",
+        text: "All Inboxes",
+        count: allUnread,
+      },
+      {
+        url: "/inbox/emails",
+        icon: "email",
+        text: "Emails",
+        count: unreadCount.emails,
+      },
+      {
+        url: "/inbox/texts",
+        icon: "text",
+        text: "Texts",
+        count: unreadCount.messages,
+      },
+      {
+        url: "/inbox/calls",
+        icon: "phone",
+        text: "Calls",
+        count: unreadCount.calls,
+      },
+      {
+        url: "/inbox/requests",
+        icon: "user-tick",
+        text: "Requests",
+        count: unreadCount.requests,
+      },
+      {
+        url: "/inbox/starred",
+        icon: "star",
+        text: "Starred",
+        count: unreadCount.starred,
+      },
+    ],
+    active: !basicModeEnabled,
+  },
+];

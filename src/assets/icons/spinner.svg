@@ -1,0 +1,43 @@
+import { createTextVNode as _createTextVNode, resolveDynamicComponent as _resolveDynamicComponent, withCtx as _withCtx, openBlock as _openBlock, createBlock as _createBlock, createElementVNode as _createElementVNode, createElementBlock as _createElementBlock } from "vue"
+
+const _hoisted_1 = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "17",
+  height: "17",
+  fill: "none",
+  viewBox: "0 0 20 20"
+}
+
+export function render(_ctx, _cache) {
+  return (_openBlock(), _createElementBlock("svg", _hoisted_1, [
+    (_openBlock(), _createBlock(_resolveDynamicComponent("style"), null, {
+      default: _withCtx(() => _cache[0] || (_cache[0] = [
+        _createTextVNode("@keyframes spin{0%{transform:rotate(0deg)}to{transform:rotate(360deg)}}")
+      ])),
+      _: 1,
+      __: [0]
+    })),
+    _cache[1] || (_cache[1] = _createElementVNode("circle", {
+      cx: "10",
+      cy: "10",
+      r: "8",
+      stroke: "url(#spinner)",
+      "stroke-width": "3",
+      style: {"transform-origin":"center","animation":"spin .5s linear infinite"}
+    }, null, -1)),
+    _cache[2] || (_cache[2] = _createElementVNode("defs", null, [
+      _createElementVNode("linearGradient", { id: "spinner" }, [
+        _createElementVNode("stop", {
+          offset: "20%",
+          "stop-color": "currentColor",
+          "stop-opacity": "0"
+        }),
+        _createElementVNode("stop", {
+          offset: "100%",
+          "stop-color": "currentColor"
+        })
+      ])
+    ], -1))
+  ]))
+}
+export default { render: render }

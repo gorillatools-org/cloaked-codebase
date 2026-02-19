@@ -1,0 +1,17 @@
+export const NewZealandRegionsList = [
+  { label: "Auckland", value: "NZ-AUK" },
+  { label: "Waikato", value: "NZ-WKO" },
+  { label: "Bay of Plenty", value: "NZ-BOP" },
+  { label: "Gisborne", value: "NZ-GIS" },
+  { label: "Hawke's Bay", value: "NZ-HKB" },
+  { label: "Taranaki", value: "NZ-TKI" },
+  { label: "Manawatu-Wanganui", value: "NZ-MWT" },
+  { label: "Wellington", value: "NZ-WGN" },
+  { label: "Marlborough", value: "NZ-Marlborough" },
+  { label: "Nelson", value: "NZ-NSN" },
+  { label: "Tasman", value: "NZ-TAS" },
+  { label: "West Coast", value: "NZ-WTC" },
+  { label: "Canterbury", value: "NZ-CAN" },
+  { label: "Otago", value: "NZ-OTA" },
+  { label: "Southland ", value: "NZ-STL" },
+];
