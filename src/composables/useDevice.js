@@ -1,12 +1,12 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { useWindowSize } from "@vueuse/core";
 
+// Screen size based detection
+export const MOBILE_BREAKPOINT = 760;
+export const TABLET_BREAKPOINT = 1050;
+
 export const useDevice = () => {
   const { width } = useWindowSize();
-
-  // Screen size based detection
-  const MOBILE_BREAKPOINT = 760;
-  const TABLET_BREAKPOINT = 1050;
 
   const isMobile = ref(width.value < MOBILE_BREAKPOINT);
   const isTablet = ref(

@@ -34,7 +34,7 @@ export const headers = () => {
     "Cloaked-Os-Version": get_os(),
   };
 
-  if (store.getters.auth_token !== "") {
+  if (store.getters.auth_token) {
     headers.Authorization = `Bearer ${store.getters.auth_token}`;
   }
   if (store.state?.authentication?.user?.uuid) {
@@ -166,6 +166,17 @@ const setInterceptors = (api) => {
           throw error;
         }
       } else {
+        if (error?.code === "ERR_NETWORK") {
+          const raw = error?.config?.url ?? "unknown";
+          let safeUrl = raw;
+          try {
+            const u = new URL(raw, window.location.origin);
+            safeUrl = u.origin + u.pathname;
+          } catch {
+            safeUrl = "unknown";
+          }
+          console.warn("[api] Network error", safeUrl, error.message);
+        }
         throw error;
       }
     }

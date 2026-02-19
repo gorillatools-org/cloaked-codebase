@@ -184,7 +184,7 @@ const onTryAdvanced = async () => {
   &__description {
     margin-top: 16px;
     padding: 24px;
-    background-color: $color-base-white-0;
+    background-color: $color-base-white-100;
     border: 1px solid $color-primary-10;
     border-radius: 24px;
   }

@@ -8,8 +8,7 @@ import { useEmailValidation } from "@/composables/validation/useEmailValidation.
 import { useUsernameValidation } from "@/composables/validation/useUsernameValidation.ts";
 import { usePasswordValidation } from "@/composables/validation/usePasswordValidation.ts";
 import { useConfirmPasswordValidation } from "@/composables/validation/useConfirmPasswordValidation.ts";
-
-type Identifier = "phone" | "email" | "username";
+import type { SignupType } from "@/features/checkout/useSignupForm.ts";
 
 defineProps<{
   isDisabled: boolean;
@@ -155,7 +154,7 @@ const primaryIdentifierError = computed(() => {
   }
 });
 
-const typeOptions = computed<{ value: Identifier; label: string }[]>(() => [
+const typeOptions = computed<{ value: SignupType; label: string }[]>(() => [
   { value: "phone", label: "Phone number" },
   { value: "email", label: "Email address" },
   { value: "username", label: "Username" },
@@ -168,7 +167,7 @@ defineExpose({ validateForm });
   <div class="checkout-signup-form">
     <BaseSelect
       v-model="type"
-      title="Register using"
+      title="Sign up with"
       placeholder="Select a method"
       :options="typeOptions"
       :disabled="isDisabled"

@@ -4,6 +4,7 @@ import {
   type Component,
   type InjectionKey,
   type ComputedRef,
+  type Ref,
 } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 
@@ -26,6 +27,7 @@ export type WalletRouterViewContext = {
   ) => void;
   setNavigation: (navigation: Partial<WalletRouterViewNavigation>) => void;
   routerViewScrollContainer: ComputedRef<HTMLDivElement>;
+  routerViewWidth: Ref<number>;
 };
 
 export const WalletRouterViewKey: InjectionKey<WalletRouterViewContext> =

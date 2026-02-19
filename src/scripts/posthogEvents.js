@@ -1,5 +1,7 @@
 export const PH_EVENT_USER_VIEWED_SETUPONBOARDING_DOWNLOAD_APP =
   "user_viewed_setuponboarding_download_app";
+export const PH_EVENT_USER_VIEWED_DOWNLOAD_APP_SCREEN =
+  "user_viewed_download_app_screen";
 
 export const PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_LOADING =
   "user_viewed_data_deletion_search_loading";
@@ -23,6 +25,12 @@ export const PH_EVENT_USER_VIEWED_DATA_DELETION_NO_RESULTS =
   "user_viewed_data_deletion_no_results";
 export const PH_EVENT_USER_CLICKED_DATA_DELETION_NOT_ME_BUTTON =
   "user_clicked_data_deletion_not_me_button";
+export const PH_EVENT_USER_CLICKED_DATA_DELETION_NETWORK_SKIP_BUTTON =
+  "user_clicked_data_deletion_network_skip_button";
+export const PH_EVENT_USER_CLICKED_DATA_DELETION_NETWORK_VIEW_FULL_REPORT_BUTTON =
+  "user_clicked_data_deletion_network_view_full_report_button";
+export const PH_EVENT_USER_VIEWED_DATA_DELETION_NETWORK =
+  "user_viewed_data_deletion_network";
 export const PH_EVENT_USER_VIEWED_DATA_DELETION_THREAT_LEVEL =
   "user_viewed_data_delete_threat_level";
 export const PH_EVENT_USER_CLICKED_DATA_DELETION_SEARCH_RESULTS_CONTINUE_BUTTON =
@@ -35,13 +43,21 @@ export const PH_EVENT_USER_AGREED_TO_DATA_DELETION_AGENCY_AGREEMENT =
   "user_agreed_to_data_deletion_agency_agreement";
 export const PH_EVENT_USER_CLICKED_DATA_DELETION_STATUS_IN_HOME_PAGE_TILE =
   "user_clicked_data_deletion_status_in_home_page_tile";
-export const PH_EVENT_USER_DISMISSED_BLACK_FRIDAY_2025_PROMOTION =
-  "user_dismissed_black_friday_2025_promotion";
 export const PH_EVENT_USER_ENTERED_DATA_SCAN = "user_entered_data_scan";
 export const PH_EVENT_HOME_ACTION = "user_clicked_dashboardactionitem";
 export const PH_EVENT_USER_CLICKED_SIGN_UP_NO_WASM =
   "user_clicked_sign_up_no_wasm";
 export const PH_EVENT_REFERRAL_SENT = "referral_sent";
+
+// data scan events
+export const PH_EVENT_USER_VIEWED_DATA_SCAN_SPYCLOUD_DATA =
+  "user_viewed_data_scan_spycloud_data";
+export const PH_EVENT_VIEWED_DATA_SCAN_OTP_VERIFICATION_FAILED =
+  "user_viewed_data_scan_otp_verification_failed";
+export const PH_EVENT_USER_VIEWED_DATA_SCAN_PRE_SCAN_APP_DOWNLOAD =
+  "user_viewed_data_scan_pre_scan_app_download";
+export const PH_EVENT_USER_CLICKED_DATA_SCAN_PRE_SCAN_APP_DOWNLOAD =
+  "user_clicked_data_scan_pre_scan_app_download_cta";
 
 // data removal events
 export const PH_EVENT_DATA_REMOVAL_USER_CLICKED_MARK_DONE =
@@ -60,6 +76,20 @@ export const PH_EVENT_USER_SUBMITTED_DD_SCAN_EMAIL_MODAL_CAPTURE =
   "user_submitted_data_deletion_scan_email_modal_capture";
 export const PH_EVENT_USER_VIEWED_DD_SCAN_EMAIL_MODAL =
   "user_viewed_data_delete_scan_email_modal";
+
+// Intermediate checkout screen events
+export const PH_EVENT_USER_VIEWED_INTERMEDIATE_CHECKOUT_SCREEN =
+  "user_viewed_intermediate_checkout_screen";
+export const PH_EVENT_USER_CLICKED_CONTINUE_ON_INTERMEDIATE_CHECKOUT_SCREEN =
+  "user_clicked_continue_on_intermediate_checkout_screen";
+
+// Intermediate checkout questions screen events
+export const PH_EVENT_USER_VIEWED_INTERMEDIATE_QUESTION_SCREEN =
+  "user_viewed_intermediate_question_screen";
+export const PH_EVENT_USER_CLICKED_NEXT_ON_INTERMEDIATE_QUESTION_SCREEN =
+  "user_clicked_next_on_intermediate_question_screen";
+export const PH_EVENT_USER_SKIPPED_INTERMEDIATE_QUESTION_SCREEN =
+  "user_skipped_intermediate_question_screen";
 
 // Email breach search events
 export const PH_EVENT_EMAIL_BREACH_SEARCH_STARTED =
@@ -93,8 +123,16 @@ export const PH_EVENT_ESIM_USER_CHANGED_ZIP_CODE = "eSim_user_changed_zipcode";
 /* Feature flags */
 export const PH_EVENT_CLOAKED_AUTH_TOTP_MFA_ENABLED = "cloaked-auth-mfa-totp";
 export const PH_FEATURE_FLAG_DATA_DELETION_IN_APP_SEARCH = "dd_in_app_search";
-export const PH_FEATURE_FLAG_DD_SCHEDULE_CALL = "dd_schedule_call";
 export const PH_FEATURE_FLAG_DD_EMAIL_CAPTURE_MODAL = "dd_email_capture_modal";
+export const PH_FEATURE_FLAG_SCAN_RESULTS_FEEDBACK_BUTTONS =
+  "scan_results_feedback_buttons";
+export const PH_FEATURE_FLAG_SCAN_NETWORK_VISUALIZATION =
+  "scan_network_visualization";
+export const PH_FEATURE_FLAG_SCAN_OTP_HEADER = "data-scan-otp-header";
+export const PH_FEATURE_FLAG_CHECKOUT_FIXED_CTA = "checkout-fixed-cta";
+export const PH_FEATURE_FLAG_SCAN_IDENTITIES_COUNTER = "scan_exposures_counter";
+export const PH_FEATURE_FLAG_SCAN_RESULTS_PROTECT_CTA =
+  "scan-results-protect-cta";
 export const PH_FEATURE_FLAG_AI_OPERATOR = "operator-enabled";
 export const PH_FEATURE_FLAG_AUTO_CLOAKING = "autocloaking-operator-enabled";
 export const PH_FEATURE_FLAG_KILLSWITCH_TURNSTILE_CAPTCHA =
@@ -127,8 +165,6 @@ export const PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT =
 export const PH_FEATURE_FLAG_DOWNLOAD_APP_EXPERIMENT =
   "download-app-experiment";
 
-// Black Friday Banner
-
 // Data Deletion Improvement
 export const PH_FEATURE_FLAG_DATA_DELETION_IMPROVEMENT =
   "data_deletion_improvement";
@@ -139,6 +175,23 @@ export const PH_FEATURE_FLAG_CHECKOUT_MINIMAL_COPY_MODE =
 
 // Checkout New Baseline Experiment
 export const PH_FEATURE_FLAG_CHECKOUT_NEW_BASELINE = "checkout-new-baseline";
+
+// Checkout Trust Badges Banner
+export const PH_FEATURE_FLAG_CHECKOUT_TRUST_BADGES = "checkout-trust-badges";
+
+// Checkout Promo Banner Privacy Week
+export const PH_FEATURE_FLAG_CHECKOUT_PRIVACY_WEEK_BANNER_COPY =
+  "checkout-privacy-week-banner-copy";
+
+// Checkout Reduced Visual Clutter
+export const PH_FEATURE_FLAG_CHECKOUT_REDUCED_VISUAL_CLUTTER =
+  "checkout_reduced_visual_clutter";
+
+// Checkout POA Agreement Experiment
+export const PH_FEATURE_FLAG_CHECKOUT_POA_AGREEMENT = "checkout-poa-agreement";
+
+// Data Scan App Download Experiment
+export const PH_FEATURE_FLAG_DATA_SCAN_APP_DOWNLOAD = "data-scan-app-download";
 
 // Personalized Questionnaire Flow Events
 // Three-Question Flow Events
@@ -176,3 +229,21 @@ export const PH_EVENT_PERSONALIZED_QUESTIONS_LOADING_VIEWED =
   "personalized_questions_loading_viewed";
 export const PH_EVENT_PERSONALIZED_QUESTIONS_CHECKOUT_VIEWED =
   "personalized_questions_checkout_viewed";
+
+// Mobile Checkout Flow Events
+export const PH_EVENT_MOBILE_CHECKOUT_PAGE_VIEWED =
+  "mobile_checkout_page_viewed";
+export const PH_EVENT_MOBILE_CHECKOUT_PLAN_SELECTED =
+  "mobile_checkout_plan_selected";
+export const PH_EVENT_MOBILE_CHECKOUT_PROTECTION_COMPLETED =
+  "mobile_checkout_protection_completed";
+export const PH_EVENT_MOBILE_CHECKOUT_ACCOUNT_COMPLETED =
+  "mobile_checkout_account_completed";
+export const PH_EVENT_MOBILE_CHECKOUT_PAYMENT_SUBMITTED =
+  "mobile_checkout_payment_submitted";
+export const PH_EVENT_MOBILE_CHECKOUT_PAYMENT_SUCCEEDED =
+  "mobile_checkout_payment_succeeded";
+export const PH_EVENT_MOBILE_CHECKOUT_STEP_CHANGED =
+  "mobile_checkout_step_changed";
+export const PH_EVENT_MOBILE_CHECKOUT_BENEFITS_VIEWED =
+  "mobile_checkout_benefits_viewed";

@@ -131,14 +131,14 @@ defineProps({
       height: 32px;
       padding: 0 12px;
 
-      @include font-style-by-type("body-small-medium");
+      @include font-style-by-type("footnote-regular");
     }
 
     &-lg {
       height: 40px;
       padding: 0 18px;
 
-      @include font-style-by-type("body-3-semibold");
+      @include font-style-by-type("subhead-emphasized");
     }
   }
 

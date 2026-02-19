@@ -24,7 +24,7 @@ export const useCouponDiscount = () => {
     isValidatingCoupon.value = true;
 
     try {
-      coupon.value = couponCode;
+      coupon.value = null;
       discount.value = null;
       couponError.value = null;
 

@@ -243,4 +243,14 @@ export default class SubscriptionService {
         return data;
       });
   }
+
+  static async changeSubscriptionPaymentMethod(paymentMethodId) {
+    return api()
+      .post("/api/v2/subscription/stripe/payment-method/", {
+        payment_method_id: paymentMethodId,
+      })
+      .then(({ data }) => {
+        return data;
+      });
+  }
 }

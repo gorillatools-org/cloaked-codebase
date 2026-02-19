@@ -124,7 +124,7 @@ const model = defineModel({ type: String });
   }
 
   &__select {
-    @include font-style-by-type("body-2-semibold");
+    @include font-style-by-type("subhead-emphasized");
 
     padding: 0 calc(16px + 24px + 8px) 0 16px;
     border-radius: 16px;
@@ -186,7 +186,7 @@ const model = defineModel({ type: String });
   }
 
   &__option {
-    @include font-style-by-type("body-2-semibold");
+    @include font-style-by-type("subhead-emphasized");
   }
 
   &__chevron {

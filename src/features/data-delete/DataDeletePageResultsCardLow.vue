@@ -3,6 +3,7 @@ import DataDeleteThreatTag from "@/features/data-delete/atoms/DataDeleteThreatTa
 import DataDeleteCard from "@/features/data-delete/atoms/DataDeleteCard.vue";
 import DataDeleteCardInfo from "@/features/data-delete/atoms/DataDeleteCardInfo.vue";
 import DataDeleteCardDivider from "@/features/data-delete/atoms/DataDeleteCardDivider.vue";
+import DataDeleteThumbsFeedback from "@/features/data-delete/DataDeleteThumbsFeedback.vue";
 import { computed, watch } from "vue";
 import { formatPhone } from "@/scripts/format";
 import BaseText from "@/library/BaseText.vue";
@@ -30,8 +31,12 @@ watch(
   <DataDeleteCard
     v-if="isCardVisible"
     type="dark"
+    class="data-delete-results-low"
   >
-    <DataDeleteThreatTag threat-level="low" />
+    <div class="data-delete-results-low__header">
+      <DataDeleteThreatTag threat-level="low" />
+      <DataDeleteThumbsFeedback result-id="low-risk" />
+    </div>
     <div v-if="result.phones?.length">
       <BaseText
         as="h3"
@@ -70,3 +75,16 @@ watch(
     </DataDeleteCardInfo>
   </DataDeleteCard>
 </template>
+
+<style lang="scss" scoped>
+.data-delete-results-low {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+}
+</style>

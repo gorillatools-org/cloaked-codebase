@@ -200,6 +200,17 @@ watch(
     @media (min-width: $screen-md) {
       max-width: 90%;
     }
+
+    :deep(.base-input__input),
+    :deep(.base-select__select) {
+      border: 1.5px solid $color-overlay-neutral-15;
+      height: 56px;
+      border-radius: 12px;
+
+      &:focus {
+        border-color: $color-neutral-1000;
+      }
+    }
   }
 
   &__footer {

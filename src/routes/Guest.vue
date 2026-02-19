@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import { useRoute } from "vue-router";
+import Page404 from "@/routes/Pages/Page404.vue";
 
 const route = useRoute();
 
@@ -19,12 +20,15 @@ const isRouteAllowed = computed(
     route.path.startsWith("/invitation") ||
     route.path.startsWith("/mobile")
 );
+
+const is404 = computed(() => route.name === "404");
 </script>
 
 <template>
   <main :class="{ 'auth-route': $route.path.startsWith('/auth') }">
+    <Page404 v-if="is404" />
     <router-view
-      v-if="isRouteAllowed"
+      v-else-if="isRouteAllowed"
       default="login"
     />
   </main>

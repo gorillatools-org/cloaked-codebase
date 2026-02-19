@@ -9,6 +9,7 @@ import {
   type Component,
   computed,
   markRaw,
+  useTemplateRef,
 } from "vue";
 import { useVirtualCardsWalletPageStore } from "@/features/VirtualCards/store/useVirtualCardsWalletPageStore";
 import {
@@ -18,6 +19,7 @@ import {
 } from "@/features/VirtualCards/composables/pages-context/useWalletRouterViewContext";
 import BaseIcon from "@/library/BaseIcon.vue";
 import BaseText from "@/library/BaseText.vue";
+import { useElementSize } from "@vueuse/core";
 
 const props = defineProps<{
   scrollContainer: HTMLDivElement;
@@ -32,6 +34,8 @@ const defaultNavigation: WalletRouterViewNavigation = {
 const route = useRoute();
 const walletPageStore = useVirtualCardsWalletPageStore();
 const shouldRouteTransition = ref(false);
+const routerViewRef = useTemplateRef<HTMLElement>("routerViewRef");
+const { width } = useElementSize(routerViewRef);
 
 let navigationResetTimeout: ReturnType<typeof setTimeout> | undefined =
   undefined;
@@ -149,11 +153,15 @@ provide(WalletRouterViewKey, {
   setSlot,
   setNavigation,
   routerViewScrollContainer,
+  routerViewWidth: width,
 });
 </script>
 
 <template>
-  <section class="wallet-layout-router-view">
+  <section
+    ref="routerViewRef"
+    class="wallet-layout-router-view"
+  >
     <div class="wallet-layout-router-view__container">
       <header class="wallet-layout-router-view__header">
         <!-- Icon or back button -->
@@ -266,8 +274,15 @@ provide(WalletRouterViewKey, {
     &-title {
       &-container {
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        gap: 16px;
         min-height: 34px;
+
+        @container wallet-router-view (min-width: 450px) {
+          flex-direction: row;
+          gap: 0;
+          align-items: center;
+        }
       }
 
       &-text {
@@ -298,7 +313,7 @@ provide(WalletRouterViewKey, {
   }
 
   &__router-view {
-    margin-top: 26px;
+    margin-top: 19px;
   }
 }
 
@@ -354,5 +369,14 @@ provide(WalletRouterViewKey, {
 .header-title-leave-to {
   opacity: 0.2;
   filter: blur(2px);
+}
+</style>
+
+<!-- This is required to allow other components to use these containers for container queries -->
+<!-- eslint-disable-next-line vue/enforce-style-attribute -->
+<style lang="scss">
+.wallet-layout-router-view {
+  container-name: wallet-router-view;
+  container-type: inline-size;
 }
 </style>

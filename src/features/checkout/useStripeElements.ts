@@ -1,12 +1,12 @@
 import { ref, toValue, type TemplateRef, type MaybeRefOrGetter } from "vue";
 import { useStripe } from "@/features/checkout/useStripe.ts";
 import {
-  getStripeAppearance,
+  type StripeAppearanceResolver,
   type StripeAppearanceOptions,
-} from "@/features/checkout/useStripeAppearance.ts";
+} from "@/features/checkout/stripeAppearance.ts";
+import { generateConsistentFakeName } from "@/utils/generateFakeName";
 import type { SetupIntent } from "@/features/subscribe/types.ts";
 import {
-  type PaymentMethodCreateParams,
   type Stripe,
   type StripeElements,
   type StripePaymentElement,
@@ -21,7 +21,14 @@ export const useStripeElements = () => {
     error: false,
   });
 
+  let getAppearance: StripeAppearanceResolver | null = null;
+
+  const useStripeAppearance = (fn: StripeAppearanceResolver) => {
+    getAppearance = fn;
+  };
+
   const stripe = ref<Stripe | null>(null);
+  const stripeIntent = ref<SetupIntent | null>(null);
   const stripeElements = ref<StripeElements | null>(null);
   const paymentElement = ref<StripePaymentElement | null>(null);
   const stripeError = ref<string | null>(null);
@@ -43,13 +50,8 @@ export const useStripeElements = () => {
       return;
     }
 
+    stripeIntent.value = intentValue;
     stripeElements.value = stripeValue.elements({
-      fonts: [
-        {
-          cssSrc:
-            "https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600&display=swap",
-        },
-      ],
       clientSecret: intentValue.client_secret,
     });
   };
@@ -98,19 +100,47 @@ export const useStripeElements = () => {
 
     const appearance = { ...stripeAppearance.value, ...options };
 
-    stripeElementsValue.update({ appearance: getStripeAppearance(appearance) });
+    stripeElementsValue.update({ appearance: getAppearance?.(appearance) });
     paymentElementValue.update({ readOnly: appearance.readOnly });
 
     stripeAppearance.value = appearance;
   };
 
-  const confirmPaymentElement = async (
-    billingDetails: PaymentMethodCreateParams.BillingDetails
-  ) => {
-    const stripeValue = toValue(stripe);
+  /**
+   * Triggers validation and wallet payment sheets (Apple Pay / Google Pay).
+   * Must be called directly from a user gesture so the browser still
+   * considers the event a "user activation".
+   */
+  const submitPaymentElement = async () => {
     const stripeElementsValue = toValue(stripeElements);
 
-    if (!stripeValue || !stripeElementsValue) {
+    if (!stripeElementsValue) {
+      stripeError.value = "Failed to submit payment.";
+      return false;
+    }
+
+    stripeError.value = null;
+
+    const { error } = await stripeElementsValue.submit();
+
+    if (error) {
+      stripeError.value = error.message ?? "Could not process payment.";
+      return false;
+    }
+
+    return true;
+  };
+
+  /**
+   * Finalises the SetupIntent after elements.submit() has already collected
+   * payment details. Safe to call after async work - no user activation needed.
+   */
+  const confirmPaymentElement = async () => {
+    const stripeValue = toValue(stripe);
+    const stripeElementsValue = toValue(stripeElements);
+    const intentValue = toValue(stripeIntent);
+
+    if (!stripeValue || !stripeElementsValue || !intentValue) {
       stripeError.value = "Failed to confirm payment.";
       return;
     }
@@ -121,7 +151,10 @@ export const useStripeElements = () => {
       elements: stripeElementsValue,
       confirmParams: {
         payment_method_data: {
-          billing_details: billingDetails,
+          billing_details: {
+            name: generateConsistentFakeName(intentValue.email),
+            email: intentValue.email,
+          },
         },
       },
       redirect: "if_required",
@@ -135,14 +168,34 @@ export const useStripeElements = () => {
     return result.setupIntent.payment_method;
   };
 
+  const unmountPaymentElement = () => {
+    const stripeElementsValue = toValue(stripeElements);
+    const paymentElementValue = toValue(paymentElement);
+
+    if (!stripeElementsValue || !paymentElementValue) {
+      stripeError.value = "Failed to unmount payment element.";
+      return;
+    }
+
+    paymentElementValue.unmount();
+
+    paymentElement.value = null;
+    stripeElements.value = null;
+    stripeIntent.value = null;
+  };
+
   return {
     loadStripe,
     loadStripeElements,
+    useStripeAppearance,
     createPaymentElement,
     mountPaymentElement,
     updatePaymentElement,
+    submitPaymentElement,
     confirmPaymentElement,
+    unmountPaymentElement,
     paymentElement,
     stripeError,
+    stripe,
   };
 };

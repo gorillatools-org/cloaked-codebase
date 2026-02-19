@@ -57,10 +57,11 @@ export const useDataDeleteBrokerScan = () => {
     isScanStarted: !!scan.value?.array_started_at,
     isScanFinished: scan.value?.array_status === "done",
     currentBroker: scan.value?.brokers[0],
+    exposuresCount: scan.value?.exposures_count,
     brokerCountTotal: scan.value?.broker_count,
     brokerCountScanned: scan.value?.brokers.length,
     brokerCountWithRecords: scan.value?.brokers.filter(
-      (broker) => broker.records.length
+      (broker) => broker?.records?.length
     ).length,
   }));
 

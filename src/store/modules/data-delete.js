@@ -1,7 +1,4 @@
-import {
-  PH_FEATURE_FLAG_DATA_DELETION_IN_APP_SEARCH,
-  PH_FEATURE_FLAG_DD_SCHEDULE_CALL,
-} from "@/scripts/posthogEvents";
+import { PH_FEATURE_FLAG_DATA_DELETION_IN_APP_SEARCH } from "@/scripts/posthogEvents";
 import { getPosthog } from "@/scripts/posthog";
 
 const defaultState = () => ({
@@ -35,13 +32,13 @@ const defaultState = () => ({
     pastScans: [],
     latestScan: null,
   },
+  automationResults: null,
   actionRequiredFamilies: [],
   graphData: null,
   enrollmentProfile: null,
 
   // posthog feature flags
   ddInAppSearchEnabled: false,
-  ddScheduleCallEnabled: false,
 
   // cloaked basic mode summary
   basicModeSummary: null,
@@ -109,11 +106,11 @@ export default {
         latestScan: resp?.data?.latest_scan,
       };
     },
+    setAutomationResults(state, results) {
+      state.automationResults = results;
+    },
     setInAppSearchFeatureFlag(state, isEnabled) {
       state.ddInAppSearchEnabled = isEnabled;
-    },
-    setScheduleCallFeatureFlag(state, isEnabled) {
-      state.ddScheduleCallEnabled = isEnabled;
     },
     setActionRequiredFamilies(state, brokerFamilies) {
       state.actionRequiredFamilies = brokerFamilies ?? [];
@@ -153,6 +150,9 @@ export default {
     getGraphData: (state) => {
       return state?.graphData;
     },
+    getAutomationResults: (state) => {
+      return state.automationResults;
+    },
     getEnrollmentProfile: (state) => {
       return state?.enrollmentProfile;
     },
@@ -191,10 +191,6 @@ export default {
         commit(
           "setInAppSearchFeatureFlag",
           posthog?.isFeatureEnabled(PH_FEATURE_FLAG_DATA_DELETION_IN_APP_SEARCH)
-        );
-        commit(
-          "setScheduleCallFeatureFlag",
-          posthog?.isFeatureEnabled(PH_FEATURE_FLAG_DD_SCHEDULE_CALL)
         );
       });
     },

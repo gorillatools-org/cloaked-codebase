@@ -18,6 +18,7 @@ import { useToast } from "@/composables/useToast.js";
 let fetchWebSearchTimeout;
 
 const cloakNicknameRef = ref(null);
+const isSaving = ref(false);
 
 const emit = defineEmits(["done"]);
 
@@ -77,6 +78,8 @@ function handleClosePanel() {
 }
 
 function handleEnter() {
+  if (isSaving.value) return;
+  isSaving.value = true;
   if (state.active === null) {
     return searchWithTimeout(state.nickname);
   } else {
@@ -189,6 +192,9 @@ function createCloak(payload) {
         .then(() => {})
         .catch(() => {
           error("Failed to add identity to category");
+        })
+        .finally(() => {
+          isSaving.value = false;
         });
     }
   });

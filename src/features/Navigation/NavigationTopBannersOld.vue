@@ -17,34 +17,14 @@ import BannerVerifyEmail from "@/features/banners/BannerVerifyEmail.vue";
 import BannerDownloadExtension from "@/features/banners/BannerDownloadExtension.vue";
 import { useBasicMode } from "@/composables/useBasicMode";
 import { useDisplay } from "@/composables/useDisplay";
-import BannerBlackFridayPromotion from "../banners/BannerBlackFridayPromotion.vue";
-import { usePlans } from "@/features/subscribe/composables/usePlans";
 
 const { isBasicModeEnabled } = useBasicMode();
 const { isMobile } = useDisplay();
-
-const { activePlan } = usePlans();
-
-const isBlackFriday2025PromotionEnabled = computed(() => {
-  const user = store.state.authentication?.user;
-  return user?.flags?.monthly_plan_experiment === "black-friday-2025";
-});
-
-const showBlackFriday2025 = computed(
-  () =>
-    activePlan?.value?.owner &&
-    activePlan?.value?.recurring_interval === "monthly" &&
-    isBlackFriday2025PromotionEnabled.value
-);
 
 defineEmits(["visible"]);
 
 const showExtensionBanner = ref(
   localStorage.getItem("showExtensionBanner") === "true"
-);
-
-const dismissedPromotion = ref(
-  localStorage.getItem("blackFridayBannerDismissed") === "true"
 );
 
 onMounted(() => {
@@ -124,11 +104,7 @@ function dismissExtBanner() {
 
 <template>
   <div v-if="dataLoaded">
-    <BannerBlackFridayPromotion
-      v-if="!dismissedPromotion && showBlackFriday2025"
-      v-model="dismissedPromotion"
-    />
-    <BannerAccountDelete v-else-if="isPendingDeletion" />
+    <BannerAccountDelete v-if="isPendingDeletion" />
     <BannerExpired v-else-if="isCancelled" />
     <BannerUpgrade v-else-if="isTrialing" />
 

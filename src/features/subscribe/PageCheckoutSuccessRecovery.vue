@@ -1,7 +1,6 @@
 <script setup>
 import PageCheckoutSuccess from "@/features/subscribe/PageCheckoutSuccess.vue";
 import RecoveryKeyCard from "@/features/subscribe/RecoveryKeyCard.vue";
-import ConcentricWave from "@/features/subscribe/ConcentricWave.vue";
 import { ref } from "vue";
 import { createPDF } from "@/scripts/tools";
 import BulkPlanCard from "@/features/subscribe/BulkPlanCard.vue";
@@ -31,12 +30,6 @@ const { isMobile } = useDisplay();
 
 <template>
   <PageCheckoutSuccess class="page-checkout-success-recovery">
-    <template #background>
-      <ConcentricWave
-        v-if="hasDownloadedRecoveryKey"
-        class="page-checkout-success-recovery__wave"
-      />
-    </template>
     <template #header>
       <BaseText
         as="h1"
@@ -142,13 +135,6 @@ const { isMobile } = useDisplay();
 
 .page-checkout-success-recovery {
   color: $color-primary-100;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1000;
-  overflow: auto;
   background-color: $color-base-white-100;
   padding: 0;
 
@@ -165,16 +151,6 @@ const { isMobile } = useDisplay();
 
     &:hover {
       opacity: 0.8;
-    }
-  }
-
-  &__wave {
-    top: clamp(400px, 40%, 40%);
-    transform: translate3d(-50%, 0, 0);
-    z-index: -1;
-
-    @media all and (orientation: landscape) {
-      top: clamp(500px, 40%, 40%);
     }
   }
 

@@ -4,7 +4,6 @@ import { reactive, nextTick, computed, watch, onMounted } from "vue";
 import store from "@/store";
 import { SHOWN_PLUGIN, HAS_ACTIVATED_WEB } from "@/scripts/userFlags";
 import router from "@/routes/router";
-import { getPosthog } from "@/scripts/posthog";
 import { logout } from "@/scripts/actions/auth";
 import RightPanel from "@/features/global/rightPanel";
 import GetStarted from "@/features/modals/GetStarted";
@@ -163,9 +162,6 @@ watch(
   () => authenticated.value,
   (isAuthenticated) => {
     if (!isAuthenticated) {
-      if (window.$posthog) {
-        window.$posthog?.reset();
-      }
       logout();
     }
   },
@@ -180,20 +176,6 @@ watch(
     }
   },
   { immediate: true }
-);
-
-watch(
-  () => user.value,
-  (user) => {
-    // If the user doesn't have a uuid, then we leave them anonymous,
-    // otherwise we call identify so events are associated with the user.
-    if (user?.posthog_uuid) {
-      getPosthog().then((posthog) => {
-        posthog.identify(store?.state?.authentication?.user?.posthog_uuid);
-      });
-    }
-  },
-  { deep: true }
 );
 
 watch(

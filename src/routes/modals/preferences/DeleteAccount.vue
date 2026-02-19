@@ -395,7 +395,9 @@ const verificationCode = ref("");
         v-if="isPasswordless && !state.otpCodeSent"
         type="danger"
         :loading="state.sendingOTPCode"
-        :disabled="state.sendingOTPCode || !hasCancelledRenewal"
+        :disabled="
+          state.sendingOTPCode || (!hasCancelledRenewal && !isRestrictedPlan)
+        "
         @click="sendOTPCode"
       >
         Delete Account
@@ -533,7 +535,7 @@ const verificationCode = ref("");
             !isStoreManual &&
             !isStoreUnknown &&
             !isRestrictedPlan
-              ? `delete-account__disabled`
+              ? `delete-account__disabled-btn`
               : '',
           ]"
           :loading="state.loadingPassword"
@@ -607,8 +609,13 @@ const verificationCode = ref("");
       opacity: 0.8;
     }
   }
+
   &__disabled {
     color: $color-primary-100;
+    opacity: 0.4;
+  }
+
+  &__disabled-btn:disabled {
     opacity: 0.4;
   }
 }

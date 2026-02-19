@@ -24,17 +24,11 @@ import InlineSvg from "@/features/InlineSvg.vue";
   max-width: 1120px;
   margin: 0 auto;
   padding: 22px 16px;
-  background: $color-base-black-5;
-  background-blend-mode: overlay;
-  backdrop-filter: blur(27px);
   color: $color-primary-100;
 
   @media all and (min-width: $screen-xl) {
     justify-content: space-between;
     padding: 28px 16px;
-    background-blend-mode: normal;
-    backdrop-filter: none;
-    background-color: transparent;
   }
 
   &__logo-container {

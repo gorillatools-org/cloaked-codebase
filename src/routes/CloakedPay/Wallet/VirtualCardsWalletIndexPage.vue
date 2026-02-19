@@ -86,9 +86,12 @@ watch(
     grid-gap: 10px;
     width: 100%;
 
-    @media (width >=1200px) {
-      grid-gap: 24px;
+    @container wallet-router-view (min-width: 530px) {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    @container wallet-router-view (min-width: 660px) {
+      grid-gap: 24px;
     }
   }
 

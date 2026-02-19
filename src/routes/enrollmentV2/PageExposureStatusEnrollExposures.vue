@@ -56,7 +56,7 @@ interface Props {
   autofillData?: AutofillData;
 }
 
-interface EnrollmentRequest {
+export interface EnrollmentRequest {
   name: {
     first?: string;
     last?: string;
@@ -132,7 +132,7 @@ const addresses = defineModel<EnrollmentAddress[]>("addresses", {
   default: () => [],
 });
 const agreesWithTerms = defineModel<boolean>("agreesWithTerms", {
-  default: false,
+  default: true,
 });
 
 const phone = defineModel("phone", { type: String, default: "" });

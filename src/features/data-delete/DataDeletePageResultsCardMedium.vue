@@ -4,6 +4,7 @@ import DataDeleteCard from "@/features/data-delete/atoms/DataDeleteCard.vue";
 import DataDeleteCardInfo from "@/features/data-delete/atoms/DataDeleteCardInfo.vue";
 import DataDeleteCardDivider from "@/features/data-delete/atoms/DataDeleteCardDivider.vue";
 import DataDeleteShare from "@/features/data-delete/atoms/DataDeleteShare.vue";
+import DataDeleteThumbsFeedback from "@/features/data-delete/DataDeleteThumbsFeedback.vue";
 import { computed, watch } from "vue";
 import { useRelativesParsing } from "@/features/data-delete/composables/useRelativesParsing";
 import BaseText from "@/library/BaseText.vue";
@@ -80,7 +81,10 @@ watch(
     type="dark"
     class="data-delete-card-medium"
   >
-    <DataDeleteThreatTag threat-level="medium" />
+    <div class="data-delete-card-medium__header">
+      <DataDeleteThreatTag threat-level="medium" />
+      <DataDeleteThumbsFeedback result-id="medium-risk" />
+    </div>
     <div v-if="gender">
       <BaseText
         as="h3"
@@ -168,6 +172,15 @@ watch(
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
 .data-delete-card-medium {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+
   &__share {
     margin-top: -8px;
   }

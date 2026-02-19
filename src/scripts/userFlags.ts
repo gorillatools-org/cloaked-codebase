@@ -105,6 +105,9 @@ export const HAS_CLICKED_BASIC_MODE_DOWNLOAD_APP =
 
 export const HAS_SEEN_GOOGLE_SEARCH_MODAL = "has_seen_google_search_modal";
 
+// Checkout POA Agreement
+export const POA_AGREEMENT_ACCEPTED = "poa_agreement_accepted";
+
 export const userFlags = {
   HAS_ATS,
   NEW_USER,
@@ -173,4 +176,5 @@ export const userFlags = {
   PERMANENTLY_DISMISSED_VIRTUAL_CARD_LEAD_IN_POST_KYC_MODAL,
   DATA_DELETE_SEARCHED_EXPOSURES,
   DATA_DELETE_REQUESTED,
+  POA_AGREEMENT_ACCEPTED,
 };

@@ -415,7 +415,7 @@ $component-name: "fs-list-item";
         background-color: var(--color-primary-100);
         border-radius: 19px;
         padding: 3px 10px;
-        color: var(--color-base-white-0);
+        color: $color-base-white-100;
       }
 
       &-default-badge-container {

@@ -12,5 +12,7 @@ export const usePlanType = (plan: MaybeRefOrGetter<Plan>) =>
       ? "Individual"
       : toValue(plan).max_members === 2
         ? "Couple"
-        : "Family";
+        : toValue(plan).max_members === 3
+          ? "Family-3"
+          : "Family";
   });

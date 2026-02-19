@@ -10,6 +10,7 @@ import { useRoute } from "vue-router";
 import BaseButton from "@/library/BaseButton.vue";
 import { formatPhone } from "@/scripts/format";
 import { useNameParsing } from "@/features/data-delete/composables/useNameParsing";
+import DataDeleteThumbsFeedback from "@/features/data-delete/DataDeleteThumbsFeedback.vue";
 
 const props = defineProps({
   result: {
@@ -129,22 +130,25 @@ const allFields = computed(() =>
   >
     <header class="personal-info-card__header">
       <div class="personal-info-card__header__head">
-        <div
-          class="personal-info-card__header-icon"
-          aria-hidden="true"
-        >
-          <BaseIcon
-            name="profile-filled"
-            class="personal-info-card--icon"
-          />
+        <div class="personal-info-card__header__left">
+          <div
+            class="personal-info-card__header-icon"
+            aria-hidden="true"
+          >
+            <BaseIcon
+              name="profile-filled"
+              class="personal-info-card--icon"
+            />
+          </div>
+          <BaseText
+            as="h2"
+            variant="headline-5-bold"
+            class="personal-info-card__title"
+          >
+            Your Personal Data
+          </BaseText>
         </div>
-        <BaseText
-          as="h2"
-          variant="headline-5-bold"
-          class="personal-info-card__title"
-        >
-          Your Personal Data
-        </BaseText>
+        <DataDeleteThumbsFeedback result-id="personal-info" />
       </div>
 
       <div class="personal-info-card__subtitle-row">
@@ -253,6 +257,13 @@ const allFields = computed(() =>
     margin-bottom: 16px;
 
     &__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    &__left {
       display: flex;
       gap: 16px;
       align-items: center;

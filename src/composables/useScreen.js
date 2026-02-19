@@ -6,10 +6,12 @@ import { useUserFlag } from "@/composables/useUserFlag";
 import { useOnboardingFlag } from "@/composables/useOnboardingFlag";
 import { useCloakedPayUser } from "@/features/VirtualCards/composables/useCloakedPayUser.ts";
 import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { useBasicMode } from "@/composables/useBasicMode.js";
 import {
   DATA_DELETE_REQUESTED,
   HAS_EXITED_DELETE_FLOW,
 } from "@/scripts/userFlags";
+import store from "@/store";
 
 export const SCREEN = {
   APP: "SCREEN_APP",
@@ -50,6 +52,10 @@ export const useScreen = () => {
     HAS_EXITED_DELETE_FLOW
   );
 
+  const isRemovalEnrolled = computed(() => {
+    return store.getters["dataDelete/hasRemovalEnrollment"];
+  });
+
   // Computed flag states
   const shouldShowDataDeleteEnrollment = computed(
     () =>
@@ -86,22 +92,34 @@ export const useScreen = () => {
     return isLegacyMobileDevice || isMacintoshWithTouch;
   });
 
+  const { isBasicModeEnabled } = useBasicMode();
+
   /**
    * Check if we should show the mobile app download screen
    */
   const shouldShowMobileAppDownload = computed(() => {
     const isMobile = toValue(isMobileDevice);
+    const isExposureStatus = route.path.includes("/exposure-status");
     const isNotSubscriptionPage = route.path !== "/settings/subscription";
     const isNotInvitationPage = !route.path.includes("/invitation/");
-    const isNotExposureStatus = !route.path.includes("/exposure-status");
     const isNotExposuresEnroll = !route.path.includes("/exposures-enroll");
+    const isNotAuthPage = !route.path.includes("/auth");
+    const isNotBasicModeHome = !(
+      route.path.includes("/home") && isBasicModeEnabled.value
+    );
+
+    if (isMobile && isExposureStatus && isRemovalEnrolled.value) {
+      return true;
+    }
 
     return (
       isMobile &&
       isNotSubscriptionPage &&
       isNotInvitationPage &&
-      isNotExposureStatus &&
-      isNotExposuresEnroll
+      !isExposureStatus &&
+      isNotExposuresEnroll &&
+      isNotAuthPage &&
+      isNotBasicModeHome
     );
   });
 

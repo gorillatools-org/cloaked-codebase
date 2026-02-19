@@ -1,12 +1,5 @@
 <script setup>
-import {
-  computed,
-  onBeforeMount,
-  onUnmounted,
-  reactive,
-  watch,
-  toValue,
-} from "vue";
+import { computed, onBeforeMount, onUnmounted, reactive, watch } from "vue";
 import { password_confirm } from "@/scripts/actions/encryption";
 import AuthService from "@/api/actions/auth-service";
 import EmailService from "@/api/actions/email-service";
@@ -28,17 +21,11 @@ import AccountRecovery from "@/routes/modals/preferences/AccountRecovery.vue";
 import AuthorizedDevices from "@/routes/modals/preferences/AuthorizedDevices.vue";
 import ExportData from "@/routes/modals/preferences/ExportData.vue";
 import DeleteAccount from "@/routes/modals/preferences/DeleteAccount.vue";
-import AccountBiometrics from "@/routes/modals/preferences/AccountBiometrics.vue";
 import ManageAccount from "@/routes/modals/preferences/ManageAccount.vue";
 import CountryAccountIcon from "@/features/ui/CountryAccountIcon.vue";
 import Button from "@/features/Button.vue";
 import { useEncryptionGate } from "@/composables/useEncryptionGate";
 import BaseText from "@/library/BaseText.vue";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag";
-
-const { featureFlag: isBiometricSetupEnabled } = usePostHogFeatureFlag(
-  "biometrics-setup-dashboard"
-);
 
 const toast = useToast();
 
@@ -97,10 +84,6 @@ const showMfaSection = computed(() => {
 const userCountryCode = computed(() =>
   getUserCountry(store.state.authentication?.user)
 );
-
-const showBiometricSection = computed(() => {
-  return isEncryptionAvailable.value && toValue(isBiometricSetupEnabled);
-});
 
 const closeModal = () => {
   store.dispatch("closeModal");
@@ -501,13 +484,6 @@ const tooltipMessage = computed(() => {
       />
 
       <ValueDisplay
-        v-if="showBiometricSection"
-        label="Manage Face Recovery"
-        dark-label
-        @click="goRight('biometrics')"
-      />
-
-      <ValueDisplay
         v-if="state.userDeleteIsScheduled"
         label="Manage Account"
         dark-label
@@ -613,12 +589,6 @@ const tooltipMessage = computed(() => {
 
     <DeleteAccount
       v-if="rightPanel === 'delete'"
-      @toggle-back="toggleBack"
-      @refresh-user="getUserDeleteIsScheduled"
-    />
-
-    <AccountBiometrics
-      v-if="rightPanel === 'biometrics'"
       @toggle-back="toggleBack"
       @refresh-user="getUserDeleteIsScheduled"
     />

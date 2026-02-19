@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, inject } from "vue";
 import DataDeleteThreatLevel from "@/features/data-delete/atoms/DataDeleteThreatLevel.vue";
 import DataScanCardFinancialData from "@/features/data-delete/atoms/DataScanCardFinancialData.vue";
 import DataScanCardPasswords from "@/features/data-delete/atoms/DataScanCardPasswords.vue";
@@ -9,6 +9,16 @@ import DataScanCardFamily from "@/features/data-delete/atoms/DataScanCardFamily.
 import DataDeleteCompanyHeader from "@/features/data-delete/atoms/DataDeleteCompanyHeader.vue";
 import BaseText from "@/library/BaseText.vue";
 import DataScanPageHeader from "@/features/data-delete/DataScanPageHeader.vue";
+import DataDeleteIdentitiesCounter from "@/features/data-delete/atoms/DataDeleteIdentitiesCounter.vue";
+import {
+  PH_FEATURE_FLAG_SCAN_IDENTITIES_COUNTER,
+  PH_EVENT_USER_CLICKED_DATA_DELETION_NOT_ME_BUTTON,
+  PH_EVENT_USER_CLICKED_DATA_DELETION_SEARCH_RESULTS_CONTINUE_BUTTON,
+  PH_EVENT_USER_VIEWED_DATA_DELETION_THREAT_LEVEL,
+} from "@/scripts/posthogEvents.js";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { posthogCapture } from "@/scripts/posthog.js";
+import { networkVisualizationFlagKey } from "@/features/data-delete/injectionKeys";
 
 const props = defineProps({
   searchResults: {
@@ -30,6 +40,13 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["force-new-search", "setup"]);
+
+const {
+  featureFlag: identitiesCounterFlag,
+  hasLoadedFeatureFlag: hasLoadedIdentitiesCounterFlag,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_SCAN_IDENTITIES_COUNTER);
+
+const networkVisualizationFlag = inject(networkVisualizationFlagKey);
 
 const bestMatch = computed(() => props.searchResults[0] ?? null);
 
@@ -53,14 +70,34 @@ const threatLevel = computed(() => {
   return "low";
 });
 
+const canShowCounter = computed(() => {
+  if (networkVisualizationFlag?.canShowNetwork.value) {
+    return false;
+  }
+
+  return (
+    bestMatch.value &&
+    hasLoadedIdentitiesCounterFlag.value &&
+    (identitiesCounterFlag.value === "test-A" ||
+      identitiesCounterFlag.value === "test-B")
+  );
+});
+
 const onNotMe = () => {
   emit("force-new-search");
+  posthogCapture(PH_EVENT_USER_CLICKED_DATA_DELETION_NOT_ME_BUTTON);
 };
 
 const onDelete = () => {
   localStorage.setItem("checkoutScanBreachesCount", props.totalBreachesCount);
   localStorage.setItem("checkoutScanBreachesThreatLevel", threatLevel.value);
   emit("setup");
+  posthogCapture(
+    PH_EVENT_USER_CLICKED_DATA_DELETION_SEARCH_RESULTS_CONTINUE_BUTTON,
+    {
+      isForcingNewSearch: props.isForcingNewSearch,
+    }
+  );
 };
 
 const pastPhonesFromDataScan = computed(() => {
@@ -78,9 +115,37 @@ const pastPhones = computed(() => {
     ]),
   ];
 });
+
+onMounted(() => {
+  if (bestMatch.value) {
+    try {
+      posthogCapture(PH_EVENT_USER_VIEWED_DATA_DELETION_THREAT_LEVEL, {
+        addressCount: bestMatch.value?.locations?.length ?? null,
+        phonesNumbersCount: bestMatch.value?.phones?.length ?? null,
+        emailsCount: bestMatch.value?.emails?.length ?? null,
+        relativesCount: bestMatch.value?.relatives?.length ?? null,
+        threatLevel: threatLevel.value,
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+});
 </script>
 
 <template>
+  <div
+    v-if="canShowCounter"
+    class="data-delete-results__counter"
+  >
+    <DataDeleteIdentitiesCounter
+      :type="
+        identitiesCounterFlag === 'test-A'
+          ? 'identity-theft-reports'
+          : 'exposures-removed'
+      "
+    />
+  </div>
   <DataScanPageHeader @delete="onDelete" />
   <DataDeleteCompanyHeader />
   <div>
@@ -128,10 +193,23 @@ const pastPhones = computed(() => {
     >
       No compromised records
     </BaseText>
+
     <div
       v-if="bestMatch"
       class="data-delete-results data-delete-phone-results"
     >
+      <div class="data-delete-results__column">
+        <DataScanCardPersonalInfo
+          :result="bestMatch"
+          :is-forcing-new-search="isForcingNewSearch"
+          @on-not-me="onNotMe"
+        />
+        <DataScanCardFamily
+          v-if="bestMatch.relatives?.length"
+          v-model="isThreatLevelMedium"
+          :result="bestMatch"
+        />
+      </div>
       <div class="data-delete-results__column">
         <DataScanCardFinancialData
           v-if="
@@ -151,18 +229,6 @@ const pastPhones = computed(() => {
           :phones="pastPhones"
         />
       </div>
-      <div class="data-delete-results__column">
-        <DataScanCardPersonalInfo
-          :result="bestMatch"
-          :is-forcing-new-search="isForcingNewSearch"
-          @on-not-me="onNotMe"
-        />
-        <DataScanCardFamily
-          v-if="bestMatch.relatives?.length"
-          v-model="isThreatLevelMedium"
-          :result="bestMatch"
-        />
-      </div>
     </div>
   </div>
 </template>
@@ -171,6 +237,12 @@ const pastPhones = computed(() => {
 .data-delete-results {
   @media all and (min-width: $screen-xl) {
     padding-top: 0;
+  }
+
+  &__counter {
+    padding-bottom: 0;
+    animation: expand-counter 0.4s ease-out forwards;
+    animation-delay: 1s;
   }
 
   & &__column {
@@ -203,7 +275,7 @@ const pastPhones = computed(() => {
       margin: 16px auto 0;
     }
 
-    :deep(.base-text--headline-2-semibold.threat-level__title) {
+    :deep(.base-text--title-1-emphasized.threat-level__title) {
       font-size: 1.5rem;
       margin-top: 0;
 
@@ -222,7 +294,7 @@ const pastPhones = computed(() => {
       margin: 6px auto 0;
       font-size: 18px;
 
-      :deep(.base-text--headline-3-bold) {
+      :deep(.base-text--title-2-emphasized) {
         font-size: 18px;
       }
 
@@ -234,7 +306,7 @@ const pastPhones = computed(() => {
         font-size: 24px;
         margin: 16px auto 0;
 
-        :deep(.base-text--headline-3-bold) {
+        :deep(.base-text--title-2-emphasized) {
           font-size: 24px;
         }
       }
@@ -243,7 +315,7 @@ const pastPhones = computed(() => {
         margin: 36px auto 0;
       }
 
-      .base-text--headline-3-bold {
+      .base-text--title-2-emphasized {
         color: $color-status-error;
       }
     }
@@ -253,14 +325,14 @@ const pastPhones = computed(() => {
 .data-delete-phone-results {
   max-width: 1014px;
   margin: 16px auto 0;
-  flex-direction: column-reverse;
+  flex-direction: column;
 
   @media screen and (min-width: $screen-sm) {
     margin: 24px auto 0;
   }
 
   @media all and (min-width: $screen-xl) {
-    flex-direction: row-reverse;
+    flex-direction: row;
     gap: 36px;
     margin: 36px auto 0;
   }
@@ -320,6 +392,16 @@ const pastPhones = computed(() => {
       width: 44px;
       height: 44px;
     }
+  }
+}
+
+@keyframes expand-counter {
+  from {
+    padding-bottom: 0;
+  }
+
+  to {
+    padding-bottom: 100px;
   }
 }
 </style>

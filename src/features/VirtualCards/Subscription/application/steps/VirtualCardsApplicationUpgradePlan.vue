@@ -2,6 +2,7 @@
 <script lang="ts" setup>
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
+import BaseIcon from "@/library/BaseIcon.vue";
 import SubscriptionPlanCard from "@/features/Subscription/SubscriptionPlanCard.vue";
 import SubscriptionBillingDetails from "@/features/Subscription/Billing/SubscriptionBillingDetails.vue";
 import type { BillingDetailsProps } from "@/features/Subscription/Billing/SubscriptionBillingDetails.vue";
@@ -24,6 +25,8 @@ import { usePlanComparisonPrice } from "@/features/subscribe/composables/usePlan
 import { usePlanBilling } from "@/features/subscribe/composables/usePlanBilling";
 import { capitalizeFirstLetter } from "@/scripts/format";
 import { useDevice } from "@/composables/useDevice";
+import { useFeatureFlag } from "@/posthog/useFeatureFlag";
+import CloakedPayChangePaymentMethodModal from "@/features/VirtualCards/modals/CloakedPayChangePaymentMethodModal.vue";
 
 // Fallback default prices for early access savings (1 max member plans)
 const FALLBACK_DEFAULT_PRICE_ANNUAL = 13999;
@@ -36,6 +39,12 @@ const emit = defineEmits<{
 const toast = useToast();
 const virtualCardsApplication = useVirtualCardsApplicationStore();
 const { isMobile } = useDevice();
+
+const paymentMethodChangeFlag = useFeatureFlag("cloaked_pay_payment_method_change_modal");
+const paymentMethodChangeEnabled = computed(() => !!paymentMethodChangeFlag.value);
+
+const showPaymentMethodModal = ref(false);
+const isChangingPaymentMethod = ref(false);
 
 const plansWithDiscounts = ref<Plan[]>([]);
 const billingDetails: BillingDetailsProps = reactive({
@@ -135,6 +144,12 @@ const isCTADisabled = computed(() => {
 
 const recommendedAnnualPlanId = computed(() => {
   return getRecommendedPlan(annualPlans.value)?.product_id;
+});
+
+const subtotalDescription = computed(() => {
+  const plan = selectedPlan.value;
+  if (!plan) return "Subtotal";
+  return plan.name;
 });
 
 const offerText = computed(() => {
@@ -290,24 +305,53 @@ const getRecommendedPlan = (plans: Plan[]) => {
   return fallbackPlan;
 };
 
-const getBillingDetails = () => {
-  const selectedPlan = virtualCardsApplication.selectedPlan;
-  if (!selectedPlan) {
-    return;
-  }
+const openChangePaymentMethodModal = () => {
+  posthogCapture("pay_kyc_change_payment_method_tapped");
+  showPaymentMethodModal.value = true;
+};
 
+const onPaymentMethodSuccess = async (paymentMethodId: string) => {
+  showPaymentMethodModal.value = false;
+  isChangingPaymentMethod.value = true;
+
+  try {
+    await SubscriptionService.changeSubscriptionPaymentMethod(paymentMethodId);
+    posthogCapture("pay_kyc_change_payment_method_success");
+    toast.success("Payment method updated successfully");
+
+    // Clear and reload billing preview (includes card info from getPreviewSubscriptionChange)
+    clearBillingDetails();
+    getBillingDetails();
+  } catch (error: any) {
+    posthogCapture("pay_kyc_change_payment_method_failed");
+    const detail = error?.response?.data?.detail;
+    toast.error(detail || "Failed to update payment method. Please try again.");
+  } finally {
+    isChangingPaymentMethod.value = false;
+  }
+};
+
+const clearBillingDetails = () => {
   billingDetails.last4 = undefined;
   billingDetails.cardBrand = undefined;
-  billingDetails.savings = undefined;
   billingDetails.subtotal = undefined;
   billingDetails.subtotalInterval = undefined;
   billingDetails.dueToday = undefined;
   billingDetails.savings = [
     {
       amount: undefined,
-      description: "Early access savings",
+      description: "Early access discount",
     },
   ];
+};
+
+const getBillingDetails = () => {
+  const selectedPlan = virtualCardsApplication.selectedPlan;
+  if (!selectedPlan) {
+    return;
+  }
+
+  clearBillingDetails();
   const interval = usePlanBilling(selectedPlan).value;
 
   SubscriptionService.getPreviewSubscriptionChange(selectedPlan.product_id)
@@ -332,14 +376,14 @@ const getBillingDetails = () => {
       ) {
         billingDetails.savings.push({
           amount: -(effectiveDefaultPrice - selectedPlan.price),
-          description: "Early access savings",
+          description: "Early access discount",
         });
       }
 
       if (response.charge_adjustment < 0) {
         billingDetails.savings.push({
           amount: response.charge_adjustment,
-          description: "Plan change credit",
+          description: "Unused time credit",
         });
       }
     })
@@ -451,19 +495,52 @@ watch(
         </BaseText>
         <SubscriptionBillingDetails
           v-bind="billingDetails"
-          :subtotal-description="`Subtotal (Includes Cloaked Pay)`"
+          :subtotal-description="subtotalDescription"
         >
+          <template
+            v-if="paymentMethodChangeEnabled"
+            #payment-method-action="{ paymentMethod }"
+          >
+            <button
+              class="vc-application-upgrade-plan__payment-method-button"
+              :disabled="isChangingPaymentMethod"
+              @click="openChangePaymentMethodModal"
+            >
+              <BaseText variant="body-3-semibold">
+                {{ paymentMethod }}
+              </BaseText>
+              <BaseIcon
+                name="edit"
+                class="vc-application-upgrade-plan__payment-method-button-icon"
+              />
+            </button>
+          </template>
           <template #footer-content>
             <BaseText
               variant="caption-semibold"
-              class="vc-application-upgrade-plan__billing-details-footer-text"
+              :class="[
+                'vc-application-upgrade-plan__billing-details-footer-text',
+                {
+                  'vc-application-upgrade-plan__billing-details-footer-text--wide':
+                    paymentMethodChangeEnabled,
+                },
+              ]"
             >
+              <template v-if="paymentMethodChangeEnabled">
+                Make sure your payment method is updated.
+              </template>
               You won't be charged until identity verification is successful.
             </BaseText>
           </template>
         </SubscriptionBillingDetails>
       </div>
     </div>
+
+    <CloakedPayChangePaymentMethodModal
+      :show="showPaymentMethodModal"
+      @close="showPaymentMethodModal = false"
+      @success="onPaymentMethodSuccess"
+    />
 
     <Teleport
       to="body"
@@ -478,7 +555,7 @@ watch(
           :disabled="isCTADisabled"
           @click="onConfirmPlan"
         >
-          Confirm plan
+          Continue to verification
         </BaseButton>
       </footer>
     </Teleport>
@@ -510,10 +587,40 @@ $component-name: "vc-application-upgrade-plan";
     gap: 8px;
   }
 
+  &__payment-method-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: $color-primary-100;
+
+    &:hover &-icon {
+      opacity: 0.8;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &-icon {
+      color: $color-primary-70;
+      width: 14px;
+      height: 14px;
+    }
+  }
+
   &__billing-details-footer-text {
     text-align: center;
     font-weight: 500;
     max-width: 183px;
+
+    &--wide {
+      max-width: 260px;
+    }
   }
 
   &__footer {

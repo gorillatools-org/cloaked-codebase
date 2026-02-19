@@ -5,6 +5,7 @@ import DataDeleteExpandableCard from "@/features/data-delete/atoms/DataDeleteExp
 import BaseText from "@/library/BaseText.vue";
 import DataScanCardHeaderShared from "@/features/data-delete/atoms/DataScanCardHeaderShared.vue";
 import DataScanWarning from "@/features/data-delete/atoms/DataScanWarning.vue";
+import DataDeleteThumbsFeedback from "@/features/data-delete/DataDeleteThumbsFeedback.vue";
 import { formatPhone } from "@/scripts/format";
 
 const props = defineProps({
@@ -26,7 +27,11 @@ const warningCopy =
         icon="email-filled"
         title="Contact Information"
         :subtitle="`${phones.length} Past ${phones.length === 1 ? 'Number' : 'Numbers'} Found`"
-      />
+      >
+        <template #feedback>
+          <DataDeleteThumbsFeedback result-id="contact-phones" />
+        </template>
+      </DataScanCardHeaderShared>
     </template>
 
     <template #collapsed>

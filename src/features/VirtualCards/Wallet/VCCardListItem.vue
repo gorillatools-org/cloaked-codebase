@@ -189,18 +189,32 @@ const backgroundColor = computed(() => {
   &__available {
     display: block;
     color: $color-primary-50;
+    font-size: 13px;
+
+    @media all and (min-width: $screen-xl) {
+      font-size: 15px;
+    }
   }
 
   &__last4-container {
     flex: 0 0 auto;
-    width: 72px;
+    width: 62px;
     justify-content: flex-end;
     align-items: flex-end;
     display: flex;
+
+    @media all and (min-width: $screen-xl) {
+      width: 72px;
+    }
   }
 
   &__last4 {
     font-variant-numeric: tabular-nums;
+    font-size: 15px;
+
+    @media all and (min-width: $screen-xl) {
+      font-size: 18px;
+    }
   }
 }
 </style>

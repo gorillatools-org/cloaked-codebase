@@ -9,6 +9,7 @@ import {
   reactive,
   nextTick,
   useTemplateRef,
+  provide,
 } from "vue";
 
 import store from "@/store";
@@ -29,17 +30,25 @@ import { useDataDeleteBrokerScan } from "@/features/data-delete/composables/useD
 import { useHeadlessUser } from "@/features/headless-signup/useHeadlessUser";
 import { useFunnel } from "@/features/subscribe/composables/useFunnel";
 import { FUNNEL_STEP } from "./utils";
-import { PH_EVENT_USER_CLICKED_DATA_DELETION_SETUP_ACCOUNT_BUTTON } from "@/scripts/posthogEvents";
+import {
+  PH_EVENT_USER_CLICKED_DATA_DELETION_SETUP_ACCOUNT_BUTTON,
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT,
+  PH_FEATURE_FLAG_SCAN_NETWORK_VISUALIZATION,
+} from "@/scripts/posthogEvents";
 import DataDeletePageOtp from "@/features/data-delete/DataDeletePageOtp.vue";
 import DataDeletePageResults from "@/features/data-delete/DataDeletePageResults.vue";
 import DataDeletePageEmailResults from "@/features/data-delete/DataDeletePageEmailResults.vue";
 import DataDeletePageAdditionalSearch from "@/features/data-delete/DataDeletePageAdditionalSearch.vue";
 import DataDeletePageLoader from "@/features/data-delete/DataDeletePageLoader.vue";
+import DataDeleteProtectionPlans from "@/features/data-delete/DataDeleteProtectionPlans.vue";
+import DataDeleteProtectionPlansSurvey from "@/features/data-delete/DataDeleteProtectionPlansSurvey.vue";
 import { useCustomerIo } from "@/features/data-delete/composables/useCustomerIo";
 import { useRoute } from "vue-router";
 import router from "@/routes/router";
 import { useToast } from "@/composables/useToast.js";
 import { useDisplay } from "@/composables/useDisplay";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { networkVisualizationFlagKey } from "@/features/data-delete/injectionKeys";
 
 const toast = useToast();
 
@@ -48,6 +57,40 @@ const { identify } = useCustomerIo();
 
 useThemeQueryParameter();
 usePostHogFunnelTracking();
+
+const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
+  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
+);
+
+const {
+  hasLoadedFeatureFlag: hasLoadedScanNetworkVisualizationFlag,
+  featureFlag: scanNetworkVisualizationFlag,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_SCAN_NETWORK_VISUALIZATION);
+
+const checkoutIntermediatePlansScreenEnabled = computed(
+  () =>
+    hasLoadedFeatureFlag.value &&
+    featureFlag.value === "intermediate-checkout-screen"
+);
+
+const checkoutIntermediateQuestionScreenEnabled = computed(
+  () =>
+    hasLoadedFeatureFlag.value &&
+    featureFlag.value === "intermediate-question-screen"
+);
+
+const hasCheckoutPageV2 = computed(
+  () => hasLoadedFeatureFlag.value && featureFlag.value === "checkout-page-v2"
+);
+
+const isNetworkVisualizationEnabled = computed(() => {
+  return (
+    hasLoadedScanNetworkVisualizationFlag.value &&
+    (scanNetworkVisualizationFlag.value === "network-visualization" ||
+      scanNetworkVisualizationFlag.value ===
+        "network-visualization-relation-only")
+  );
+});
 
 const { dataDeleteInputForm } = useDataDeleteInput();
 const { formattedPhoneNumber, formattedUserName } =
@@ -179,21 +222,39 @@ const storeSearchProgressInSessionStorage = () => {
 
 async function goToCheckout() {
   storeSearchProgressInSessionStorage();
-  router.push({
-    name: "SubscribeNow",
-    query: route.query,
-  });
+
+  if (hasCheckoutPageV2.value) {
+    router.push({
+      name: "CheckoutCombined",
+      query: route.query,
+    });
+  } else {
+    router.push({
+      name: "SubscribeNow",
+      query: route.query,
+    });
+  }
 }
 
 async function setSetup() {
-  goToCheckout();
+  if (checkoutIntermediatePlansScreenEnabled.value) {
+    setStep(FUNNEL_STEP.PRE_CHECKOUT_PROTECTION_PLANS);
+  } else if (checkoutIntermediateQuestionScreenEnabled.value) {
+    setStep(FUNNEL_STEP.INTERMEDIATE_QUESTION_SCREEN);
+  } else {
+    goToCheckout();
+  }
 }
 
 function setSearchStep(value) {
   searchStep.value = value;
 }
 
-const { sortedRecords, initiateScan } = useDataDeleteBrokerScan();
+const {
+  sortedRecords,
+  progress: scanProgress,
+  initiateScan,
+} = useDataDeleteBrokerScan();
 
 const scanPayload = computed(() => {
   const person = searchResults.value[0];
@@ -287,6 +348,12 @@ async function loginPasswordlessUser({ phone, code }) {
   await handleLoginPasswordlessUser({ phone, code });
   await UserService.getFlags();
 }
+
+provide(networkVisualizationFlagKey, {
+  canShowNetwork: isNetworkVisualizationEnabled,
+  hasLoaded: hasLoadedScanNetworkVisualizationFlag,
+  flag: scanNetworkVisualizationFlag,
+});
 </script>
 
 <template>
@@ -309,6 +376,7 @@ async function loginPasswordlessUser({ phone, code }) {
         @create-user="createUser"
         @login-passwordless-user="loginPasswordlessUser"
       />
+
       <DataDeletePageLoader
         v-else-if="step === FUNNEL_STEP.LOADER"
         :search-complete="searchComplete"
@@ -337,6 +405,7 @@ async function loginPasswordlessUser({ phone, code }) {
         :has-error="hasSearchError"
         :is-forcing-new-search="isForcingNewSearch"
         :records="sortedRecords"
+        :scan-progress="scanProgress"
         class="data-delete__page"
         @force-new-search="forceNewSearch"
         @setup="setSetup"
@@ -345,9 +414,23 @@ async function loginPasswordlessUser({ phone, code }) {
 
       <DataDeletePageEmailResults
         v-else-if="step === FUNNEL_STEP.EMAIL_RESULTS"
+        :is-forcing-new-search="isForcingNewSearch"
         class="data-delete__page"
-        @setup="setSetup"
+        @setup="goToCheckout"
         @force-new-search="forceNewSearch"
+      />
+
+      <DataDeleteProtectionPlans
+        v-else-if="step === FUNNEL_STEP.PRE_CHECKOUT_PROTECTION_PLANS"
+        class="data-delete__page"
+        @checkout="goToCheckout"
+      />
+
+      <DataDeleteProtectionPlansSurvey
+        v-else-if="step === FUNNEL_STEP.INTERMEDIATE_QUESTION_SCREEN"
+        class="data-delete__page"
+        @next="goToCheckout"
+        @skip="goToCheckout"
       />
     </template>
     <CloudflareCaptcha ref="cloudflareCaptcha" />

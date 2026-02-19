@@ -494,7 +494,7 @@ watch(
 
       &-default {
         background-color: $color-primary-100;
-        color: $color-base-white-0;
+        color: $color-base-white-100;
         border-radius: 19px;
         padding: 3px 10px;
         display: inline-flex;

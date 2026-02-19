@@ -15,6 +15,10 @@ const props = defineProps({
     type: Number,
     default: 50,
   },
+  hideIcon: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const wasMounted = ref(false);
@@ -100,6 +104,7 @@ const warningIconStyle = computed(() => ({
     <InlineSvg
       name="warning-filled"
       class="threat-progress__icon"
+      :class="{ 'threat-progress__icon--hidden': hideIcon }"
       :style="warningIconStyle"
     />
   </div>
@@ -122,7 +127,14 @@ const warningIconStyle = computed(() => ({
     position: absolute;
     top: 0;
     left: 0;
-    transition: transform 500ms ease-in-out;
+    transition:
+      transform 500ms ease-in-out,
+      opacity 200ms ease-out;
+    opacity: 1;
+
+    &--hidden {
+      opacity: 0;
+    }
   }
 }
 </style>

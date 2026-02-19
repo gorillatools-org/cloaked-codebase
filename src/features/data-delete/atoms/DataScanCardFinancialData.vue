@@ -6,6 +6,7 @@ import BaseText from "@/library/BaseText.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
 import DataScanCardPill from "@/features/data-delete/atoms/DataScanCardPill.vue";
 import DataScanCardHeaderShared from "@/features/data-delete/atoms/DataScanCardHeaderShared.vue";
+import DataDeleteThumbsFeedback from "@/features/data-delete/DataDeleteThumbsFeedback.vue";
 import type { BaseIconName } from "@/library/baseIconTypes";
 
 const props = defineProps({
@@ -163,7 +164,11 @@ const collapsedCards = computed(() => {
         icon="bank-filled"
         title="Your Financial Data"
         :subtitle="`${totalBreaches} Data ${totalBreaches === 1 ? 'Breach' : 'Breaches'} Found`"
-      />
+      >
+        <template #feedback>
+          <DataDeleteThumbsFeedback result-id="financial-data" />
+        </template>
+      </DataScanCardHeaderShared>
     </template>
 
     <template #collapsed>

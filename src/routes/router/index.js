@@ -6,13 +6,13 @@ import { logout } from "@/scripts/actions/auth";
 import { useToast } from "@/composables/useToast.js";
 import { useBasicMode } from "@/composables/useBasicMode.js";
 import { useCloakedPaySubscription } from "@/features/VirtualCards/composables/useCloakedPaySubscription.ts";
+import { MOBILE_BREAKPOINT } from "@/composables/useDevice.js";
 
 const toast = useToast();
 
 // general
 import HomePage from "@/features/home/HomePage.vue";
 
-import SubscribeNow from "@/features/subscribe/SubscribeNow.vue";
 import AutoPasswordChange from "@/routes/AutoPasswordChange.vue";
 
 // data delete
@@ -101,6 +101,7 @@ import PageExposureStatusEnroll from "@/routes/enrollmentV2/PageExposureStatusEn
 import PageExposureStatusEnrollExposures from "@/routes/enrollmentV2/PageExposureStatusEnrollExposures.vue";
 import PageExposureStatusEnrollMonitoring from "@/routes/enrollmentV2/PageExposureStatusEnrollMonitoring.vue";
 import PageExposureStatusEnrollSuccess from "@/routes/enrollmentV2/PageExposureStatusEnrollSuccess.vue";
+import PageExposureStatusEnrollDownload from "@/routes/enrollmentV2/PageExposureStatusEnrollDownload.vue";
 
 // Exposure Status
 import PageExposureStatus from "@/routes/Pages/PageExposureStatus.vue";
@@ -122,6 +123,10 @@ import PageMonitoringEvent from "@/routes/monitoring/PageMonitoringEvent.vue";
 // checkout
 import PageCheckout from "@/routes/checkout/PageCheckout.vue";
 import PageCheckoutCombined from "@/routes/checkout/PageCheckoutCombined.vue";
+import PageCheckoutMobile from "@/routes/checkout/PageCheckoutMobile.vue";
+import PageCheckoutSuccess from "@/routes/checkout/PageCheckoutSuccess.vue";
+import PageCheckoutOnboarding from "@/routes/checkout/PageCheckoutOnboarding.vue";
+import PageCheckoutDownloadApp from "@/routes/checkout/PageCheckoutDownloadApp.vue";
 
 // mobile checkout
 import NativeCheckout from "@/routes/NativeCheckout.vue";
@@ -247,12 +252,11 @@ const allowOnlyGuests = (to, from, next) => {
   return next();
 };
 
-const allowOnlyCheckoutTesters = (to, from, next) => {
-  if (to.query.testing === "true") {
-    next();
-  } else {
-    next({ name: "SubscribeNow" });
+const allowMobileScreenOnly = (redirectRouteName) => (to, from, next) => {
+  if (window.innerWidth >= MOBILE_BREAKPOINT) {
+    return next({ name: redirectRouteName, query: to.query });
   }
+  return next();
 };
 
 const allowOnlyAuthenticatedUsers = (to, from, next) => {
@@ -1079,7 +1083,18 @@ const routes = [
     name: "DataDeleteGuest",
     component: DataDeletePageGuestOtp,
     meta: { title: "Delete Data" },
-    beforeEnter: allowOnlyGuests,
+    beforeEnter: [
+      allowOnlyGuests,
+      (to, from, next) => {
+        const { phone, email_address } = to.query;
+        const hasBoth = !!phone && !!email_address;
+        if (hasBoth) {
+          next();
+        } else {
+          next({ name: "DataScan", query: to.query });
+        }
+      },
+    ],
   },
   {
     path: "/data-scan",
@@ -1104,8 +1119,10 @@ const routes = [
   {
     path: "/subscribe-now",
     name: "SubscribeNow",
-    component: SubscribeNow,
-    meta: { title: "Subscribe Now" },
+    redirect: (to) => ({
+      name: "CheckoutCombined",
+      query: to.query,
+    }),
     beforeEnter: allowOnlyGuests,
   },
   {
@@ -1113,14 +1130,44 @@ const routes = [
     name: "Checkout",
     component: PageCheckout,
     meta: { title: "Checkout" },
-    beforeEnter: [allowOnlyCheckoutTesters, allowOnlyGuests],
     children: [
       {
         path: "",
         name: "CheckoutCombined",
         component: PageCheckoutCombined,
         meta: { title: "Checkout" },
-        beforeEnter: [allowOnlyCheckoutTesters, allowOnlyGuests],
+        beforeEnter: allowOnlyGuests,
+      },
+      {
+        path: "mobile",
+        name: "CheckoutMobile",
+        component: PageCheckoutMobile,
+        meta: { title: "Checkout" },
+        beforeEnter: [
+          allowMobileScreenOnly("CheckoutCombined"),
+          allowOnlyGuests,
+        ],
+      },
+      {
+        path: "success",
+        name: "CheckoutSuccess",
+        component: PageCheckoutSuccess,
+        meta: { title: "Checkout" },
+        beforeEnter: allowOnlyAuthenticatedUsers,
+      },
+      {
+        path: "onboarding",
+        name: "CheckoutOnboarding",
+        component: PageCheckoutOnboarding,
+        meta: { title: "Onboarding" },
+        beforeEnter: allowOnlyAuthenticatedUsers,
+      },
+      {
+        path: "download-app",
+        name: "CheckoutDownloadApp",
+        component: PageCheckoutDownloadApp,
+        meta: { title: "Checkout" },
+        beforeEnter: allowOnlyAuthenticatedUsers,
       },
     ],
   },
@@ -1188,6 +1235,16 @@ const routes = [
         name: "ExposureStatusEnrollSuccess",
         component: PageExposureStatusEnrollSuccess,
         meta: { title: "You're protected", hideAside: true },
+        beforeEnter: allowOnlyAuthenticatedUsers,
+      },
+      {
+        path: "download",
+        name: "ExposureStatusEnrollDownload",
+        component: PageExposureStatusEnrollDownload,
+        meta: {
+          title: "Download Cloaked",
+          hideAside: true,
+        },
         beforeEnter: allowOnlyAuthenticatedUsers,
       },
     ],

@@ -22,14 +22,8 @@ import DataDeleteCounter from "@/features/data-delete/atoms/DataDeleteCounter.vu
 import { phone } from "phone";
 import { useDisplay } from "@/composables/useDisplay";
 import BaseIcon from "@/library/BaseIcon.vue";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
-import { PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT } from "@/scripts/posthogEvents";
 import { formatPhone } from "@/scripts/format";
 import InlineSvg from "@/features/InlineSvg.vue";
-
-const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
-  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
-);
 
 const toast = useToast();
 defineOptions({ inheritAttrs: false });
@@ -66,6 +60,14 @@ const props = defineProps({
   loginUserError: {
     type: String,
     default: null,
+  },
+  showDataDeleteCounter: {
+    type: Boolean,
+    default: true,
+  },
+  showCloakedLogo: {
+    type: Boolean,
+    default: true,
   },
 });
 
@@ -299,14 +301,11 @@ watch(
   <div class="data-delete__page data-delete__page--scan-otp">
     <div class="data-scan-otp">
       <InlineSvg
+        v-if="props.showCloakedLogo"
         name="cloaked-logo-full"
         class="data-scan-otp__cloaked-logo"
       />
-      <template
-        v-if="
-          hasLoadedFeatureFlag && featureFlag !== 'spycloud-otp-remove-counter'
-        "
-      >
+      <template v-if="props.showDataDeleteCounter">
         <DataDeleteCounter
           class="data-scan-otp__counter"
           :delay="1000"
@@ -484,12 +483,11 @@ watch(
 
   &__cloaked-logo {
     width: 128px;
-    margin: 50px auto 32px;
+    margin: 10px auto 32px;
     z-index: 2;
-    display: none;
 
     @media all and (min-width: $screen-xl) {
-      display: block;
+      margin: 50px auto 32px;
     }
   }
 

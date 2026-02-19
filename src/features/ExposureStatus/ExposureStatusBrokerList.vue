@@ -1,11 +1,10 @@
 <script setup>
-import { ref, computed, provide, onBeforeMount, markRaw } from "vue";
+import { ref, computed, provide, onBeforeMount } from "vue";
 import store from "@/store";
 import BaseText from "@/library/BaseText.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
 import ExposureStatusBrokerListSection from "@/features/ExposureStatus/ExposureStatusBrokerListSection.vue";
 import { useRelativesApi } from "@/composables/useRelativesApi.js";
-import ShareFeedbackModal from "@/features/feedback/ShareFeedbackModal.vue";
 import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 import ExposureStatusLoading from "@/features/ExposureStatus/ExposureStatusLoading.vue";
 
@@ -139,25 +138,6 @@ const closeAllItems = () => {
   openItemIds.value.clear();
 };
 
-function openReportIssueModal() {
-  store.dispatch("openModal", {
-    customTemplate: {
-      template: markRaw(ShareFeedbackModal),
-      props: {
-        show: true,
-        isReportMode: true,
-        source: "Exposure Status",
-        defaultCategory: "Identity Monitoring",
-      },
-      events: {
-        close: () => {
-          store.dispatch("closeModal");
-        },
-      },
-    },
-  });
-}
-
 const { fetchRelatives } = useRelativesApi();
 onBeforeMount(fetchRelatives);
 
@@ -201,13 +181,6 @@ const shouldShowActionRequired = computed(() => {
           class="page-exposure-status__broker-list-header-title"
         >
           Data Brokers
-        </BaseText>
-        <BaseText
-          variant="body-3-semibold"
-          class="page-exposure-status__broker-list-header-report-issue"
-          @click="openReportIssueModal"
-        >
-          Report an Issue
         </BaseText>
       </div>
     </div>

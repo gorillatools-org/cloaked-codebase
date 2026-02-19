@@ -36,6 +36,10 @@ const openSetting = () => {
   align-items: center;
   justify-content: flex-end;
   width: 100%;
-  gap: 10px;
+  gap: 5px;
+
+  @container wallet-router-view (min-width: 380px) {
+    gap: 10px;
+  }
 }
 </style>

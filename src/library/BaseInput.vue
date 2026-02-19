@@ -160,7 +160,7 @@ defineExpose({
   }
 
   &__input {
-    @include font-style-by-type("body-2-semibold");
+    @include font-style-by-type("subhead-emphasized");
 
     padding: 0 16px;
     border-radius: 16px;
@@ -178,7 +178,7 @@ defineExpose({
     }
 
     &::placeholder {
-      @include font-style-by-type("body-2-semibold");
+      @include font-style-by-type("subhead-emphasized");
 
       color: $color-primary-20;
     }

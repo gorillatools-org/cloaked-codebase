@@ -22,6 +22,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  label: {
+    type: String,
+    default: undefined,
+  },
   hasPlan: {
     type: Boolean,
     default: false,
@@ -32,25 +36,34 @@ defineEmits(["choose-plan"]);
 const planType = usePlanType(toRef(() => props?.option?.stripePlan));
 
 const { isMobile } = useDisplay();
+
+const normalizedPlanType = computed(() => {
+  const type = planType.value?.toLowerCase();
+  return type === "family-3" ? "family" : type;
+});
 </script>
 
 <template>
   <ButtonPlans
     id="choose-plan-cta"
-    :type="planType?.toLowerCase()"
+    :type="normalizedPlanType"
     size="lg"
     :full-width="!isMobile || showSubscribeNowCta"
     @click="$emit('choose-plan')"
   >
     <span v-if="hasPlan">
       <span v-if="$attrs.loading">Switching plan</span>
-      <span v-else>Switch to {{ planType?.toLowerCase() }} plan</span>
+      <span v-else>
+        {{ label || `Switch to ${planType?.toLowerCase()} plan` }}
+      </span>
     </span>
     <span v-else>
       <span v-if="$attrs.loading">Processing...</span>
       <span v-else>
         <span v-if="showSubscribeNowCta">Subscribe now</span>
-        <span v-else>Start your {{ planType?.toLowerCase() }} plan</span>
+        <span v-else>
+          {{ label || `Start your ${planType?.toLowerCase()} plan` }}
+        </span>
       </span>
     </span>
   </ButtonPlans>

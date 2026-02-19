@@ -3,6 +3,7 @@ import DataScanPasswordBreachCard from "@/features/data-delete/atoms/DataScanPas
 import DataDeleteExpandableCard from "@/features/data-delete/atoms/DataDeleteExpandableCard.vue";
 import BaseText from "@/library/BaseText.vue";
 import DataScanCardHeaderShared from "@/features/data-delete/atoms/DataScanCardHeaderShared.vue";
+import DataDeleteThumbsFeedback from "@/features/data-delete/DataDeleteThumbsFeedback.vue";
 import type { Breach } from "@/features/data-delete/atoms/DataScanPasswordBreachCard.vue";
 
 defineProps<{
@@ -23,7 +24,11 @@ const descriptionCopy =
         icon="key-filled"
         title="Password Breaches"
         :subtitle="`${breaches.length} ${breaches.length === 1 ? 'Password' : 'Passwords'} Found`"
-      />
+      >
+        <template #feedback>
+          <DataDeleteThumbsFeedback result-id="password-breaches" />
+        </template>
+      </DataScanCardHeaderShared>
     </template>
 
     <template #collapsed>

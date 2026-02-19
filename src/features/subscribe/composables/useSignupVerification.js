@@ -8,6 +8,8 @@ import { toValue } from "@vueuse/core/index";
 export const useSignupVerification = ({ form, user }) => {
   const route = useRoute();
 
+  const { fetch } = useUserPhoneNumbers();
+
   const searchPhone = computed(
     () => formatPhone(route?.query?.phone)?.phoneNumber ?? null
   );
@@ -34,13 +36,19 @@ export const useSignupVerification = ({ form, user }) => {
     toValue(isSignupPhoneVerified) ? toValue(signupPhone) : null
   );
 
-  const { fetch } = useUserPhoneNumbers();
-
   watch(
     user,
     async (user) => {
       if (user) {
-        await fetch();
+        try {
+          await fetch();
+        } catch (error) {
+          // Silently fail - phone numbers are optional for checkout receipt
+          console.error(
+            "Failed to fetch phone numbers in signup verification",
+            error
+          );
+        }
       }
     },
     { immediate: true }

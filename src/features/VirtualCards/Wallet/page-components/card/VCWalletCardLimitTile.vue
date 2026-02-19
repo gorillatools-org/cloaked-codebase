@@ -6,6 +6,8 @@ import VCBaseCircularProgress from "@/features/VirtualCards/base/VCBaseCircularP
 import VCBaseAlert from "@/features/VirtualCards/base/VCBaseAlert.vue";
 import useVirtualCardLimit from "@/features/VirtualCards/composables/useVirtualCardLimit";
 import useVirtualCard from "@/features/VirtualCards/composables/useVirtualCard";
+import { computed, useTemplateRef } from "vue";
+import { useElementSize } from "@vueuse/core";
 
 type Props = {
   cardId: string;
@@ -14,6 +16,16 @@ type Props = {
 const props = defineProps<Props>();
 
 const { isCanceled } = useVirtualCard(() => props.cardId);
+const cardLimitTileRef = useTemplateRef<HTMLElement>("cardLimitTileRef");
+const { width: tileWidth } = useElementSize(cardLimitTileRef);
+
+const circularProgressSize = computed(() => {
+  if (tileWidth.value >= 300) {
+    return 114;
+  }
+
+  return 90;
+});
 
 const {
   formattedAvailableLimit,
@@ -26,6 +38,7 @@ const {
 
 <template>
   <VCBaseCard
+    ref="cardLimitTileRef"
     class="vc-wallet-card-limit-tile"
     :border="{ borderRadius: 24 }"
   >
@@ -57,7 +70,7 @@ const {
           <VCBaseCircularProgress
             v-if="!isCanceled"
             :progress="spentPercentage"
-            :size="114"
+            :size="circularProgressSize"
             :stroke="6"
           >
             <div class="vc-wallet-card-limit-tile__spent-content">
@@ -108,6 +121,7 @@ const {
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    flex-grow: 1;
   }
 
   &__available {
@@ -121,7 +135,7 @@ const {
   }
 
   &__amount {
-    font-size: clamp(18px, 9cqw, 32px);
+    font-size: clamp(18px, 12cqw, 32px);
   }
 
   &__edit {
@@ -140,6 +154,11 @@ const {
     &-label {
       color: $color-primary-50;
       font-weight: 500;
+      font-size: clamp(9px, 5cqw, 13px);
+    }
+
+    &-amount {
+      font-size: clamp(12px, 6cqw, 18px);
     }
   }
 
@@ -147,7 +166,6 @@ const {
     &-container {
       display: flex;
       align-items: flex-end;
-      flex-grow: 1;
     }
 
     &-alert {

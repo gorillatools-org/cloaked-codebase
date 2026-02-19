@@ -33,12 +33,12 @@ const props = defineProps({
 const emit = defineEmits(["navigate", "select"]);
 
 const identity = computed(() => {
-  const id = parseInt(props.activity.identity.match(/\/(\d+)\/$/)[1], 10);
-  return store.state.localdb.db_cloaks.find((i) => i.id === id);
+  const id = parseInt(props.activity?.identity?.match(/\/(\d+)\/$/)?.[1], 10);
+  return id ? store.state.localdb.db_cloaks.find((i) => i.id === id) : null;
 });
 
 const identityName = computed(() => {
-  return formattedText.getFormattedNickname(identity.value);
+  return formattedText.getFormattedNickname(identity.value) || "(Unnamed)";
 });
 
 const type = computed(() => {
@@ -226,11 +226,9 @@ function showDeleteModal() {
 
 function deleteThread() {
   InboxService.bulkDeleteActivity([props.activity?.thread_id])
-    .then(async () => {
+    .then(() => {
       toast.success("Deleted");
-      await store.dispatch("deleteCacheAllPages", {
-        url: "api/v2/cloaked/activity/",
-      });
+      window.dispatchEvent(new CustomEvent("reset:cache"));
     })
     .catch(() => {
       toast.error("Error, delete unsuccessful");
@@ -306,6 +304,7 @@ function deleteThread() {
         @click.stop.prevent="toggleRead"
       >
         <InlineSvg
+          :key="isRead ? 'mark-as-unread' : 'mark-as-read'"
           :name="isRead ? 'activity-mark-as-unread' : 'activity-mark-as-read'"
         />
       </div>

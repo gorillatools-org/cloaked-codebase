@@ -30,12 +30,16 @@ const enrollmentTimeouts = ref([]);
 async function fetchEnrolledData() {
   const removalLogPromise = DataDeleteService.getRemovalLog().catch(() => null);
   const graphDataPromise = DataDeleteService.getGraphData().catch(() => null);
+  const automationResultsPromise =
+    DataDeleteService.getAutomationResults().catch(() => null);
 
-  const [removalLogResponse, graphResponse] = await Promise.all([
-    removalLogPromise,
-    graphDataPromise,
-  ]);
-  return [removalLogResponse, graphResponse];
+  const [removalLogResponse, graphResponse, automationResults] =
+    await Promise.all([
+      removalLogPromise,
+      graphDataPromise,
+      automationResultsPromise,
+    ]);
+  return [removalLogResponse, graphResponse, automationResults];
 }
 
 async function loadEnrolledData() {

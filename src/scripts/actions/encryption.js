@@ -13,15 +13,6 @@ const log = (/*content*/) => {
   // }
 };
 
-export const check_encryption = () => {
-  UserService.getUserDetails().then(({ data }) => {
-    const user = data.results && data.results[0];
-    if (user) {
-      store.commit("encryptionStatus", user.has_setup_encryption);
-      store.commit("encryptionFeatureFlag", user.flags.encryption);
-    }
-  });
-};
 export const enabled = () => {
   const userIsV2User =
     store.state.authentication?.user &&

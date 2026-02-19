@@ -142,7 +142,7 @@ const bodyStyle = computed(() => {
     "font-weight": "400",
     "font-size": "14px",
     "line-height": "21px",
-    "font-family": "Urbanist, sans-serif",
+    "font-family": "STKBureauSans, sans-serif",
     width: iframeWidth.value,
   };
 
@@ -181,8 +181,8 @@ const iframeContent = computed(() => {
       text-decoration: underline;
     }
     @font-face {
-      font-family: 'Urbanist';
-      src: local('Urbanist'), url(/static-fonts/Urbanist-Regular.woff2) format('woff2'), url(/static-fonts/Urbanist-Regular.woff) format('woff'), url(/static-fonts/Urbanist-Regular.ttf) format('truetype');
+      font-family: 'STKBureauSans';
+      src: local('STKBureauSans'), url(/static-fonts/STKBureauSans-Regular.woff2) format('woff2'), url(/static-fonts/STKBureauSans-Regular.woff) format('woff'), url(/static-fonts/STKBureauSans-Regular.ttf) format('truetype');
       font-weight: 400;
       font-style: normal;
     }
@@ -210,8 +210,8 @@ const iframeContent = computed(() => {
       text-decoration: underline;
     }
     @font-face {
-      font-family: 'Urbanist';
-      src: local('Urbanist'), url(/static-fonts/Urbanist-Regular.woff2) format('woff2'), url(/static-fonts/Urbanist-Regular.woff) format('woff'), url(/static-fonts/Urbanist-Regular.ttf) format('truetype');
+      font-family: 'STKBureauSans';
+      src: local('STKBureauSans'), url(/static-fonts/STKBureauSans-Regular.woff2) format('woff2'), url(/static-fonts/STKBureauSans-Regular.woff) format('woff'), url(/static-fonts/STKBureauSans-Regular.ttf) format('truetype');
       font-weight: 400;
       font-style: normal;
     }

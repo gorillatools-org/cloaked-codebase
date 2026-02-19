@@ -2,7 +2,7 @@ import store from "@/store";
 import { computed, ref, watch } from "vue";
 import { merge } from "lodash-es";
 import UserService from "@/api/actions/user-service";
-import { toValue } from "@vueuse/core";
+import { toValue, useEventListener } from "@vueuse/core";
 import { useColorScheme } from "@/composables/useColorScheme";
 import { useChangeTracking } from "@/composables/useChangeTracking.js";
 import { generateConsistentFakeName } from "@/utils/generateFakeName";
@@ -12,7 +12,7 @@ const appearanceBase = (variant) => ({
   labels: variant === "flat" ? "floating" : "above",
   variables: {
     colorDanger: "#F24141",
-    fontFamily: "Urbanist, system-ui, sans-serif",
+    fontFamily: "STKBureauSans, system-ui, sans-serif",
     spacingUnit: "4px",
     borderRadius: "8px",
     gridColumnSpacing: "8px",
@@ -131,10 +131,28 @@ export const usePaymentProviderStripe = (
   const isProcessingStripePayment = ref(false);
   const stripeError = ref(null);
   const stripeRef = ref(null);
+  const stripeFormState = ref(null);
+  const isStripeFieldFocused = ref(false);
 
   let elements = null;
+  let paymentElement = null;
+  let viewportHeightBeforeKeyboard = null;
 
   const stripe = computed(() => store.getters["subscription/getStripe"]);
+
+  // Detect keyboard dismiss via viewport resize (standard mobile keyboard detection)
+  useEventListener(window.visualViewport, "resize", () => {
+    if (!viewportHeightBeforeKeyboard || !isStripeFieldFocused.value) return;
+
+    const currentHeight = window.visualViewport?.height ?? 0;
+    const keyboardDismissed =
+      currentHeight >= viewportHeightBeforeKeyboard - 50;
+
+    if (keyboardDismissed) {
+      isStripeFieldFocused.value = false;
+      viewportHeightBeforeKeyboard = null;
+    }
+  });
 
   const loadWidget = (changeId) => {
     if (!stripeIntent.value || !stripeRef.value) {
@@ -151,19 +169,13 @@ export const usePaymentProviderStripe = (
         colorScheme.value === "dark"
           ? appearanceDarkMode(toValue(variant))
           : appearanceLightMode(toValue(variant)),
-      fonts: [
-        {
-          cssSrc:
-            "https://fonts.googleapis.com/css2?family=Urbanist:wght@400..500&display=swap",
-        },
-      ],
       clientSecret: stripeIntent.value.client_secret,
     });
 
     // just to get rid of "element will be mounted to an element with children" on re-mount warning
     Array.from(stripeRef.value.children)[0]?.remove();
 
-    elements
+    paymentElement = elements
       .create("payment", {
         layout: "tabs",
         paymentMethodOrder: ["card", "apple_pay", "google_pay"],
@@ -178,7 +190,23 @@ export const usePaymentProviderStripe = (
           }
         }, 500);
       })
-      .mount(stripeRef.value);
+      .on("change", (event) => {
+        stripeFormState.value = event;
+      })
+      .on("focus", () => {
+        isStripeFieldFocused.value = true;
+        viewportHeightBeforeKeyboard = window.visualViewport?.height ?? null;
+      })
+      .on("blur", () => {
+        isStripeFieldFocused.value = false;
+      });
+
+    paymentElement.mount(stripeRef.value);
+  };
+
+  const focusStripeForm = () => {
+    if (stripeFormState.value?.complete) return;
+    paymentElement?.focus();
   };
 
   const payWithStripe = async () => {
@@ -298,7 +326,10 @@ export const usePaymentProviderStripe = (
     isProcessingStripePayment,
     stripeError,
     stripeRef,
+    stripeFormState,
+    isStripeFieldFocused,
     subscribeWithStripe,
     payWithStripe,
+    focusStripeForm,
   };
 };

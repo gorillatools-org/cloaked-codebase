@@ -12,6 +12,7 @@ import { initializeExtensionAuth } from "@/features/extension-auth/core";
 import { extensionMessaging } from "@/scripts/messaging";
 import { EXTENSION_MESSAGE_TYPES } from "@/scripts/constants";
 import { initiateEncryption } from "@/scripts/actions/encryption";
+import { datadogRum } from "@datadog/browser-rum";
 
 const { success, error } = useToast();
 
@@ -25,6 +26,7 @@ const defaultState = () => ({
   extension: null,
   collections: [],
   MfaMethods: [],
+  posthogIdentified: false,
 });
 let timeout;
 export default {
@@ -83,6 +85,14 @@ export default {
     },
     setUser(state, user) {
       state.user = user;
+
+      // Set Datadog RUM user context
+      if (user?.posthog_uuid) {
+        datadogRum.setUser({
+          id: user.posthog_uuid,
+        });
+      }
+
       if (user?.account_version === 2 && user?.username_encrypted) {
         return authDecrypt(user.username_encrypted).then((decrypted) => {
           state.username = decrypted;
@@ -96,7 +106,13 @@ export default {
     setMigration(state, payload) {
       state.migration = payload;
     },
+    setPosthogIdentified(state, value) {
+      state.posthogIdentified = value;
+    },
     setLogout: (state) => {
+      // Clear Datadog RUM user context
+      datadogRum.clearUser();
+
       Object.assign(state, defaultState());
     },
     replaceState: (state, newState) => {

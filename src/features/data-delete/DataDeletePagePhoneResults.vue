@@ -14,17 +14,27 @@ import {
 import { posthogCapture } from "@/scripts/posthog.js";
 import { useRelativesParsing } from "@/features/data-delete/composables/useRelativesParsing";
 import BaseText from "@/library/BaseText.vue";
-import { computed, onMounted, ref, onBeforeUnmount } from "vue";
+import { computed, onMounted, ref, onBeforeUnmount, inject } from "vue";
 import { PH_FEATURE_FLAG_DD_EMAIL_CAPTURE_MODAL } from "@/scripts/posthogEvents";
+import { PH_FEATURE_FLAG_SCAN_IDENTITIES_COUNTER } from "@/scripts/posthogEvents.js";
 import {
   usePostHogFeatureFlag,
   fetchFeatureFlag,
 } from "@/composables/usePostHogFeatureFlag.js";
 import { useRoute } from "vue-router";
+import DataDeleteIdentitiesCounter from "@/features/data-delete/atoms/DataDeleteIdentitiesCounter.vue";
+import { networkVisualizationFlagKey } from "@/features/data-delete/injectionKeys";
 
 const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
   PH_FEATURE_FLAG_DD_EMAIL_CAPTURE_MODAL
 );
+
+const {
+  featureFlag: identitiesCounterFlag,
+  hasLoadedFeatureFlag: hasLoadedIdentitiesCounterFlag,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_SCAN_IDENTITIES_COUNTER);
+
+const networkVisualizationFlag = inject(networkVisualizationFlagKey);
 
 const isEmailCaptureModalFlag = computed(
   () => hasLoadedFeatureFlag.value && featureFlag.value === true
@@ -74,6 +84,22 @@ onBeforeUnmount(() => {
 const onDelete = () => {
   emit("setup");
 
+  if (bestMatch.value?.relatives) {
+    const { partners, relatives } = useRelativesParsing(
+      bestMatch.value?.relatives
+    );
+
+    localStorage.setItem(
+      "data-delete-relatives",
+      JSON.stringify({
+        data: [...partners.value, ...relatives.value, ...others.value].splice(
+          0,
+          3
+        ),
+      })
+    );
+  }
+
   sessionStorage.setItem(
     "data-delete",
     JSON.stringify({ ...bestMatch.value, searchDate: new Date() })
@@ -109,6 +135,7 @@ onMounted(() => {
       friendsOrAssociatesCount: others.value?.length ?? null,
       threatLevel: threatLevel.value,
     });
+    localStorage.removeItem("data-delete-relatives");
   } catch (e) {
     console.error(e);
   }
@@ -118,11 +145,39 @@ onMounted(() => {
 const isEnterpriseLeadScanResults = computed(
   () => !!route.query?.email_address
 );
+
+const canShowCounter = computed(() => {
+  if (networkVisualizationFlag?.canShowNetwork.value) {
+    return false;
+  }
+
+  return (
+    bestMatch.value &&
+    hasLoadedIdentitiesCounterFlag.value &&
+    (identitiesCounterFlag.value === "test-A" ||
+      identitiesCounterFlag.value === "test-B")
+  );
+});
 </script>
 
 <template>
+  <div
+    v-if="canShowCounter"
+    class="data-delete-results__counter"
+  >
+    <DataDeleteIdentitiesCounter
+      :type="
+        identitiesCounterFlag === 'test-A'
+          ? 'identity-theft-reports'
+          : 'exposures-removed'
+      "
+    />
+  </div>
   <DataDeleteCompanyHeader />
-  <div class="data-delete-results data-delete-phone-results">
+  <div
+    class="data-delete-results data-delete-phone-results"
+    :class="{ 'data-delete-results--with-counter': canShowCounter }"
+  >
     <div class="data-delete-results__column">
       <DataDeleteThreatLevel
         :threat-level="threatLevel"
@@ -192,6 +247,12 @@ const isEnterpriseLeadScanResults = computed(
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
 .data-delete-results {
+  &__counter {
+    padding-bottom: 0;
+    animation: expand-counter 0.3s ease-out forwards;
+    animation-delay: 1s;
+  }
+
   & &__column {
     align-self: center;
 
@@ -210,6 +271,14 @@ const isEnterpriseLeadScanResults = computed(
     animation: appear-bottom-5 0.3s forwards ease-out;
     animation-delay: 0.5s;
     opacity: 0;
+  }
+}
+
+.data-delete-results--with-counter .data-delete-results__column {
+  @media all and (min-width: $screen-xl) {
+    &:first-child {
+      top: 100px;
+    }
   }
 }
 
@@ -269,6 +338,16 @@ const isEnterpriseLeadScanResults = computed(
       width: 44px;
       height: 44px;
     }
+  }
+}
+
+@keyframes expand-counter {
+  from {
+    padding-bottom: 0;
+  }
+
+  to {
+    padding-bottom: 80px;
   }
 }
 </style>

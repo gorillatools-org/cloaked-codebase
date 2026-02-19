@@ -118,6 +118,15 @@ export default class DataDeleteService {
       });
   }
 
+  static async getAutomationResults() {
+    return await api()
+      .get("/api/v1/automation/results/exposures-summary/")
+      .then(({ data }) => {
+        store.commit("dataDelete/setAutomationResults", data);
+        return data;
+      });
+  }
+
   static async getActionItems() {
     return await api()
       .get("/api/v1/data_deletion/enrollment/action_items/")
@@ -228,10 +237,12 @@ export default class DataDeleteService {
     );
   }
 
-  static async getBreachScanReport(email) {
-    return api().get(
-      `/api/v1/breach/report/breach_scan/?email=${encodeURIComponent(email)}`
-    );
+  static async getBreachScanReport(email = null, phone = null) {
+    const params = {};
+    if (email) params.email = email;
+    if (phone) params.phone = phone;
+
+    return api().get("/api/v1/breach/report/breach_scan/", { params });
   }
 
   static async getEmailBreachCompany(company) {

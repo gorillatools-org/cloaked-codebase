@@ -107,6 +107,7 @@ const {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    flex-shrink: 0;
     gap: 8px;
   }
 

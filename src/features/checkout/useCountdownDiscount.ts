@@ -1,30 +1,46 @@
-import { computed, toValue } from "vue";
+import { computed, ref } from "vue";
 import { useInterval } from "@vueuse/core";
 
 export const useCountdownDiscount = ({
   discountSize = 20,
   expiresIn = 5 * 60,
-  // expiresIn = 20,
 } = {}) => {
+  const discount = ref<number | null>(discountSize);
+  const expirationTime = ref(expiresIn);
+
   const { counter, resume, pause, isActive } = useInterval(1000, {
     controls: true,
     immediate: false,
     callback: () => {
       if (countdown.value <= 0) {
+        discount.value = null;
         pause();
       }
     },
   });
 
-  const countdown = computed(() => expiresIn - counter.value);
+  const countdown = computed(() => expirationTime.value - counter.value);
 
-  const discount = computed(() =>
-    isActive.value ? toValue(discountSize) : null
-  );
+  const updateDiscount = (newDiscount: number) => {
+    if (countdown.value <= 0) {
+      return;
+    }
+
+    discount.value = newDiscount;
+  };
+
+  const updateExpirationTime = (value: number) => {
+    expirationTime.value = value;
+    counter.value = 0;
+  };
 
   return {
     countdown,
     discount,
-    start: resume,
+    updateDiscount,
+    updateExpirationTime,
+    resume,
+    pause,
+    isActive,
   };
 };

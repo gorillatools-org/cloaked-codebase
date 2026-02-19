@@ -13,22 +13,25 @@ defineProps<{
 <template>
   <header class="scan-header">
     <div class="scan-header__head">
-      <div
-        class="scan-header__icon"
-        aria-hidden="true"
-      >
-        <BaseIcon
-          :name="icon"
-          class="scan-header--icon"
-        />
+      <div class="scan-header__left">
+        <div
+          class="scan-header__icon"
+          aria-hidden="true"
+        >
+          <BaseIcon
+            :name="icon"
+            class="scan-header--icon"
+          />
+        </div>
+        <BaseText
+          as="h2"
+          variant="headline-5-bold"
+          class="scan-header__title"
+        >
+          {{ title }}
+        </BaseText>
       </div>
-      <BaseText
-        as="h2"
-        variant="headline-5-bold"
-        class="scan-header__title"
-      >
-        {{ title }}
-      </BaseText>
+      <slot name="feedback" />
     </div>
 
     <BaseText
@@ -53,6 +56,13 @@ defineProps<{
   }
 
   &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__left {
     display: flex;
     gap: 16px;
     align-items: center;

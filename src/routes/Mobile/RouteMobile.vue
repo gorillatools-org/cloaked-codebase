@@ -2,7 +2,7 @@
 import { useRoute } from "vue-router";
 import { DOWNLOAD_APP_URL } from "@/scripts/constants";
 import { onMounted } from "vue";
-import DownloadApp from "@/features/onboarding/DownloadApp.vue";
+import DownloadApp from "@/features/DownloadApp/DownloadApp.vue";
 
 const route = useRoute();
 

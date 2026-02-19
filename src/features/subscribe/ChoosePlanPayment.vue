@@ -1,7 +1,7 @@
 <script setup>
 import ChoosePlanCta from "@/features/subscribe/ChoosePlanCta.vue";
 import SubscribeInputPromo from "@/features/subscribe/SubscribeInputPromo.vue";
-import { ref, toRef, watch, computed, onMounted } from "vue";
+import { ref, toRef, watch, computed, onMounted, onUnmounted } from "vue";
 import { posthogCapture } from "@/scripts/posthog.js";
 import { usePromoCode } from "@/composables/usePromoCode";
 import { usePaymentIntent } from "@/composables/usePaymentIntent";
@@ -57,6 +57,18 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  fixedCta: {
+    type: Boolean,
+    default: false,
+  },
+  canSubscribe: {
+    type: Boolean,
+    default: true,
+  },
+  label: {
+    type: String,
+    default: undefined,
+  },
   isLoading: {
     type: Boolean,
     default: false,
@@ -78,6 +90,7 @@ const paymentMethod = defineModel("paymentMethod", {
 });
 
 const route = useRoute();
+const hasInputFocused = ref(false);
 const promoCode = route.query.coupon ?? "";
 const isPromoCodeInputVisible = ref(!!promoCode);
 
@@ -99,10 +112,18 @@ const {
 } = usePromoCode(selectedPlan);
 
 onMounted(async () => {
+  document.addEventListener("focusin", handleInputFocusIn);
+  document.addEventListener("focusout", handleInputFocusOut);
+
   if (!promoCode) return;
   await until(() => !!selectedPlan.value?.product_id).toBe(true);
   promoCodeInput.value = promoCode;
   validatePromoCode();
+});
+
+onUnmounted(() => {
+  document.removeEventListener("focusin", handleInputFocusIn);
+  document.removeEventListener("focusout", handleInputFocusOut);
 });
 
 const { paymentIntent, isLoadingIntent, promoDiscount } = usePaymentIntent(
@@ -135,8 +156,11 @@ const onSubscribed = (plan) => {
 const {
   stripeRef,
   stripeError,
+  stripeFormState,
   isProcessingStripePayment,
+  isStripeFieldFocused,
   subscribeWithStripe,
+  focusStripeForm,
 } = usePaymentProviderStripe(
   selectedPlan,
   onSubscribed,
@@ -145,7 +169,26 @@ const {
   toRef(() => props.variant)
 );
 
+const handleInputFocusIn = (event) => {
+  if (!props.fixedCta) return;
+  if (event.target.matches("input, textarea, [contenteditable]")) {
+    hasInputFocused.value = true;
+  }
+};
+
+const handleInputFocusOut = (event) => {
+  if (!props.fixedCta) return;
+  if (event.target.matches("input, textarea, [contenteditable]")) {
+    hasInputFocused.value = false;
+  }
+};
+
 const onChoosePlan = async () => {
+  if (!props.canSubscribe) {
+    emit("clicked-subscribe");
+    return;
+  }
+
   await posthogCapture("user_clicked_credit_card_subscribe");
   emit("clicked-subscribe");
 };
@@ -172,11 +215,19 @@ defineExpose({
   subscribeWithStripe,
   paymentMethod,
   paypalRef,
+  stripeFormState,
   isProcessingStripePayment,
+  focusStripeForm,
 });
 
 const isHeadlessUser = computed(() => {
   return !props.user || props.user.account_version < 2;
+});
+
+const showFixedCta = computed(() => {
+  return (
+    props.fixedCta && !hasInputFocused.value && !isStripeFieldFocused.value
+  );
 });
 
 const {
@@ -377,18 +428,29 @@ const billingCycleLabel = usePlanBilling(selectedPlan);
       </div>
       <slot name="after-total" />
     </section>
-    <ChoosePlanCta
-      v-if="selectedPlanOption && (paymentMethod === 'Card' || isHeadlessUser)"
-      :option="selectedPlanOption"
-      :has-plan="!!activePlan"
-      :loading="(isProcessingStripePayment || props.isLoading) && !stripeError"
-      :disabled="
-        (props.disabled || isProcessingStripePayment || props.isLoading) &&
-        !stripeError
-      "
-      class="choose-plan-payment__cta"
-      @choose-plan="onChoosePlan"
-    />
+    <Teleport
+      :to="showFixedCta ? 'body' : undefined"
+      :disabled="!props.fixedCta || !showFixedCta"
+    >
+      <ChoosePlanCta
+        v-if="
+          selectedPlanOption && (paymentMethod === 'Card' || isHeadlessUser)
+        "
+        :option="selectedPlanOption"
+        :label="props.label"
+        :has-plan="!!activePlan"
+        :loading="
+          (isProcessingStripePayment || props.isLoading) && !stripeError
+        "
+        :disabled="
+          (props.disabled || isProcessingStripePayment || props.isLoading) &&
+          !stripeError
+        "
+        class="choose-plan-payment__cta"
+        :class="{ 'choose-plan-payment__cta--fixed': showFixedCta }"
+        @choose-plan="onChoosePlan"
+      />
+    </Teleport>
 
     <slot name="after-cta" />
 
@@ -541,13 +603,23 @@ const billingCycleLabel = usePlanBilling(selectedPlan);
 
   &__cta {
     width: 100%;
-    margin-top: 36px;
+    margin-top: 32px;
+
+    &--fixed {
+      position: fixed;
+      bottom: 25px;
+      left: 20px;
+      z-index: 100;
+      width: calc(100% - 40px);
+      // When it's loading, the button almost disappears, so we need to set it to 1
+      opacity: 1 !important;
+    }
   }
 
   &__total {
     display: flex;
     flex-direction: column;
-    margin-top: 24px;
+    margin-top: 36px;
     // margin-bottom: 36px;
     padding-top: 16px;
 

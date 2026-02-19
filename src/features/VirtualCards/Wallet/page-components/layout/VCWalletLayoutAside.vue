@@ -195,15 +195,14 @@ defineExpose({
         >
           Virtual Cards
         </BaseText>
+        <div class="vc-wallet-aside__actions-container">
+          <VCExpressGeneration
+            ref="expressGenerationRef"
+            @new-card-issued="onNewCardIssued"
+            @show-advanced-modal="handleShowAdvancedModal"
+          />
+        </div>
       </header>
-
-      <div class="vc-wallet-aside__actions-container">
-        <VCExpressGeneration
-          ref="expressGenerationRef"
-          @new-card-issued="onNewCardIssued"
-          @show-advanced-modal="handleShowAdvancedModal"
-        />
-      </div>
 
       <div class="vc-wallet-aside__cards-container">
         <div class="vc-wallet-aside__cards-header">
@@ -338,7 +337,7 @@ defineExpose({
   }
 }
 
-$only-cards-scroll-min-height: 800px;
+$only-cards-scroll-min-height: 650px;
 
 .vc-wallet-aside {
   height: 100%;
@@ -349,19 +348,7 @@ $only-cards-scroll-min-height: 800px;
 
   @include custom-scroll-bar;
 
-  &--loaded {
-    @include custom-scroll-bar;
-
-    overflow-y: auto;
-    max-height: 100%;
-
-    @media all and (min-height: $only-cards-scroll-min-height) {
-      overflow-y: unset;
-      max-height: unset;
-    }
-  }
-
-  @media all and (min-height: $only-cards-scroll-min-height) {
+  @container wallet-aside (min-height: #{$only-cards-scroll-min-height}) {
     overflow-y: hidden;
   }
 
@@ -374,12 +361,18 @@ $only-cards-scroll-min-height: 800px;
     min-height: 0;
     flex: 1;
 
-    .vc-wallet-aside--loaded & {
-      height: auto;
+    @container wallet-page (min-width: 600px) {
+      display: grid;
+      grid-template-columns: 48% 49%;
+      gap: 18px;
+      padding-inline: 16px;
+    }
 
-      @media all and (min-height: $only-cards-scroll-min-height) {
-        height: 100%;
-      }
+    @container wallet-page (min-width: 730px) {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding-inline: 0;
     }
   }
 
@@ -388,6 +381,19 @@ $only-cards-scroll-min-height: 800px;
     flex-direction: column;
     gap: 18px;
     padding: 0 24px;
+
+    @container wallet-page (min-width: 600px) {
+      padding: 0;
+    }
+
+    @container wallet-page (min-width: 730px) {
+      padding: 0 16px;
+      gap: 18px;
+    }
+
+    @container wallet-page (min-width: 1200px) {
+      padding: 0 24px;
+    }
 
     &-icon {
       font-size: 25px;
@@ -403,7 +409,6 @@ $only-cards-scroll-min-height: 800px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 0 24px;
   }
 
   &__cards {
@@ -412,7 +417,7 @@ $only-cards-scroll-min-height: 800px;
       flex-direction: column;
       flex-grow: 1;
 
-      @media all and (min-height: $only-cards-scroll-min-height) {
+      @container wallet-aside (min-height: #{$only-cards-scroll-min-height}) {
         overflow: hidden;
       }
     }
@@ -421,6 +426,18 @@ $only-cards-scroll-min-height: 800px;
       display: flex;
       flex-direction: column;
       padding: 0 24px;
+
+      @container wallet-page (min-width: 600px) {
+        padding: 0;
+      }
+
+      @container wallet-page (min-width: 730px) {
+        padding: 0 16px;
+      }
+
+      @container wallet-page (min-width: 1200px) {
+        padding: 0 24px;
+      }
 
       &-title-container {
         display: flex;
@@ -600,13 +617,18 @@ $only-cards-scroll-min-height: 800px;
       flex-grow: 1;
       min-height: 0;
 
-      @media all and (min-height: $only-cards-scroll-min-height) {
+      @container wallet-aside (min-height: #{$only-cards-scroll-min-height}) {
         &::after {
           content: "";
           bottom: 0;
-          border-radius: 0 20px 20px;
 
           @include scroll-gradient;
+
+          border-radius: 0;
+
+          @media all and (min-width: $screen-xl) {
+            border-radius: 0 20px 20px;
+          }
         }
 
         &::before {
@@ -625,7 +647,21 @@ $only-cards-scroll-min-height: 800px;
         flex-grow: 1;
         height: 100%;
 
-        @media all and (min-height: $only-cards-scroll-min-height) {
+        @container wallet-page (min-width: 600px) {
+          padding-inline: 0;
+        }
+
+        @container wallet-page (min-width: 730px) {
+          padding-inline: 16px;
+          padding-top: 26px;
+          padding-bottom: 30px;
+        }
+
+        @container wallet-page (min-width: 1200px) {
+          padding-inline: 24px;
+        }
+
+        @container wallet-aside (min-height: #{$only-cards-scroll-min-height}) {
           @include custom-scroll-bar;
 
           overflow-y: auto;

@@ -14,10 +14,9 @@ import { PH_EVENT_USER_VIEWED_DD_SUBMISSION_FORM } from "@/scripts/posthogEvents
 import { useColorScheme } from "@/composables/useColorScheme";
 import { posthogCapture } from "@/scripts/posthog.js";
 import EnrollmentCardHeader from "@/features/enrollment/EnrollmentCardHeader.vue";
-import UserService from "@/api/actions/user-service.js";
 import { getPosthog } from "@/scripts/posthog.js";
+import { fetchFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 import { useDisplay } from "@/composables/useDisplay.js";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 import { useRouter } from "vue-router";
 const { colorScheme } = useColorScheme();
 
@@ -103,24 +102,19 @@ const hasExitedDeleteFlow = computed(() => {
 });
 
 const router = useRouter();
+
 const { isMobile } = useDisplay();
-const { featureFlag } = usePostHogFeatureFlag("download-app-experiment");
 
 async function exitDeleteFlow() {
-  if (isMobile.value && featureFlag.value.startsWith("call-guard")) {
-    return router.push({ name: "ExposureStatusEnrollSuccess" });
+  const { payload: downloadPayload } = await fetchFeatureFlag(
+    "post_enrollment_download_app"
+  );
+
+  if (downloadPayload?.length && isMobile.value) {
+    return router.push({ name: "ExposureStatusEnrollDownload" });
   }
 
-  if (featureFlag.value.startsWith("enrollment-progress")) {
-    return router.push({ name: "ExposureStatusEnrollSuccess" });
-  }
-
-  await UserService.setFlag({
-    name: HAS_EXITED_DELETE_FLOW,
-    value: true,
-  });
-
-  return router.push({ name: "ExposureStatusBrokers" });
+  return router.push({ name: "ExposureStatusEnrollSuccess" });
 }
 </script>
 

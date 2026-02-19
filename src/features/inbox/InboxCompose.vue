@@ -1235,7 +1235,7 @@ button {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 400;
+  z-index: 452;
 }
 
 .disabled {

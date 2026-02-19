@@ -88,9 +88,13 @@ watch(
       <VCWalletCardSkeletonTile v-if="isLoadingCard" />
       <VCWalletCardTile
         v-else
+        class="vc-wallet-card-page__card-tile"
         :card-id="cardId"
       />
-      <VCWalletCardLimitTile :card-id="cardId" />
+      <VCWalletCardLimitTile
+        :card-id="cardId"
+        class="vc-wallet-card-page__card-limit-tile"
+      />
     </div>
   </div>
   <VCWalletTransactionsList
@@ -124,13 +128,32 @@ watch(
     grid-template-columns: repeat(1, 1fr);
     grid-gap: 10px;
     width: 100%;
+    justify-items: center;
 
-    @media (width >= 1200px) {
-      grid-template-columns: repeat(2, 1fr);
+    @container wallet-router-view (min-width: 590px) {
+      grid-template-columns: 53cqw 1fr;
     }
 
-    @media (width >= $screen-xxl) {
-      grid-gap: 32px;
+    @container wallet-router-view (min-width: 670px) {
+      grid-template-columns: repeat(2, 1fr);
+      grid-gap: 24px;
+    }
+  }
+
+  &__card-tile {
+    max-width: 370px;
+    order: 1;
+
+    @container wallet-router-view (min-width: 590px) {
+      order: 0;
+    }
+  }
+
+  &__card-limit-tile {
+    order: 0;
+
+    @container wallet-router-view (min-width: 590px) {
+      order: 1;
     }
   }
 }

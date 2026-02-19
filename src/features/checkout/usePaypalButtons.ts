@@ -79,5 +79,6 @@ export const usePaypalButtons = () => {
     paypalButtons,
     paypalSubscriptionId,
     paypalError,
+    paypal,
   };
 };

@@ -1,12 +1,25 @@
 import api, { cache } from "@/api/api";
+import { fetchFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 
 export default class InboxService {
   static async getInbox(params, useCache = true, source) {
+    // Fetch feature flag value directly (works in static methods)
+    const { value: activity25Flag } = await fetchFeatureFlag(
+      "dashboard-activity-2-5"
+    );
+
     const queryKeys = {
       ordering: "-created_at",
-      group_threads: true,
       ...params,
     };
+
+    if (!activity25Flag) {
+      queryKeys.group_threads = true;
+      if (queryKeys.search) {
+        queryKeys.sensitive_search = queryKeys.search;
+        delete queryKeys.search;
+      }
+    }
     const queryParams = Object.keys(queryKeys).map((key) => {
       return `${key}=${queryKeys[key]}`;
     });
@@ -14,16 +27,29 @@ export default class InboxService {
     // NOTE: This is an example cache call
     if (useCache) {
       return cache(source).get(
-        `api/v2/cloaked/activity/?${queryParams.join("&")}`
+        activity25Flag
+          ? `api/v2_5/cloaked/activity/group/?${queryParams.join("&")}`
+          : `api/v2/cloaked/activity/?${queryParams.join("&")}`
       );
     }
     return api(source)
-      .get(`api/v2/cloaked/activity/?${queryParams.join("&")}`)
+      .get(
+        activity25Flag
+          ? `api/v2_5/cloaked/activity/group/?${queryParams.join("&")}`
+          : `api/v2/cloaked/activity/?${queryParams.join("&")}`
+      )
       .catch((err) => err);
   }
 
-  static getActivityDetails(activityId) {
-    const url = `/api/v2/cloaked/activity/${activityId}/?&ordering=-created_at`;
+  static async getActivityDetails(activityId) {
+    const { value: activity25Flag } = await fetchFeatureFlag(
+      "dashboard-activity-2-5"
+    );
+
+    const url = activity25Flag
+      ? `/api/v2_5/cloaked/activity/${activityId}/?ordering=-created_at`
+      : `/api/v2/cloaked/activity/${activityId}/?ordering=-created_at`;
+
     // NOTE: This is an example cache call
     // return cache().get(url);
     return api().get(url);
@@ -78,16 +104,28 @@ export default class InboxService {
     return api().delete(url);
   }
 
+  static deleteEmail(email_id) {
+    const url = `/api/v1/inbox/email/${email_id}/`;
+    return api().delete(url);
+  }
+
   static getContent(activityId) {
     const url = `/api/v2/cloaked/activity/${activityId}/content/`;
     return api().get(url);
   }
 
-  static postEmailForward(activityId, body) {
-    return api().post(
-      `api/v2/cloaked/activity/${activityId}/email/forward/`,
-      body
+  static getContentUri(contentUri) {
+    return api().get(contentUri);
+  }
+
+  static async postEmailForward(activityId, body) {
+    const { value: activity25Flag } = await fetchFeatureFlag(
+      "dashboard-activity-2-5"
     );
+    const url = activity25Flag
+      ? `/api/v2_5/cloaked/activity/${activityId}/email/forward/`
+      : `/api/v2/cloaked/activity/${activityId}/email/forward/`;
+    return api().post(url, body);
   }
 
   static sendComposeMessage(payload) {
@@ -98,9 +136,15 @@ export default class InboxService {
     return api().post("/api/v1/cloaked/activity/email/compose/", payload);
   }
 
-  static sendReply(id, payload) {
+  static async sendReply(id, payload) {
     delete payload?.original_html;
-    return api().post(`api/v2/cloaked/activity/${id}/reply/`, payload);
+    const { value: activity25Flag } = await fetchFeatureFlag(
+      "dashboard-activity-2-5"
+    );
+    const url = activity25Flag
+      ? `/api/v2_5/cloaked/activity/${id}/reply/`
+      : `/api/v2/cloaked/activity/${id}/reply/`;
+    return api().post(url, payload);
   }
 
   static async postContactStatus(id, status) {
@@ -132,11 +176,6 @@ export default class InboxService {
 
   static async getUnreadCount() {
     return await api().get(`/api/v2/cloaked/activity/unread-count/`);
-  }
-
-  static async fetchPopulatedActivity(activityId) {
-    const url = `/api/v1/cloaked/activity/${activityId}/?populated=true`;
-    return await api().get(url);
   }
 
   static async checkIfThreadExists(payload) {

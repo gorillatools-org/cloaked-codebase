@@ -4,7 +4,7 @@ import { generatePkceRequirements } from "@/scripts/actions/auth";
 import MountEvent from "@/features/MountEvent";
 import UserService from "@/api/actions/user-service";
 import Loading from "@/features/ui/loading.vue";
-import DownloadApp from "@/features/onboarding/DownloadApp.vue";
+import DownloadAppLegacy from "@/features/DownloadApp/DownloadAppLegacy.vue";
 import { supportsWasm, isInAppBrowser } from "@/scripts/tools";
 import { headers } from "@/api/api";
 import store from "@/store";
@@ -222,12 +222,6 @@ async function iframeListener(message) {
         message.data.event
       )
     ) {
-      const payload = message.data.data;
-
-      if (payload.user?.posthog_uuid && window?.$posthog) {
-        window.$posthog?.identify(payload.user?.posthog_uuid);
-      }
-
       if (message?.data?.data?.user?.is_passwordless) {
         store.commit(
           "authentication/setUsername",
@@ -374,7 +368,7 @@ const src = computed(() => {
 </script>
 
 <template>
-  <DownloadApp
+  <DownloadAppLegacy
     v-if="shouldShowDownloadApp"
     button-label="Sign up"
     :action="goToSignup"

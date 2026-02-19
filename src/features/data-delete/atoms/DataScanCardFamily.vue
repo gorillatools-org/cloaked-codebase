@@ -6,6 +6,7 @@ import BaseText from "@/library/BaseText.vue";
 import DataScanCardHeaderShared from "@/features/data-delete/atoms/DataScanCardHeaderShared.vue";
 import DataScanWarning from "@/features/data-delete/atoms/DataScanWarning.vue";
 import DataDeleteCardDivider from "@/features/data-delete/atoms/DataDeleteCardDivider.vue";
+import DataDeleteThumbsFeedback from "@/features/data-delete/DataDeleteThumbsFeedback.vue";
 import { useRelativesParsing } from "@/features/data-delete/composables/useRelativesParsing";
 
 const props = defineProps({
@@ -83,7 +84,11 @@ const warningCopy =
         icon="family-filled"
         title="Friends & Family"
         :subtitle="`${totalCount} ${totalCount === 1 ? 'Friend' : 'Friends'} & Family`"
-      />
+      >
+        <template #feedback>
+          <DataDeleteThumbsFeedback result-id="family-relatives" />
+        </template>
+      </DataScanCardHeaderShared>
     </template>
 
     <template #collapsed>

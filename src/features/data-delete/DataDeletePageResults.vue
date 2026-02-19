@@ -3,12 +3,17 @@ import { useRoute } from "vue-router";
 import DataDeletePageNoResults from "@/features/data-delete/DataDeletePageNoResults.vue";
 import DataDeletePagePhoneResults from "@/features/data-delete/DataDeletePagePhoneResults.vue";
 import { PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_RESULTS } from "@/scripts/posthogEvents";
-import { onMounted } from "vue";
+import { onMounted, provide, inject, computed, ref } from "vue";
 import DataDeleteTryAgain from "@/features/data-delete/DataDeleteTryAgain.vue";
 import UserService from "@/api/actions/user-service";
 import { DATA_DELETE_SEARCHED_EXPOSURES } from "@/scripts/userFlags";
 import { posthogCapture } from "@/scripts/posthog.js";
 import DataDeleteScanResultsTableCompact from "@/features/data-delete/DataDeleteScanResultsTableCompact.vue";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { PH_FEATURE_FLAG_SCAN_RESULTS_FEEDBACK_BUTTONS } from "@/scripts/posthogEvents.js";
+import { networkVisualizationFlagKey } from "@/features/data-delete/injectionKeys";
+import DataDeleteNetworkPage from "@/features/data-delete/family-network/components/DataDeleteNetworkPage.vue";
+
 const route = useRoute();
 
 const props = defineProps({
@@ -36,7 +41,20 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  scanProgress: {
+    type: Object,
+    default: () => ({}),
+  },
 });
+
+const hasUserViewedNetworkVisualization = ref(false);
+
+const {
+  featureFlag: thumbsFeedbackFlag,
+  hasLoadedFeatureFlag: hasLoadedThumbsFeedbackFlag,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_SCAN_RESULTS_FEEDBACK_BUTTONS);
+
+const networkVisualizationFlag = inject(networkVisualizationFlagKey);
 
 onMounted(() => {
   posthogCapture(PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_RESULTS, {
@@ -51,25 +69,53 @@ onMounted(() => {
     value: true,
   });
 });
+
+const onViewFullReport = () => {
+  hasUserViewedNetworkVisualization.value = true;
+};
+
+provide(
+  "canShowThumbsFeedback",
+  computed(
+    () =>
+      hasLoadedThumbsFeedbackFlag.value && thumbsFeedbackFlag.value === "test-A"
+  )
+);
 </script>
 
 <template>
   <DataDeleteTryAgain v-if="hasError" />
   <div v-else-if="searchResults[0]">
-    <DataDeletePagePhoneResults
-      :search-results="searchResults"
-      :phone="phone ?? route.query.phone"
-      :is-forcing-new-search="isForcingNewSearch"
-      v-bind="{ ...$attrs, class: null }"
-    />
-    <DataDeleteScanResultsTableCompact
-      v-if="records?.length && !isForcingNewSearch"
-      :records="records"
-      :search-results="searchResults"
-      :is-forcing-new-search="isForcingNewSearch"
-      class="data-delete-results__table"
-      v-bind="{ ...$attrs, class: null }"
-    />
+    <template
+      v-if="
+        networkVisualizationFlag?.canShowNetwork?.value &&
+        !hasUserViewedNetworkVisualization
+      "
+    >
+      <DataDeleteNetworkPage
+        :search-result="searchResults[0]"
+        :brokers-names="records?.map((record) => record?.brokerName) ?? []"
+        :exposures-count="scanProgress?.exposuresCount"
+        v-bind="{ ...$attrs, class: null }"
+        @view-full-report="onViewFullReport"
+      />
+    </template>
+    <template v-else>
+      <DataDeletePagePhoneResults
+        :search-results="searchResults"
+        :phone="phone ?? route.query.phone"
+        :is-forcing-new-search="isForcingNewSearch"
+        v-bind="{ ...$attrs, class: null }"
+      />
+      <DataDeleteScanResultsTableCompact
+        v-if="records?.length && !isForcingNewSearch"
+        :records="records"
+        :search-results="searchResults"
+        :is-forcing-new-search="isForcingNewSearch"
+        class="data-delete-results__table"
+        v-bind="{ ...$attrs, class: null }"
+      />
+    </template>
   </div>
   <DataDeletePageNoResults
     v-else
@@ -143,5 +189,9 @@ onMounted(() => {
       margin-bottom: 32px;
     }
   }
+}
+
+.data-delete__page:has(.data-delete-network-page) {
+  padding: 0 !important;
 }
 </style>

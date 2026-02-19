@@ -398,7 +398,7 @@ $ease-fade: cubic-bezier(0.22, 1, 0.36, 1);
     cursor: pointer;
     border: 1px solid $color-base-black-15;
     border-radius: 999px;
-    background-color: $color-base-white-0;
+    background-color: $color-base-white-100;
     transition: background-color 0.1s ease-in;
 
     &:hover {

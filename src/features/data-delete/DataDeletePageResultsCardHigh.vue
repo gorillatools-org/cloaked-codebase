@@ -3,6 +3,7 @@ import DataDeleteCard from "@/features/data-delete/atoms/DataDeleteCard.vue";
 import DataDeleteCardDivider from "@/features/data-delete/atoms/DataDeleteCardDivider.vue";
 import DataDeleteCardInfo from "@/features/data-delete/atoms/DataDeleteCardInfo.vue";
 import DataDeleteThreatTag from "@/features/data-delete/atoms/DataDeleteThreatTag.vue";
+import DataDeleteThumbsFeedback from "@/features/data-delete/DataDeleteThumbsFeedback.vue";
 import { computed, watch } from "vue";
 import { useDateOfBirthParsing } from "@/features/data-delete/composables/useDateOfBirthParsing";
 import BaseText from "@/library/BaseText.vue";
@@ -66,7 +67,10 @@ watch(
     type="alert"
     class="data-delete-results-high"
   >
-    <DataDeleteThreatTag threat-level="high" />
+    <div class="data-delete-results-high__header">
+      <DataDeleteThreatTag threat-level="high" />
+      <DataDeleteThumbsFeedback result-id="high-risk" />
+    </div>
     <div
       v-if="result.ssn || dateOfBirth"
       class="data-delete-results-high__column"
@@ -160,6 +164,15 @@ watch(
 <!-- eslint-disable-next-line vue/enforce-style-attribute -->
 <style lang="scss">
 .data-delete-results-high {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+
   &__column {
     display: flex;
     align-items: start;

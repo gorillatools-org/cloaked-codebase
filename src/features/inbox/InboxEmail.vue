@@ -8,6 +8,7 @@ import {
   onBeforeUnmount,
   markRaw,
   watch,
+  ref,
 } from "vue";
 import { inbox as inboxScripts } from "@/scripts/inbox";
 import UiTooltip from "@/features/ui/ui-tooltip";
@@ -38,6 +39,7 @@ import { timestamp } from "@/scripts/timestamp_format";
 import { sanitize } from "@/scripts/sanitize";
 import BaseText from "@/library/BaseText";
 import { useDisplay } from "@/composables/useDisplay.js";
+import { fetchFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 
 const route = useRoute();
 const toast = useToast();
@@ -61,8 +63,20 @@ const state = reactive({
 let pollingInterval;
 let loadedDate = new Date();
 
-onBeforeMount(() => {
-  state.nextUrl = `/api/v2/cloaked/activity/thread/${state.threadId}/?ordering=created_at`;
+let activity25Flag = ref(false);
+
+onBeforeMount(async () => {
+  let nextUrl = `/api/v2/cloaked/activity/thread/${state.threadId}/?ordering=created_at`;
+  try {
+    const { value } = await fetchFeatureFlag("dashboard-activity-2-5");
+    activity25Flag.value = value;
+    if (value) {
+      nextUrl = `/api/v2_5/cloaked/activity/?thread_id=${state.threadId}&ordering=created_at`;
+    }
+  } catch {
+    activity25Flag.value = false;
+  }
+  state.nextUrl = nextUrl;
 
   document.addEventListener("visibilitychange", togglePolling);
 
@@ -123,7 +137,6 @@ function updateStateWithPollingData(newEmails) {
     return !state.thread.find((activity) => activity.id === newActivity.id);
   });
   state.thread = [...state.thread, ...newEmails];
-  state.nextUrl = `/api/v2/cloaked/activity/thread/${state.threadId}/?ordering=created_at&page=2&page_size=${state.thread.length}`;
   const latestEmail = newEmails.pop();
   if (latestEmail) {
     // NOTE: need to fetch content first
@@ -136,7 +149,9 @@ function updateStateWithPollingData(newEmails) {
 
 function fetchThreadPolling() {
   const updated_at__gt = loadedDate.toISOString();
-  let url = `/api/v2/cloaked/activity/thread/${state.threadId}/?ordering=created_at&updated_at__gt=${updated_at__gt}&page_size=50`;
+  let url = activity25Flag.value
+    ? `/api/v2_5/cloaked/activity/?thread_id=${state.threadId}&ordering=created_at&updated_at__gt=${updated_at__gt}&page_size=50`
+    : `/api/v2/cloaked/activity/thread/${state.threadId}?ordering=created_at&updated_at__gt=${updated_at__gt}&page_size=50`;
   InboxService.getThread(url).then(({ data }) => {
     if (data.count) {
       state.emailCount = data.count;
@@ -153,10 +168,10 @@ function fetchThreadPolling() {
 }
 
 function contactBlockedEvtListener(event) {
-  const allSendersContact = [...state.thread].map(
-    (activity) => activity.email.sender_contact
-  );
-  if (allSendersContact.find((contact) => contact.id === event.detail.id)) {
+  const allSendersContact = [...state.thread]
+    .filter((activity) => activity?.email?.sender_contact)
+    .map((activity) => activity.email.sender_contact);
+  if (allSendersContact.find((contact) => contact?.id === event.detail.id)) {
     router.push({ name: "Inbox" });
   }
 }
@@ -305,7 +320,9 @@ async function reply(activity) {
       activity = [...state.thread].pop();
     } else {
       const threadId = route?.params?.id;
-      const url = `/api/v2/cloaked/activity/thread/${threadId}/?ordering=-created_at&page_size=1`;
+      const url = activity25Flag.value
+        ? `/api/v2_5/cloaked/activity/?thread_id=${threadId}&ordering=-created_at&page_size=1`
+        : `/api/v2/cloaked/activity/thread/${threadId}/?ordering=-created_at&page_size=1`;
       const mostRecentActivityResp = await InboxService.getThread(url);
       activity =
         mostRecentActivityResp.data.results[
@@ -402,22 +419,20 @@ function openFullEmail(activity) {
 }
 
 function fetchEmailContent(activity) {
-  return InboxService.getContent(activity.id).then(({ data }) => {
-    if (data.length) {
-      state.emailContentById = {
-        ...state.emailContentById,
-        [activity.id]: data,
-      };
-      return data;
+  if (!activity?.email?.content_uri) {
+    console.error("No content_uri found for activity", activity);
+    return Promise.resolve("");
+  }
+  return InboxService.getContentUri(activity.email.content_uri).then(
+    ({ data }) => {
+      if (!data.length) {
+        console.error("No data returned from getContentUri", data);
+        return "";
+      }
+      state.emailContentById[activity.id] = data;
+      return data || "";
     }
-    return InboxService.fetchPopulatedActivity(activity.id).then(({ data }) => {
-      state.emailContentById = {
-        ...state.emailContentById,
-        [activity.id]: data.email.text,
-      };
-      return data.email.text || "";
-    });
-  });
+  );
 }
 
 function closeFullEmail(activity) {
@@ -451,7 +466,11 @@ function deleteActivity(activity) {
       text: "Yes, Delete",
       onClick: () => {
         store.dispatch("closeModal");
-        InboxService.deleteActivity(activity.id)
+        if (!activity?.email?.id) {
+          toast.error("Cannot delete email: invalid email data");
+          return;
+        }
+        InboxService.deleteEmail(activity?.email?.id)
           .then(async () => {
             toast.success("Email deleted");
             state.thread = state.thread.filter(
@@ -460,6 +479,9 @@ function deleteActivity(activity) {
             if (state.thread.length === 0) {
               await store.dispatch("deleteCacheAllPages", {
                 url: "api/v2/cloaked/activity/",
+              });
+              await store.dispatch("deleteCacheAllPages", {
+                url: "api/v2_5/cloaked/activity/",
               });
               setTimeout(() => {
                 nextTick(handleGoBack);
@@ -548,7 +570,6 @@ const { isMobile } = useDisplay();
               :initials="
                 inboxScripts.getSenderInitialsFromEmail(activity?.email)
               "
-              :override="state.openEmailIds.includes(activity.id)"
             />
             <div class="email-contact-row-middle">
               <div class="sender">

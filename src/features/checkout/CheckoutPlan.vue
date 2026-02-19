@@ -2,6 +2,7 @@
 import { inject, toRef } from "vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseSheet from "@/library/BaseSheet.vue";
+import BaseIcon from "@/library/BaseIcon.vue";
 import {
   checkoutSessionInjectionKey,
   countdownDiscountInjectionKey,
@@ -22,12 +23,12 @@ import {
 
 type CheckoutPlanCardProps = {
   plan: Plan;
-  compareAt?: number | null;
+  compareAtPrice?: number | null;
   disabled?: boolean;
 };
 
 const props = withDefaults(defineProps<CheckoutPlanCardProps>(), {
-  compareAt: null,
+  compareAtPrice: null,
   disabled: false,
 });
 
@@ -51,80 +52,92 @@ const price = usePlanPrice(plan, "per-member-monthly");
 const anchoredPrice = usePriceAnchor(price, anchor);
 const discountedPrice = usePriceDiscount(price, discount);
 
-const compareAtPrice = toRef(() => props.compareAt);
-const savings = useSavings(price, compareAtPrice);
+const savings = useSavings(
+  price,
+  toRef(() => props.compareAtPrice)
+);
 </script>
 
 <template>
-  <label class="checkout-plan">
+  <label
+    class="checkout-plan"
+    :class="`checkout-plan--${type}`"
+  >
     <BaseSheet
       spacing-y="sm"
       spacing-x="sm"
       elevation="none"
+      rounding="sm"
       class="checkout-plan__card"
     >
-      <div class="checkout-plan__title">
-        <BaseText
-          variant="headline-4-bold"
-          class="checkout-plan__type"
-          as="h3"
-        >
-          {{ type }}
-          {{ billing }}
-        </BaseText>
-        <BaseText
-          variant="body-3-semibold"
-          class="checkout-plan__members"
-        >
-          &nbsp;•&nbsp;
-          {{ members }}
-        </BaseText>
+      <div class="checkout-plan__icon">
+        <BaseIcon name="check" />
       </div>
-      <BaseText
-        variant="body-3-semibold"
-        as="p"
-      >
-        <span
-          v-if="isValidPrice(anchoredPrice)"
-          class="checkout-plan__price--original"
+      <div class="checkout-plan__content">
+        <div class="checkout-plan__title">
+          <BaseText
+            variant="headline-4-bold"
+            class="checkout-plan__type"
+            as="h3"
+          >
+            <template v-if="type !== 'individual'">
+              {{ type }}
+            </template>
+            {{ billing }}
+          </BaseText>
+          <BaseText
+            variant="body-small-medium"
+            class="checkout-plan__members"
+          >
+            &nbsp;&nbsp;•&nbsp;&nbsp;{{ members }}
+          </BaseText>
+        </div>
+        <BaseText
+          variant="headline-6-bold"
+          as="p"
+          class="checkout-plan__price"
         >
-          {{ formattedPrice(anchoredPrice) }}
-        </span>
-        <span
-          v-else-if="isValidPrice(discountedPrice)"
-          class="checkout-plan__price--original"
+          <span
+            v-if="isValidPrice(anchoredPrice)"
+            class="checkout-plan__price--original"
+          >
+            {{ formattedPrice(anchoredPrice) }}
+          </span>
+          <span
+            v-else-if="isValidPrice(discountedPrice)"
+            class="checkout-plan__price--original"
+          >
+            {{ formattedPrice(price) }}
+          </span>
+          <template v-if="isValidPrice(discountedPrice)">
+            {{ formattedPrice(discountedPrice) }}
+          </template>
+          <template v-else>{{ formattedPrice(price) }}</template>
+
+          <BaseText variant="body-small-medium">
+            {{ type === "individual" ? " / per month" : " / member per month" }}
+          </BaseText>
+        </BaseText>
+        <BaseText
+          v-if="savings && savings > 0"
+          variant="body-3-semibold"
+          as="p"
+          class="checkout-plan__savings"
         >
-          {{ formattedPrice(price) }}
-        </span>
-        <template v-if="isValidPrice(discountedPrice)">
-          {{
-            `${formattedPrice(discountedPrice)}${type === "individual" ? "/per month" : "/member per month"}`
-          }}
-        </template>
-        <template v-else>
-          {{
-            `${formattedPrice(price)}${type === "individual" ? "/per month" : "/member per month"}`
-          }}
-        </template>
-      </BaseText>
-      <BaseText
-        v-if="savings && savings > 0"
-        variant="body-3-semibold"
-        as="p"
-      >
-        Save {{ savings }}%
-        <template v-if="plan.recurring_interval === 'annually'">
-          billed annually
-        </template>
-      </BaseText>
-      <input
-        v-if="checkoutSession"
-        v-model="checkoutSession.plan"
-        :value="type"
-        :disabled="disabled"
-        type="radio"
-        class="checkout-plan__input"
-      />
+          Save {{ savings }}%
+          <template v-if="plan.recurring_interval === 'annually'">
+            billed annually
+          </template>
+        </BaseText>
+        <input
+          v-if="checkoutSession"
+          v-model="checkoutSession.plan"
+          :value="type"
+          :disabled="disabled"
+          type="radio"
+          class="checkout-plan__input"
+        />
+      </div>
     </BaseSheet>
   </label>
 </template>
@@ -134,15 +147,58 @@ const savings = useSavings(price, compareAtPrice);
   cursor: pointer;
   display: block;
 
-  &:has(.checkout-plan__input:checked) {
-    .checkout-plan__card {
-      border: 1px solid $color-primary-100;
+  &__icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    border: 1px solid $color-base-black-100;
+
+    & > * {
+      display: none;
+    }
+
+    @at-root .checkout-plan:has(.checkout-plan__input:checked) & {
+      background-color: $color-base-black-100;
+
+      & > * {
+        display: block;
+        color: $color-base-white-100;
+      }
+    }
+  }
+
+  &__card {
+    background-color: transparent;
+    border: unset;
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    column-gap: 16px;
+    align-items: center;
+
+    @at-root .checkout-plan:hover & {
+      background: $color-base-black-5;
+    }
+
+    @at-root .checkout-plan:has(.checkout-plan__input:checked) & {
+      background: $color-base-black-10;
+    }
+
+    @at-root .checkout-plan:has(.checkout-plan__input:disabled):hover & {
+      background: unset;
+    }
+
+    @at-root .checkout-plan:has(.checkout-plan__input:checked):hover & {
+      background: $color-base-black-10;
     }
   }
 
   &:has(.checkout-plan__input:disabled) {
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.4;
   }
 
   &__title {
@@ -155,10 +211,26 @@ const savings = useSavings(price, compareAtPrice);
   }
 
   &__price {
+    margin-top: 2px;
+
     &--original {
       text-decoration: line-through;
       margin-right: 4px;
       opacity: 0.5;
+    }
+  }
+
+  &__savings {
+    @at-root .checkout-plan--individual & {
+      color: $color-brand-1-100-dark;
+    }
+
+    @at-root .checkout-plan--couple & {
+      color: $color-brand-2-90-light;
+    }
+
+    @at-root .checkout-plan--family & {
+      color: $color-brand-3-90-light;
     }
   }
 

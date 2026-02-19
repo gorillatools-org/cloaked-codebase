@@ -1,47 +1,17 @@
 <script setup>
-import { onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import * as Sentry from "@sentry/vue";
+import { useRouter } from "vue-router";
 import { HELP_CENTER_BASE_URL } from "@/scripts/constants";
-import store from "@/store";
 import BaseText from "@/library/BaseText.vue";
 import BaseButton from "@/library/BaseButton.vue";
+import { datadogRum } from "@datadog/browser-rum";
+import { onMounted } from "vue";
+
+onMounted(() => {
+  // when 404 component is mounted / shown
+  datadogRum.addAction("page_not_found", { url: window.location.pathname });
+});
 
 const router = useRouter();
-const route = useRoute();
-
-// Capture 404 event to Sentry with metadata
-onMounted(() => {
-  const user = store.getters["authentication/user"];
-
-  // Get the previous route from router history if available
-  const previousRoute = router.options.history.state.back || null;
-
-  const metadata = {
-    attemptedUrl: route.fullPath,
-    previousRoute: previousRoute,
-    isAuthenticated: !!user,
-  };
-
-  // Log to Sentry with context
-  Sentry.addBreadcrumb({
-    category: "navigation",
-    message: `404 - Page not found: ${route.fullPath}`,
-    level: "info",
-    data: metadata,
-  });
-
-  Sentry.captureMessage(`404 - Page not found: ${route.fullPath}`, {
-    level: "info",
-    tags: {
-      type: "404_error",
-      url: route.fullPath,
-    },
-    contexts: {
-      "404_details": metadata,
-    },
-  });
-});
 
 const goHome = () => {
   router.push("/");
@@ -100,7 +70,7 @@ const getHelp = () => {
 <style lang="scss" scoped>
 .page-404 {
   display: flex;
-  height: 100%;
+  height: 100vh;
   overflow: hidden;
   position: relative;
 

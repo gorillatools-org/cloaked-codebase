@@ -54,8 +54,8 @@ export const useDataDeletionRow = () => {
     html = `
       <base href="/" target="_blank" />
       <style>
-        @font-face { font-family: 'Urbanist'; src: local('Urbanist'), url(/static-fonts/Urbanist-Regular.woff2)  format('woff2'), url(/static-fonts/Urbanist-Regular.woff)  format('woff'), url(/static-fonts/Urbanist-Regular.ttf)  format('truetype'); font-weight: 400; font-style: normal;}
-        html, body { font-family: 'Urbanist', sans-serif; color: ${linkColor.value}; }
+        @font-face { font-family: 'STKBureauSans'; src: local('STKBureauSans'), url(/static-fonts/STKBureauSans-Regular.woff2)  format('woff2'), url(/static-fonts/STKBureauSans-Regular.woff)  format('woff'), url(/static-fonts/STKBureauSans-Regular.ttf)  format('truetype'); font-weight: 400; font-style: normal;}
+        html, body { font-family: 'STKBureauSans', sans-serif; color: ${linkColor.value}; }
       </style>
       <html>
         <body>

@@ -19,14 +19,30 @@ const isHeadlessIframeError = (
 ): error is { error_code: string } =>
   typeof error === "object" && error !== null && "error_code" in error;
 
+const isHeadlessIframeErrorWithMessage = (
+  error: unknown
+): error is { error_message: string } =>
+  typeof error === "object" &&
+  error !== null &&
+  "error_message" in error &&
+  typeof error.error_message === "string";
+
 const isSuccessResponse = <Event extends { status: IframeResponseStatus }>(
   data: Event
 ): data is SuccessResponse<Event> => data.status === "success";
 
-export const parseHeadlessUserError = (error: unknown) => {
+export const parseHeadlessUserError = (
+  error: unknown,
+  shouldShowServerErrorMessage: boolean = false
+) => {
   if (isHeadlessIframeError(error) && error.error_code === "invalid_username") {
     return "Username already exists";
   }
+
+  if (shouldShowServerErrorMessage && isHeadlessIframeErrorWithMessage(error)) {
+    return error.error_message;
+  }
+
   return "Something went wrong. Please try again later.";
 };
 
@@ -51,6 +67,10 @@ export const useHeadlessIframe = () => {
     codeVerifier.value = verifier;
     codeChallenge.value = challenge;
 
+    // NOTE: backend will generate fresh posthog uuid
+    const queryCopy = { ...route.query };
+    delete queryCopy.vid;
+
     const params = new URLSearchParams({
       cloaked_code_challenge: toValue(codeChallenge) ?? "",
       cloaked_client_id: import.meta.env.VITE_HEADLESS_ID ?? "",
@@ -58,7 +78,7 @@ export const useHeadlessIframe = () => {
       cloaked_redirect_uri: import.meta.env.VITE_REDIRECT_URI ?? "",
       enable_delete: "true",
       vpn_customer: "true",
-      ...route.query,
+      ...queryCopy,
       ...headlessParams(),
     });
 

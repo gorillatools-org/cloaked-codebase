@@ -19,12 +19,21 @@ import {
   PH_EVENT_EMAIL_BREACH_RESULTS_VIEWED,
   PH_EVENT_EMAIL_BREACH_IDENTITY_REVEALED,
   PH_EVENT_EMAIL_BREACH_IDENTITY_MASKED,
+  PH_EVENT_USER_CLICKED_DATA_DELETION_NOT_ME_BUTTON,
+  PH_EVENT_USER_CLICKED_DATA_DELETION_SEARCH_RESULTS_CONTINUE_BUTTON,
 } from "@/scripts/posthogEvents";
 import store from "@/store";
 import { useDisplay } from "@/composables/useDisplay";
 
 const route = useRoute();
 const { isMobile } = useDisplay();
+
+const props = defineProps({
+  isForcingNewSearch: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 const email = ref(route.query.email || "");
 const breachData = ref(null);
@@ -117,9 +126,14 @@ const loadBreachData = async (page = 1) => {
 };
 
 const emit = defineEmits(["setup", "force-new-search"]);
-const onNotMe = () => emit("force-new-search");
+
+const onNotMe = () => {
+  emit("force-new-search");
+  posthogCapture(PH_EVENT_USER_CLICKED_DATA_DELETION_NOT_ME_BUTTON);
+};
 
 onMounted(() => {
+  localStorage.removeItem("data-delete-relatives");
   if (isAuthenticated.value && email.value && !hasLoaded.value) {
     loadBreachData();
   }
@@ -145,6 +159,12 @@ const breachStatus = () => {
 
 const onDelete = () => {
   emit("setup");
+  posthogCapture(
+    PH_EVENT_USER_CLICKED_DATA_DELETION_SEARCH_RESULTS_CONTINUE_BUTTON,
+    {
+      isForcingNewSearch: props.isForcingNewSearch,
+    }
+  );
 };
 
 const goToPage = (page) => {
@@ -205,6 +225,7 @@ const goToPage = (page) => {
 
             <div class="data-delete-email-results__header">
               <button
+                v-if="!isForcingNewSearch"
                 type="button"
                 class="data-delete-email-results__not-you-button"
                 @click="onNotMe"

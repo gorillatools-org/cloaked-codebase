@@ -244,7 +244,7 @@ const fetchBlockedTransactionStats = async () => {
   }
 
   &__footer {
-    font-size: clamp(14px, 4cqw, 16px);
+    font-size: clamp(13px, 4cqw, 16px);
     color: $color-primary-70;
 
     &-value {

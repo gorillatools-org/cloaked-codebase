@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch } from "vue";
+import { onMounted, onBeforeUnmount, ref, watch, useTemplateRef } from "vue";
 import VCRightPanelCloseButton from "../right-panels/VCRightPanelCloseButton.vue";
 import BaseText from "@/library/BaseText.vue";
 
@@ -25,6 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
 const isInternallyOpen = ref(false);
+const contentRef = useTemplateRef<HTMLDivElement>("contentRef");
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown);
@@ -47,6 +48,7 @@ function close() {
 
   timeout = setTimeout(() => {
     props.onClose();
+    contentRef.value?.scrollTo({ top: 0 });
   }, 300); // Wait for the close animation to complete
 }
 
@@ -90,7 +92,10 @@ defineExpose({
           <span />
         </slot>
       </header>
-      <div class="vc-base-right-panel__content">
+      <div
+        ref="contentRef"
+        class="vc-base-right-panel__content"
+      >
         <slot />
       </div>
     </div>

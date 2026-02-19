@@ -11,9 +11,12 @@ import {
   onUnmounted,
   onMounted,
 } from "vue";
+import { liveQuery } from "dexie";
+import { useObservable } from "@vueuse/rxjs";
 
 import router from "@/routes/router";
 import store from "@/store";
+import { db } from "@/store/modules/localdb";
 import InboxService from "@/api/actions/inbox-service";
 import InboxListItem from "@/features/inbox/InboxListItem";
 import InboxListSkeleton from "@/features/inbox/InboxListSkeleton";
@@ -21,6 +24,7 @@ import Checkbox from "@/features/ui/input/Checkbox";
 import InlineSvg from "@/features/InlineSvg";
 import InboxMenu from "@/features/inbox/InboxMenu";
 import { useToast } from "@/composables/useToast.js";
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 import axios from "axios";
 import { hash } from "@/scripts/hash";
 import { constants } from "@/scripts/constants";
@@ -94,6 +98,10 @@ const searchRecent = computed(() => {
   return pageName.value.toLowerCase() === "recentinbox";
 });
 
+const { featureFlag: activity25Flag } = usePostHogFeatureFlag(
+  "dashboard-activity-2-5"
+);
+
 const searchTerm = computed(() => {
   return store.state.inbox.search;
 });
@@ -148,6 +156,65 @@ const queryTypeDisplay = computed(() => {
     ? activityType + "s"
     : activityType;
 });
+
+// Create a reactive live query that watches ALL activity cache entries
+// This will re-run whenever ANY cache entry changes
+const allActivityCache = useObservable(
+  liveQuery(async () => {
+    const [v2Entries, v25Entries] = await Promise.all([
+      db.cache
+        .where("url")
+        .startsWithIgnoreCase("api/v2/cloaked/activity/")
+        .toArray(),
+      db.cache
+        .where("url")
+        .startsWithIgnoreCase("api/v2_5/cloaked/activity/")
+        .toArray(),
+    ]);
+    return [...v2Entries, ...v25Entries];
+  })
+);
+
+// Watch for cache updates and find our current page's data
+watch(
+  [allActivityCache, activity25Flag],
+  ([cacheEntries]) => {
+    if (!cacheEntries || state.loading) return;
+
+    const params = getParams();
+    if (!params) return;
+
+    // Build the expected key to match InboxService.getInbox (depends on dashboard-activity-2-5 flag)
+    const queryKeys = { ordering: "-created_at", ...params };
+    if (!activity25Flag.value) {
+      queryKeys.group_threads = true;
+      if (queryKeys.search) {
+        queryKeys.sensitive_search = queryKeys.search;
+        delete queryKeys.search;
+      }
+    }
+    const queryParams = Object.keys(queryKeys)
+      .map((key) => `${key}=${queryKeys[key]}`)
+      .join("&");
+    const activityBaseUrl = activity25Flag.value
+      ? "api/v2_5/cloaked/activity/group/"
+      : "api/v2/cloaked/activity/";
+    const expectedKey = `${activityBaseUrl}?${queryParams}::get`;
+
+    const cached = cacheEntries.find((entry) => entry.key === expectedKey);
+
+    if (cached) {
+      try {
+        const payload = JSON.parse(cached.payload);
+        state.activities = payload.data.results || [];
+        state.count = payload.data.count || 0;
+      } catch (err) {
+        console.error("Error parsing cached activities:", err);
+      }
+    }
+  },
+  { immediate: false }
+);
 
 function resetPage() {
   source.cancel();
@@ -248,7 +315,7 @@ function getParams() {
   };
 
   if (searchTerm.value) {
-    params.sensitive_search = searchTerm.value;
+    params.search = searchTerm.value;
   }
   if (constants.MAIN_INBOX_PAGE_NAMES.includes(pageName.value)) {
     const activityTypeForAPI =
@@ -467,9 +534,14 @@ function setPage(change) {
 }
 
 async function deleteStoredCacheAndRefetch() {
-  await store.dispatch("deleteCacheAllPages", {
-    url: "api/v2/cloaked/activity/",
-  });
+  await Promise.all([
+    store.dispatch("deleteCacheAllPages", {
+      url: "api/v2/cloaked/activity/",
+    }),
+    store.dispatch("deleteCacheAllPages", {
+      url: "api/v2_5/cloaked/activity/",
+    }),
+  ]);
   return setTimeout(() => {
     return nextTick(fetchActivity);
   }, 500);

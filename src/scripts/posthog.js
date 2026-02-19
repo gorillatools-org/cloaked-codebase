@@ -35,19 +35,6 @@ const sanitizePosthogProperties = (properties) => {
   return properties;
 };
 
-function getVidFromWindow() {
-  var search = window.location.search; // This gets the query string from the URL
-  var params = new URLSearchParams(search); // This parses the query string into a URLSearchParams object
-  var queryParams = {};
-
-  for (var pair of params.entries()) {
-    // This iterates over each pair of params
-    queryParams[pair[0]] = pair[1]; // This adds each param to the queryParams object
-  }
-
-  return queryParams.vid;
-}
-
 export const getPosthog = () =>
   new Promise((resolve) => {
     if (!window || !import.meta.env.VITE_POSTHOG_PROJECT_API_KEY) {
@@ -58,7 +45,9 @@ export const getPosthog = () =>
       return resolve(window.$posthog);
     }
 
-    const vid = getVidFromWindow();
+    // Extract vid from URL query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const distinctId = urlParams.get("vid");
 
     const posthogOptions = {
       api_host: import.meta.env.VITE_POSTHOG_API_HOST || POSTHOG_URL,
@@ -70,17 +59,20 @@ export const getPosthog = () =>
       mask_all_text: true, // dont leak user data
       mask_all_element_attributes: true, // dont leak user data
       opt_out_capturing_by_default: false,
-      persistence: "localStorage",
+      person_profiles: "always",
       sanitize_properties: sanitizePosthogProperties,
       loaded: (posthog) => {
+        posthog.register({
+          CloakedPlatform: "dashboard",
+          CloakedAppVersion: import.meta.env.VITE_APP_VERSION,
+        });
         resolve(posthog);
       },
     };
-
-    if (vid) {
+    if (distinctId) {
       posthogOptions.bootstrap = {
-        distinctID: vid,
-        isIdentifiedID: false,
+        ...posthogOptions.bootstrap,
+        distinctID: distinctId,
       };
     }
 

@@ -4,6 +4,7 @@ import { watchImmediate } from "@vueuse/core";
 import BaseText from "@/library/BaseText.vue";
 import BaseInput from "@/library/BaseInput.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
+import Button from "@/features/Button.vue";
 import {
   couponDiscountInjectionKey,
   checkoutSessionInjectionKey,
@@ -65,36 +66,58 @@ watchImmediate(
 
 <template>
   <div class="checkout-coupon-field">
-    <BaseInput
-      ref="input"
-      v-model="couponCode"
-      title="Promo code"
-      placeholder="Promo code"
-      :disabled="
-        couponDiscount?.isValidatingCoupon.value || !!checkoutSession?.status
-      "
-      :error="couponDiscount?.couponError.value"
-      type="text"
-      @click-action="isValid ? removePromoCode(true) : validatePromoCode(true)"
-      @keydown.enter="validatePromoCode(true)"
-      @keydown.esc="removePromoCode(true)"
+    <div
+      class="checkout-coupon-field__row"
+      :class="{
+        'checkout-coupon-field__row--error': couponDiscount?.couponError.value,
+      }"
     >
-      <template #right>
-        <span
-          v-if="couponDiscount?.isValidatingCoupon.value"
-          class="checkout-coupon-field__icon checkout-coupon-field__loader"
-        />
-        <BaseIcon
-          v-else-if="couponCode"
-          :name="isValid ? 'close' : 'arrow-right'"
-          class="checkout-coupon-field__icon"
-          @click="isValid ? removePromoCode(true) : validatePromoCode(true)"
-        />
-      </template>
-    </BaseInput>
+      <BaseInput
+        ref="input"
+        v-model="couponCode"
+        class="checkout-coupon-field__input"
+        title="Promo code"
+        placeholder="Promo code"
+        :disabled="
+          couponDiscount?.isValidatingCoupon.value ||
+          !!checkoutSession?.status ||
+          isValid
+        "
+        :error="couponDiscount?.couponError.value"
+        type="text"
+        @keydown.enter="validatePromoCode(true)"
+        @keydown.esc="removePromoCode(true)"
+      >
+        <template #right>
+          <div
+            class="checkout-coupon-field__icon-container"
+            @click.stop="removePromoCode(true)"
+          >
+            <BaseIcon
+              v-if="isValid && !checkoutSession?.status"
+              name="close"
+              class="checkout-coupon-field__icon"
+            />
+          </div>
+        </template>
+      </BaseInput>
+      <Button
+        v-if="!isValid && !checkoutSession?.status"
+        class="checkout-coupon-field__button"
+        type="primary"
+        size="xl"
+        :loading="couponDiscount?.isValidatingCoupon.value"
+        :disabled="!couponCode || couponDiscount?.isValidatingCoupon.value"
+        @click="validatePromoCode(true)"
+      >
+        Apply
+      </Button>
+    </div>
     <BaseText
       v-if="couponDiscount?.discount.value"
       variant="body-small-medium"
+      class="checkout-coupon-field__success"
+      as="p"
     >
       Coupon added ({{ couponDiscount?.discount }}% off)
     </BaseText>
@@ -103,34 +126,63 @@ watchImmediate(
 
 <style lang="scss" scoped>
 .checkout-coupon-field {
-  &__icon {
-    cursor: pointer;
-    opacity: 0.3;
+  // On iOS WebKit, a disabled <input> inside a <label> swallows tap events,
+  // preventing clicks from reaching overlapping elements like the remove icon.
+  // pointer-events: none makes the disabled input transparent to touch/click.
+  :deep(.base-input__input:disabled) {
+    pointer-events: none;
+  }
 
-    &:hover {
+  &__icon-container {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__icon {
+    font-size: 20px;
+    opacity: 1;
+
+    .checkout-coupon-field__icon-container:hover & {
       opacity: 0.7;
     }
   }
 
-  &__loader {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: linear-gradient(currentcolor 40%, transparent 70%);
-    mask: radial-gradient(closest-side, transparent 70%, black 70%);
-    animation: rotate 0.5s linear infinite;
-    opacity: 0.3;
-    cursor: not-allowed;
+  &__row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
   }
 
-  @keyframes rotate {
-    0% {
-      transform: rotate(0deg);
+  &__input {
+    flex: 1;
+  }
+
+  &__button {
+    flex-shrink: 0;
+    font-weight: 600;
+    width: 110px;
+    margin-top: 20px;
+
+    .checkout-coupon-field__row--error & {
+      margin-top: -20px;
+
+      @media all and (min-width: $screen-sm) {
+        margin-top: 0;
+      }
     }
 
-    100% {
-      transform: rotate(360deg);
+    &:disabled {
+      background-color: $color-primary-20;
     }
+  }
+
+  &__success {
+    margin-top: 4px;
+    color: $color-success;
   }
 }
 </style>

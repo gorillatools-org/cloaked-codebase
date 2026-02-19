@@ -84,7 +84,7 @@ const intercepts = {
   "/cloaked/activity/": {
     response: read_activity,
   },
-  "/cloaked/activity/[\\d]+/content": {
+  "/cloaked/activity/([\\d]+|[0-9a-fA-F-]{36})/content": {
     response: read_activity_content,
   },
   "/cloaked/activity/[\\d]+/$": {

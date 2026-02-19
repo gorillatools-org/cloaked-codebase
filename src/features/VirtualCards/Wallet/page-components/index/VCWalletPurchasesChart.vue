@@ -20,6 +20,7 @@ import CardsServices from "@/api/actions/cards-services";
 import { useToast } from "@/composables/useToast";
 import { useMounted } from "@vueuse/core";
 import store from "@/store";
+import { useNavigationStore } from "@/pinia/navigation";
 
 type DailyPurchaseData = {
   date: Date;
@@ -43,6 +44,7 @@ const container = ref<HTMLElement | null>(null);
 const isMounted = useMounted();
 const isLoading = ref(true);
 const weeklyBreakdownData = ref<WeeklyBreakdown | null>(null);
+const navigationStore = useNavigationStore();
 
 const user = computed(() => {
   return store.state.authentication?.user;
@@ -369,7 +371,7 @@ function drawDayLabels(
     )
     .attr("y", height + 17)
     .attr("text-anchor", "middle")
-    .style("font-family", "'Urbanist', sans-serif")
+    .style("font-family", "'STKBureauSans', sans-serif")
     .style("font-size", "14px")
     .style("font-weight", "600")
     .style("fill", FILL_BAR_COLOR)
@@ -513,6 +515,13 @@ watch(
     drawChart();
   }
 );
+
+watch(
+  () => navigationStore.collapse,
+  () => {
+    debouncedResize();
+  }
+);
 </script>
 
 <template>
@@ -571,7 +580,7 @@ watch(
 
     &-text {
       color: $color-primary-70;
-      font-size: clamp(14px, 4cqw, 16px);
+      font-size: clamp(13px, 4cqw, 16px);
     }
 
     &-amount {

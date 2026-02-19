@@ -95,18 +95,8 @@
       collect certain information, including your face biometrics, about you,
       for purposes of various steps you can take on Cloaked, including log-in,
       and password recovery. You agree that this information may be stored in a
-      decentralized manner, and sharded, into anonymized bits through Anonybit.
-      By performing this functionality, you are agreeing to Anonybit's privacy
-      policy, located at
-      <a
-        href="https://www.anonybit.io/privacy-policy/"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        https://www.anonybit.io/privacy-policy/
-      </a>
-      . You may delete the biometrics provided for Cloaked Biometric ID in your
-      settings page.
+      decentralized manner, and sharded, into anonymized bits. You may delete
+      the biometrics provided for Cloaked Biometric ID in your settings page.
     </p>
 
     <p>How is information collected with Cloaked?</p>

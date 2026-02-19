@@ -1,17 +1,27 @@
 <script setup>
 import { useRoute } from "vue-router";
-import { onMounted } from "vue";
-
+import { onMounted, provide, computed, inject, ref } from "vue";
 import DataDeletePageNoResults from "@/features/data-delete/DataDeletePageNoResults.vue";
 import DataScanPagePhoneResults from "@/features/data-delete/DataScanPagePhoneResults.vue";
 import DataDeleteTryAgain from "@/features/data-delete/DataDeleteTryAgain.vue";
-
+import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
+import { PH_FEATURE_FLAG_SCAN_RESULTS_FEEDBACK_BUTTONS } from "@/scripts/posthogEvents.js";
 import { PH_EVENT_USER_VIEWED_DATA_DELETION_SEARCH_RESULTS } from "@/scripts/posthogEvents";
 import { posthogCapture } from "@/scripts/posthog.js";
+import { networkVisualizationFlagKey } from "@/features/data-delete/injectionKeys";
+import DataDeleteNetworkPage from "@/features/data-delete/family-network/components/DataDeleteNetworkPage.vue";
+
 import UserService from "@/api/actions/user-service";
 import { DATA_DELETE_SEARCHED_EXPOSURES } from "@/scripts/userFlags";
 
 const route = useRoute();
+const {
+  featureFlag: thumbsFeedbackFlag,
+  hasLoadedFeatureFlag: hasLoadedThumbsFeedbackFlag,
+} = usePostHogFeatureFlag(PH_FEATURE_FLAG_SCAN_RESULTS_FEEDBACK_BUTTONS);
+
+const hasUserViewedNetworkVisualization = ref(false);
+const networkVisualizationFlag = inject(networkVisualizationFlagKey);
 
 const props = defineProps({
   isForcingNewSearch: {
@@ -59,6 +69,18 @@ onMounted(() => {
     value: true,
   });
 });
+
+const onViewFullReport = () => {
+  hasUserViewedNetworkVisualization.value = true;
+};
+
+provide(
+  "canShowThumbsFeedback",
+  computed(
+    () =>
+      hasLoadedThumbsFeedbackFlag.value && thumbsFeedbackFlag.value === "test-A"
+  )
+);
 </script>
 
 <template>
@@ -73,15 +95,31 @@ onMounted(() => {
       duration="400"
     >
       <div v-if="searchResults[0]">
-        <DataScanPagePhoneResults
-          :search-results="searchResults"
-          :phone="phone ?? route.query.phone"
-          :is-forcing-new-search="isForcingNewSearch"
-          :breach-data="breachData"
-          :total-breaches-count="totalBreachesCount"
-          @force-new-search="() => emit('force-new-search')"
-          @setup="() => emit('setup')"
-        />
+        <template
+          v-if="
+            networkVisualizationFlag?.canShowNetwork?.value &&
+            !hasUserViewedNetworkVisualization
+          "
+        >
+          <DataDeleteNetworkPage
+            :search-result="searchResults[0]"
+            :brokers-names="[]"
+            :exposures-count="totalBreachesCount"
+            v-bind="{ ...$attrs, class: null }"
+            @view-full-report="onViewFullReport"
+          />
+        </template>
+        <template v-else>
+          <DataScanPagePhoneResults
+            :search-results="searchResults"
+            :phone="phone ?? route.query.phone"
+            :is-forcing-new-search="isForcingNewSearch"
+            :breach-data="breachData"
+            :total-breaches-count="totalBreachesCount"
+            @force-new-search="() => emit('force-new-search')"
+            @setup="() => emit('setup')"
+          />
+        </template>
       </div>
 
       <DataDeletePageNoResults
@@ -108,6 +146,10 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.data-delete__page:has(.data-delete-network-page) {
+  padding: 0 !important;
 }
 
 .data-delete-results {

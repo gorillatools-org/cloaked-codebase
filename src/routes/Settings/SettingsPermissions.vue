@@ -50,8 +50,7 @@ async function handleSessionReplayToggleChange() {
           @click="handleSessionReplayToggleChange"
         />
         <BaseText variant="body-3-regular">
-          Allow Cloaked to share usage data with Sentry to help improve our
-          products.
+          Allow Cloaked to share usage data to help improve our products.
         </BaseText>
       </div>
     </div>

@@ -1,13 +1,23 @@
 <script setup>
-import BaseIcon from "@/library/BaseIcon.vue";
 import BaseText from "@/library/BaseText.vue";
+import { computed } from "vue";
 
-defineProps({
+const props = defineProps({
   variant: {
     type: String,
     default: "primary",
     validator: (value) =>
       [
+        //NEW STYLE VARIANTS
+        "primary-fill",
+        "primary-outline",
+        "secondary-fill",
+        "secondary-outline",
+        "tertiary-fill",
+        "tertiary-outline",
+        "text-mono",
+        "destructive",
+        //OLD STYLE VARIANTS
         "primary",
         "secondary",
         "outline",
@@ -19,17 +29,19 @@ defineProps({
   size: {
     type: String,
     default: "md",
-    validator: (value) => ["md", "lg"].includes(value),
+    validator: (value) => ["sm", "md", "lg"].includes(value),
   },
   fullWidth: {
     type: Boolean,
     default: false,
   },
+  // NOTE: deprecated prop
   icon: {
     type: String,
 
     default: "arrow-right",
   },
+  // NOTE: deprecated prop, use variant instead
   backgroundColor: {
     type: String,
     default: "",
@@ -54,81 +66,79 @@ defineProps({
     default: false,
   },
 });
+
+const computedVariant = computed(() => {
+  if (props.backgroundColor) {
+    //convert colored background to use primary styles
+    if (props.backgroundColor === "danger") {
+      return "destructive";
+    }
+    return "primary-fill";
+  }
+  const colorMapping = {
+    primary: "secondary-fill",
+    secondary: "secondary-outline",
+    outline: "secondary-outline",
+    text: "text-mono",
+    "cloaked-gradient": "primary-fill",
+    "cloaked-gradient-secondary": "primary-fill",
+    danger: "destructive",
+  };
+  return colorMapping[props.variant] || props.variant;
+});
 </script>
 
 <template>
   <button
     class="base-button"
     :class="{
-      [`base-button--${variant}`]: variant,
-      [`base-button--${size}`]: size,
-      'base-button--full-width': fullWidth,
-      [`base-button--${backgroundColor}`]: backgroundColor,
+      [`base-button--${computedVariant}`]: computedVariant,
+      [`base-button--${props.size}`]: props.size,
+      'base-button--full-width': props.fullWidth,
     }"
     :disabled="disabled"
   >
     <BaseText
       :variant="
         {
-          md: 'body-3-semibold',
-          lg: 'body-2-semibold',
-        }[size] || 'body-2-semibold'
+          sm: 'footnote-emphasized',
+          md: 'callout-emphasized',
+          lg: 'callout-emphasized',
+        }[size]
       "
+      :underline="computedVariant === 'text-mono'"
       class="base-button__text"
     >
       <slot />
     </BaseText>
-    <template v-if="variant !== 'text' && variant !== 'outline'">
-      <span
-        v-if="loading"
-        class="base-button__icon"
-      >
-        <span class="base-button__loader" />
-      </span>
-      <BaseIcon
-        v-else
-        :name="icon"
-        class="base-button__icon"
-      />
-    </template>
+    <span
+      v-if="props.loading"
+      class="base-button__loader"
+    />
   </button>
 </template>
 
 <style lang="scss" scoped>
 .base-button {
-  display: inline-grid;
-  grid-template-columns: min-content 1fr min-content;
-  grid-template-areas: "left text right";
+  display: flex;
+  justify-content: center;
   align-items: center;
-  column-gap: 8px;
+  gap: 8px;
+  border-radius: 1000px;
   border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 5px;
   cursor: pointer;
   white-space: nowrap;
+  transition:
+    background-color 0.15s ease-out,
+    border-color 0.15s ease-out,
+    color 0.15s ease-out;
 
   &__text {
-    flex: 1 1 auto;
     text-align: center;
-    padding: 0 6px;
-    font-weight: 600;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
     display: block;
-    grid-area: text;
-  }
-
-  &__icon {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: $color-primary-90;
-    border-radius: 50%;
-    font-size: 16px;
-    font-weight: 500;
-    grid-area: right;
   }
 
   &__loader {
@@ -150,181 +160,199 @@ defineProps({
     }
   }
 
-  &--primary {
-    background-color: $color-primary-100;
-    color: $color-primary-1;
-
-    &:not(:disabled):hover {
-      opacity: 0.9;
-    }
-  }
-
-  &--outline {
-    background-color: transparent;
-    color: $color-primary-100;
-    border-color: $color-primary-100;
-    padding: 5px 11px;
-
-    .base-button__icon {
-      background-color: $color-primary-10;
-    }
-  }
-
-  &--secondary {
-    background-color: transparent;
-    color: $color-primary-100;
-    border-color: $color-primary-100;
-
-    .base-button__icon {
-      background-color: $color-primary-10;
-    }
-  }
-
-  &--text {
-    background-color: transparent;
-    color: $color-primary-100;
-    border-color: transparent;
-    padding: 5px 11px;
-
-    &:not(:disabled):hover {
-      background-color: $color-primary-5;
-    }
-  }
-
-  &--cloaked-gradient {
-    background: $cloaked-gradient;
-    color: $color-primary-100-dark;
-    border: none;
-
-    &:not(:disabled):hover {
-      opacity: 0.9;
-    }
-
-    .base-button__icon {
-      background-color: $color-base-white-15-dark;
-    }
-  }
-
-  &--cloaked-gradient-secondary {
-    background: $cloaked-gradient-secondary;
-    color: $color-primary-100-dark;
-    border: none;
-
-    &:not(:disabled):hover {
-      opacity: 0.9;
-    }
-
-    .base-button__icon {
-      background-color: $color-base-white-15-dark;
-    }
-  }
-
-  &--purple-gradient {
-    background: linear-gradient(90deg, #878dfa 0%, #454cbe 100%);
-    color: $white !important;
-    border: none;
-
-    .base-button__icon {
-      background-color: rgba($white, 0.15);
-    }
-  }
-
-  &--purple {
-    background: #8e83ea;
-    color: $white;
-
-    .base-button__icon {
-      background-color: rgba($white, 0.15);
-    }
-  }
-
-  &--success {
-    background-color: $color-status-success;
-    color: $white;
-
-    .base-button__icon {
-      background-color: $color-base-white-15-light;
-    }
-  }
-
-  &--danger {
-    background-color: $color-status-error;
-    color: $color-primary-1-light;
-
-    .base-button__icon {
-      background-color: $color-base-white-15-light;
-    }
-  }
-
-  @mixin background-gradient($color-start, $color-end) {
-    background: linear-gradient(46deg, $color-start 31%, $color-end 100%);
-  }
-
-  &--brand-2-gradient {
-    color: $color-primary-100-light;
-
-    @include background-gradient($color-brand-2-90-light, #dbdf00);
-
-    .base-button__icon {
-      background-color: rgba(#dbdf00, 0.9);
-    }
-  }
-
-  &--brand-3-gradient {
-    color: $color-primary-100-light;
-
-    @include background-gradient($color-brand-3-90-light, #2ab5dc);
-
-    .base-button__icon {
-      background-color: rgba(#2ab5dc, 0.9);
-    }
-  }
-
-  &--info-gradient {
-    @include background-gradient($color-info, #fd9871);
-
-    .base-button__icon {
-      background-color: rgba(#fd9871, 0.9);
-    }
-  }
-
-  &:disabled {
-    opacity: 0.2;
-    cursor: not-allowed;
-  }
-
-  &:not(:disabled):hover {
-    opacity: 0.9;
-  }
-
   &--full-width {
     width: 100%;
   }
 
-  &--md {
-    min-height: 46px;
+  &--sm {
+    height: 32px;
+    padding: 7px 16px;
+  }
 
-    &.base-button--full-width {
-      grid-template-columns: 36px 1fr 36px;
-    }
+  &--md {
+    height: 40px;
+    padding: 9.5px 16px;
   }
 
   &--lg {
-    min-height: 54px;
+    height: 48px;
+    padding: 13.5px 24px;
+  }
 
-    &.base-button--full-width {
-      grid-template-columns: 44px 1fr 44px;
+  &--primary-fill {
+    background-color: $color-brand-300;
+    color: $color-primary-100-dark;
+    border-color: $color-brand-300;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      background-color: $color-brand-400;
+      border-color: $color-brand-400;
+    }
+
+    &:not(:disabled):active {
+      background-color: $color-brand-400;
+      outline: 2px solid $color-neutral-0-light;
+      outline-offset: -3px;
+      border-color: $color-brand-400;
     }
   }
 
-  &--md &__icon {
-    width: 36px;
-    height: 36px;
+  &--primary-outline {
+    background-color: transparent;
+    color: $color-brand-300;
+    border-color: $color-brand-300;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      border-color: $color-brand-300;
+      background-color: $color-brand-100;
+    }
+
+    &:not(:disabled):active {
+      border-color: $color-brand-300;
+      background-color: $color-brand-200;
+    }
   }
 
-  &--lg &__icon {
-    width: 44px;
-    height: 44px;
+  &--secondary-fill {
+    background-color: $color-primary-100;
+    color: $color-primary-1;
+    border-color: $color-primary-100;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      background-color: $color-neutral-850;
+      border-color: $color-neutral-850;
+    }
+
+    &:not(:disabled):active {
+      background-color: $color-neutral-850;
+      border-color: $color-neutral-850;
+
+      @at-root .theme-light & {
+        outline: 2px solid $color-neutral-0-light;
+        outline-offset: -3px;
+        border-color: $color-neutral-850;
+      }
+    }
+  }
+
+  &--secondary-outline {
+    background-color: transparent;
+    color: $color-primary-100;
+    border-color: $color-primary-100;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      border-color: $color-primary-100;
+      background-color: $color-neutral-100;
+    }
+
+    &:not(:disabled):active {
+      border-color: $color-primary-100;
+      background-color: $color-neutral-200;
+    }
+  }
+
+  &--tertiary-fill {
+    background-color: transparent;
+    color: $color-primary-100;
+    border-color: transparent;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      background-color: $color-neutral-100;
+      border-color: $color-neutral-100;
+    }
+
+    &:not(:disabled):active {
+      background-color: $color-neutral-200;
+      border-color: $color-neutral-200;
+    }
+  }
+
+  &--tertiary-outline {
+    background-color: transparent;
+    color: $color-primary-100;
+    border-color: $color-neutral-200;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      border-color: $color-neutral-200;
+      background-color: $color-neutral-100;
+    }
+
+    &:not(:disabled):active {
+      border-color: $color-neutral-300;
+      background-color: $color-neutral-200;
+    }
+  }
+
+  &--text-mono {
+    color: $color-neutral-1000;
+    border-color: transparent;
+    background-color: transparent;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      color: $color-neutral-850;
+    }
+
+    &:not(:disabled):active {
+      color: $color-neutral-650;
+    }
+  }
+
+  &--destructive {
+    background-color: $color-status-negative;
+    color: $color-primary-100-dark;
+    border-color: $color-status-negative;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      background-color: $color-red-300;
+      border-color: $color-red-300;
+    }
+
+    &:not(:disabled):active {
+      background-color: $color-red-300;
+      border-color: $color-red-300;
+      outline: 2px solid $color-neutral-0-light;
+      outline-offset: -3px;
+    }
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { watchImmediate } from "@vueuse/core";
 import { useScanProgress } from "@/features/enrollment/useScanProgress.js";
 import BaseText from "@/library/BaseText";
@@ -11,7 +11,6 @@ import moment from "moment";
 import { useSessionEnrollmentData } from "@/features/enrollment/useSessionEnrollmentData.js";
 import { formatPhoneStringBasic } from "@/scripts/format.js";
 import { posthogCapture } from "@/scripts/posthog.js";
-import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 
 defineEmits(["see-results"]);
 
@@ -95,18 +94,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", onWindowResize);
-});
-
-const { featureFlag } = usePostHogFeatureFlag("download-app-experiment");
-
-const cta = computed(() => {
-  const featureFlagToCtaText = {
-    "enrollment-progress-1": "See Complete Results",
-    "enrollment-progress-2": "See Results",
-    "enrollment-progress-3": "See My Results",
-  };
-
-  return featureFlagToCtaText[featureFlag.value] ?? "See Complete Results";
 });
 </script>
 
@@ -291,7 +278,7 @@ const cta = computed(() => {
           class="enrollment-app-progress__cta"
           @click="$emit('see-results')"
         >
-          {{ cta }}
+          See Results
         </BaseButton>
       </div>
     </Transition>

@@ -209,7 +209,7 @@ $ease-fade: cubic-bezier(0.22, 1, 0.36, 1);
       opacity: 1;
       transform: scale(1);
       background-color: $color-status-success;
-      color: $color-base-white-0;
+      color: $color-base-white-100;
     }
 
     .vc-base-circular-loader__center-icon {
@@ -228,7 +228,7 @@ $ease-fade: cubic-bezier(0.22, 1, 0.36, 1);
       opacity: 1;
       transform: scale(1);
       background-color: $color-status-error;
-      color: $color-base-white-0;
+      color: $color-base-white-100;
     }
 
     .vc-base-circular-loader__center-icon {

@@ -23,6 +23,7 @@ import useOutstandingBalance from "@/features/VirtualCards/composables/useOutsta
 import VCBalanceDueModal from "@/features/VirtualCards/modals/balance-due/VCBalanceDueModal.vue";
 import { capitalizeFirstLetter } from "@/scripts/format";
 import { useWalletPageContext } from "./composables/pages-context/useWalletPageContext";
+import { useWindowSize } from "@vueuse/core";
 
 type Period = Extract<VirtualCardPeriod, "monthly" | "one-time">;
 
@@ -51,13 +52,21 @@ const isCreating = ref(false);
 const amount = ref<number>();
 const tab = ref<Period>("monthly");
 const createError = ref<string>();
+const { width } = useWindowSize();
 const amountInputRef =
   useTemplateRef<typeof VCBaseAmountInput>("amountInputRef");
+const ONE_TAB_WIDTH = 950;
 
-const items: TabItem[] = [
-  { id: "monthly", label: "Monthly" },
-  { id: "one-time", label: "One-Time" },
-];
+const items = computed<TabItem[]>(() => {
+  const monthly = { id: "monthly", label: "Monthly" };
+  const oneTime = { id: "one-time", label: "One-Time" };
+
+  if (width.value < ONE_TAB_WIDTH) {
+    return [monthly];
+  }
+
+  return [monthly, oneTime];
+});
 
 const allowedToCreateCard = computed(() => {
   return !hasCollectionStatus.value;
@@ -265,7 +274,7 @@ defineExpose({
                 :full-width="false"
                 :items="items"
                 :height="35"
-                :width="190"
+                :width="width < ONE_TAB_WIDTH ? 90 : 190"
                 @select="
                   clearErrors();
                   amountInputRef?.focus();

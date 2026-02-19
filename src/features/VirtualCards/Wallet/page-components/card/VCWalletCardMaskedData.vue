@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount } from "vue";
+import { computed, ref, watch, onBeforeUnmount } from "vue";
 import BaseText from "@/library/BaseText.vue";
 import BaseIcon from "@/library/BaseIcon.vue";
 import { useToast } from "@/composables/useToast.js";
@@ -24,6 +24,15 @@ const copied = ref(false);
 
 onBeforeUnmount(() => {
   clearTimeout(resetCopiedTimeout);
+});
+
+// Inserts spaces into unmaskedData at the same positions as the mask,
+// so that mask[index] and spacedUnmaskedData[index] stay in sync.
+// e.g. mask "**** **** **** 3011" + data "4111111775723011" → "4111 1117 7572 3011"
+const spacedUnmaskedData = computed(() => {
+  const data = props.unmaskedData?.replace(/\s/g, "") ?? "";
+  let i = 0;
+  return props.mask.replace(/\S/g, () => data[i++] ?? "");
 });
 
 const getChar = (char: string) => {
@@ -115,7 +124,7 @@ watch(
             v-if="isMaskedChar(char)"
             class="vc-wallet-card-masked-data__unmasked-char"
           >
-            {{ unmaskedData?.[index] || getChar(char) }}
+            {{ spacedUnmaskedData[index] || getChar(char) }}
           </span>
         </div>
       </template>
@@ -218,7 +227,9 @@ watch(
 
   &__masked-char {
     position: absolute;
-    top: -1px;
+    inset: 0;
+    display: flex;
+    align-items: center;
     opacity: 1;
     transform: translateY(0);
     transition:

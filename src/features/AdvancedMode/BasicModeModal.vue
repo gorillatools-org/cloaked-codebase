@@ -232,7 +232,7 @@ const onGetHelp = () => {
     padding: 24px;
     border-radius: 24px;
     border: 1px solid $color-primary-10;
-    background-color: $color-base-white-0;
+    background-color: $color-base-white-100;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
@@ -307,7 +307,7 @@ const onGetHelp = () => {
     padding: 20px;
     border-radius: 24px;
     border: 1px solid $color-primary-10;
-    background-color: $color-base-white-0;
+    background-color: $color-base-white-100;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: left;

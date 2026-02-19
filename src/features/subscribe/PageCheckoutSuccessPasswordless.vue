@@ -1,5 +1,4 @@
 <script setup>
-import ConcentricWave from "@/features/subscribe/ConcentricWave.vue";
 import PasswordlessCard from "@/features/subscribe/PasswordlessCard.vue";
 import BulkPlanCard from "@/features/subscribe/BulkPlanCard.vue";
 import PageCheckoutHeader from "@/features/subscribe/PageCheckoutHeader.vue";
@@ -16,7 +15,7 @@ const props = defineProps({
   },
   isCloakedPayOnboarding: {
     type: Boolean,
-    required: true,
+    default: false,
   },
 });
 
@@ -43,7 +42,6 @@ const onContinue = () => {
 
 <template>
   <div class="page-checkout-success-recovery">
-    <ConcentricWave class="page-checkout-success-recovery__wave" />
     <PageCheckoutHeader />
     <div class="page-checkout-success-recovery__content">
       <BaseText
@@ -120,27 +118,10 @@ const onContinue = () => {
 
 .page-checkout-success-recovery {
   color: $color-primary-100;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1000;
-  overflow: auto;
   background-color: $color-base-white-100;
   padding: 0;
 
   @include cloaked-gradient-background;
-
-  &__wave {
-    top: clamp(400px, 40%, 40%);
-    transform: translate3d(-50%, 0, 0);
-    z-index: -1;
-
-    @media all and (orientation: landscape) {
-      top: clamp(500px, 40%, 40%);
-    }
-  }
 
   &__content {
     max-width: 785px;

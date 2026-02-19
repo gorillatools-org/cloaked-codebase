@@ -25,6 +25,10 @@ const enrollmentData = computed(() => {
   return store.getters["dataDelete/enrollmentData"] || {};
 });
 
+const automationResults = computed(
+  () => store.getters["dataDelete/getAutomationResults"]?.total_protected ?? 0
+);
+
 const totalRecordsRemoved = computed(() => {
   return enrollmentData.value?.latestScan?.exposures_count ?? 0;
 });
@@ -139,7 +143,7 @@ const formatNumber = (num) => {
 
 const exposuresText = computed(() => {
   return dataDeletionImprovement.value
-    ? "Exposures Thusfar"
+    ? "Exposures Thus Far"
     : "Exposures Discovered";
 });
 </script>
@@ -185,7 +189,9 @@ const exposuresText = computed(() => {
           as="h1"
           class="exposure-status-records__content-section-title"
         >
-          {{ formatNumber(enrollmentData.totalItemsRemoved) }}
+          {{
+            formatNumber(enrollmentData.totalItemsRemoved + automationResults)
+          }}
         </BaseText>
 
         <BaseText

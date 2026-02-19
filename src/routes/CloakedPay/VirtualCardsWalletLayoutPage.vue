@@ -253,17 +253,22 @@ provide(WalletPageKey, {
     gap: 8px;
     flex: 1;
     min-height: 0;
-    padding-bottom: 8px;
-    overflow: hidden;
+    flex-direction: column;
 
-    @media all and (width <= $screen-xl) {
+    @container wallet-page (min-width: 600px) {
       flex-direction: column;
+      padding-bottom: 8px;
+    }
+
+    @container wallet-page (min-width: 730px) {
+      flex-direction: row;
+      overflow: hidden;
     }
   }
 
   &__aside-container {
-    height: 100%;
-    width: 380px;
+    height: auto;
+    width: 100%;
     background-color: $color-primary-5;
     border-radius: 20px;
     flex-shrink: 0;
@@ -272,17 +277,27 @@ provide(WalletPageKey, {
     display: flex;
     flex-direction: column;
 
-    @media all and (width <= $screen-xl) {
-      width: 100%;
-      flex: 0 1 auto;
-      max-height: 40%;
+    @container wallet-page (min-width: 500px) {
+      max-height: 50%;
     }
 
-    @media all and (width > 1280px) {
+    @container wallet-page (min-width: 600px) {
+      max-height: 50%;
+      flex-direction: row;
+    }
+
+    @container wallet-page (min-width: 730px) {
+      overflow: auto;
+      height: 100%;
+      max-height: 100%;
+      width: 360px;
+    }
+
+    @container wallet-page (min-width: 1100px) {
       width: 410px;
     }
 
-    @media all and (min-width: $screen-xxxl) {
+    @container wallet-page (min-width: 1200px) {
       width: 450px;
     }
   }
@@ -358,5 +373,22 @@ provide(WalletPageKey, {
   transform: translateY(0) scale(1);
   opacity: 1;
   max-height: 200px;
+}
+</style>
+
+<!-- This is required to allow other components to use these containers for container queries -->
+<!-- eslint-disable-next-line vue/enforce-style-attribute -->
+<style lang="scss">
+.vc-wallet-layout-page {
+  container-name: wallet-page;
+  container-type: inline-size;
+}
+
+.vc-wallet-layout-page__aside-container {
+  container-name: wallet-aside;
+
+  @container wallet-page (min-width: 730px) {
+    container-type: size;
+  }
 }
 </style>

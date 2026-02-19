@@ -82,7 +82,7 @@ const availableBillingCycles = useBillingCycles();
           variant="body-3-semibold"
           class="choose-plan-option__after-title"
         >
-          &nbsp;•&nbsp;
+          &nbsp;&nbsp;•&nbsp;&nbsp;
           {{ members }}
         </BaseText>
       </BaseText>

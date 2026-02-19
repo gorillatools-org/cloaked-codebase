@@ -102,7 +102,7 @@ const formatCurrency = (amount: number | string) => {
                   variant="headline-6-bold"
                   class="subs-billing-details__list-item-title-text"
                 >
-                  Total due today
+                  Due today
                 </BaseText>
                 <UiTooltip
                   :max-width="300"
@@ -118,27 +118,12 @@ const formatCurrency = (amount: number | string) => {
               </div>
             </template>
             <template #value>
-              <div class="subs-billing-details__list-item-value-container">
-                <BaseText
-                  v-if="
-                    props.savings?.length &&
-                    props.savings.length > 0 &&
-                    props.subtotal !== undefined &&
-                    props.dueToday !== undefined &&
-                    props.subtotal !== props.dueToday
-                  "
-                  variant="headline-6-bold"
-                  class="subs-billing-details__list-item-value-text subs-billing-details__list-item-value-text--original"
-                >
-                  {{ formatCurrency(props.subtotal ?? 0) }}
-                </BaseText>
-                <BaseText
-                  variant="headline-6-bold"
-                  class="subs-billing-details__list-item-value-text"
-                >
-                  {{ formatCurrency(props.dueToday ?? 0) }}
-                </BaseText>
-              </div>
+              <BaseText
+                variant="headline-6-bold"
+                class="subs-billing-details__list-item-value-text"
+              >
+                {{ formatCurrency(props.dueToday ?? 0) }}
+              </BaseText>
             </template>
           </SubscriptionBillingDetailsRow>
         </li>
@@ -150,7 +135,17 @@ const formatCurrency = (amount: number | string) => {
             title="Payment method"
             :value="paymentMethod"
             :is-value-loading="!paymentMethod"
-          />
+          >
+            <template
+              v-if="slots['payment-method-action']"
+              #value
+            >
+              <slot
+                name="payment-method-action"
+                :payment-method="paymentMethod"
+              />
+            </template>
+          </SubscriptionBillingDetailsRow>
         </li>
       </ul>
     </div>

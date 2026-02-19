@@ -5,10 +5,17 @@ import type { useHeadlessUser } from "@/features/headless-signup/useHeadlessUser
 import type { usePaypalButtons } from "@/features/checkout/usePaypalButtons.ts";
 import type { useCountdownDiscount } from "@/features/checkout/useCountdownDiscount.ts";
 import type { useCouponDiscount } from "@/features/checkout/useCouponDiscount.ts";
+import type { useAccountRecovery } from "@/features/checkout/useAccountRecovery.ts";
+import type { useSignupForm } from "@/features/checkout/useSignupForm.ts";
+import type { usePlansExperiment } from "./usePlansExperiment";
 
 export const headlessAuthInjectionKey: InjectionKey<
   ReturnType<typeof useHeadlessUser>
 > = Symbol("HeadlessAuth");
+
+export const signupFormInjectionKey: InjectionKey<
+  ReturnType<typeof useSignupForm>
+> = Symbol("SignupForm");
 
 export const stripeElementsInjectionKey: InjectionKey<
   ReturnType<typeof useStripeElements>
@@ -29,3 +36,11 @@ export const countdownDiscountInjectionKey: InjectionKey<
 export const couponDiscountInjectionKey: InjectionKey<
   ReturnType<typeof useCouponDiscount>
 > = Symbol("CouponDiscount");
+
+export const accountRecoveryInjectionKey: InjectionKey<
+  ReturnType<typeof useAccountRecovery>
+> = Symbol("AccountRecovery");
+
+export const plansExperimentInjectionKey: InjectionKey<
+  ReturnType<typeof usePlansExperiment>
+> = Symbol("PlansExperiment");

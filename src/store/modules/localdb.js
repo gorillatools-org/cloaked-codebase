@@ -267,6 +267,7 @@ export default {
         .where("url")
         .startsWithIgnoreCase(activityUrl)
         .toArray();
+
       return matches.forEach(async (match) => {
         let changeMade = false;
         const payload = JSON.parse(match.payload);
@@ -306,6 +307,7 @@ export default {
         .where("url")
         .startsWithIgnoreCase(activityUrl)
         .toArray();
+
       return matches.forEach(async (match) => {
         let changeMade = false;
         const payload = JSON.parse(match.payload);

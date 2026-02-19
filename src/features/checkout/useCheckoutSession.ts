@@ -21,13 +21,14 @@ export type CheckoutSession = {
   phone: string;
   email: string;
   plan: PlanType;
-  billing: PlanBilling;
+  billing: PlanBilling | null;
   method: PlanProvider;
   coupon: string;
   isRegistered: boolean;
   isPaid: boolean;
   isLoggedIn: boolean;
   user: User | null;
+  poaAgreementAccepted: boolean;
 };
 
 export const useCheckoutSession = () => {
@@ -51,6 +52,7 @@ export const useCheckoutSession = () => {
     isPaid: false,
     isLoggedIn: false,
     user: null,
+    poaAgreementAccepted: true,
   });
 
   const { subscription } = useSubscription();

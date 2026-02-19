@@ -107,7 +107,7 @@ export const useHeadlessUser = () => {
       }
       return verifyCodeResponse;
     } catch (error) {
-      verifyCodeError.value = parseHeadlessUserError(error);
+      verifyCodeError.value = parseHeadlessUserError(error, true);
     } finally {
       isVerifyingCode.value = false;
     }
@@ -183,7 +183,8 @@ export const useHeadlessUser = () => {
       codeVerifier: codeVerifier.value,
       payload: loginResponse,
     });
-    return loginResponse;
+
+    return loginCredentials.value;
   };
 
   const encryptHeadlessUser = async () => {

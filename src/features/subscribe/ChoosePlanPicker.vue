@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import ButtonToggle from "@/features/ButtonToggle.vue";
 import ChoosePlanOption, {
   type ChoosePlanOptionProps,
@@ -107,6 +108,30 @@ const onLeave = (el: Element, done: () => void) => {
   });
   element.addEventListener("transitionend", () => done(), { once: true });
 };
+
+const isFamily3Plan = (plan: any) => {
+  const members = plan?.max_members ?? plan?.members ?? plan?.member_count;
+  if (members === 3) return true;
+
+  const id = String(plan?.product_id ?? "").toLowerCase();
+  if (
+    id.includes("family-3") ||
+    id.includes("family_3") ||
+    id.includes("family3")
+  )
+    return true;
+
+  return false;
+};
+
+// If family-3 is coming this filters that out :) - we are doing that intentionanly in our older picker
+const filteredBillingCycleOptions = computed(() =>
+  billingCycleOptions.value.filter((opt) => !isFamily3Plan(opt.stripePlan))
+);
+
+const user = computed(() => {
+  return store.state.authentication.user;
+});
 </script>
 
 <template>
@@ -137,7 +162,7 @@ const onLeave = (el: Element, done: () => void) => {
       />
     </div>
     <CheckoutCard
-      v-if="isLoadingPlans"
+      v-if="!user || isLoadingPlans"
       class="choose-plan-picker__plans"
       rounding="sm"
     >
@@ -166,7 +191,7 @@ const onLeave = (el: Element, done: () => void) => {
           class="choose-plan-picker__plans-wrapper"
         >
           <slot
-            v-for="option in billingCycleOptions"
+            v-for="option in filteredBillingCycleOptions"
             :key="option.id"
             name="option"
             :model-value="selectedPlanOptionId"

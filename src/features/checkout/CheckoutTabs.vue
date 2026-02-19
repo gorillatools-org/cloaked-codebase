@@ -44,30 +44,35 @@ const model = defineModel<T["value"]>();
 .checkout-tabs {
   display: flex;
   cursor: pointer;
-  background-color: $color-primary-10;
   border-radius: 100px;
+  border: 1px solid $color-base-black-10;
 
   &__label {
-    padding: 10px 0;
-    cursor: pointer;
-    color: $color-primary-70;
+    padding: 12px 0;
+    color: $color-base-black-100;
     border-radius: 100px;
-    border: 1px solid $color-primary-10;
     text-align: center;
+    cursor: pointer;
     flex: 1;
-    display: block;
 
-    &:has(.checkout-tabs__input:checked) {
-      background-color: $color-base-white-100;
-      border-radius: 100px;
-      color: $color-primary-100;
-      border: 1px solid $color-base-black-15;
-      box-shadow: 0 4px 24px 0 rgba($black, 0.05);
+    &:hover {
+      opacity: 0.8;
     }
 
     &:has(.checkout-tabs__input:disabled) {
-      opacity: 0.8;
+      opacity: 0.4;
       cursor: not-allowed;
+    }
+
+    &:has(.checkout-tabs__input:checked) {
+      background-color: $color-base-black-100;
+      color: $color-base-white-100;
+      opacity: 1;
+      cursor: default;
+    }
+
+    &:has(.checkout-tabs__input:checked):has(.checkout-tabs__input:disabled) {
+      opacity: 0.2;
     }
   }
 

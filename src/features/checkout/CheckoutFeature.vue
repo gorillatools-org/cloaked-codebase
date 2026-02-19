@@ -40,7 +40,7 @@ const isExpanded = ref(false);
       class="checkout-feature__checkmark"
     />
     <BaseText
-      variant="body-small-medium"
+      variant="body-3-regular"
       class="checkout-feature__detail"
     >
       {{ feature.detail }}
@@ -74,8 +74,8 @@ const isExpanded = ref(false);
       display: block;
       flex-shrink: 0;
       width: 100%;
-      padding: 0 25px;
-      opacity: 0.7;
+      padding: 0 26px;
+      color: $color-base-black-60;
     }
   }
 

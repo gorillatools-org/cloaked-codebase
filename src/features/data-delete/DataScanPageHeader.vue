@@ -2,24 +2,21 @@
 import { computed } from "vue";
 import InlineSvg from "@/features/InlineSvg.vue";
 import BaseButton from "@/library/BaseButton.vue";
-import DataDeleteSticky from "@/features/data-delete/atoms/DataDeleteSticky.vue";
 import { usePostHogFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
-import { PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT } from "@/scripts/posthogEvents";
+import { PH_FEATURE_FLAG_SCAN_RESULTS_PROTECT_CTA } from "@/scripts/posthogEvents";
 
 const { featureFlag, hasLoadedFeatureFlag } = usePostHogFeatureFlag(
-  PH_FEATURE_FLAG_TOP_OF_FUNNEL_EXPERIMENT
+  PH_FEATURE_FLAG_SCAN_RESULTS_PROTECT_CTA
 );
 
 const ctaText = computed(() => {
   if (!hasLoadedFeatureFlag.value) return "Remove my Data";
 
   switch (featureFlag.value) {
-    case "spycloud-flow-cta-a":
-      return "Clean Up My Data";
-    case "spycloud-flow-cta-b":
-      return "Remove My Information";
-    case "spycloud-flow-cta-c":
-      return "Remove My Data";
+    case "test-A":
+      return "Delete your online data";
+    case "test-B":
+      return "Protect your online data";
     default:
       return "Remove My Data";
   }
@@ -50,7 +47,7 @@ const onDelete = () => {
       </BaseButton>
     </div>
   </header>
-  <DataDeleteSticky class="scan-page-header__sticky-wrapper">
+  <div class="scan-page-header__sticky-wrapper">
     <BaseButton
       class="scan-page-header__cta"
       variant="primary"
@@ -58,7 +55,7 @@ const onDelete = () => {
     >
       {{ ctaText }}
     </BaseButton>
-  </DataDeleteSticky>
+  </div>
 </template>
 
 <style scoped lang="scss">
@@ -88,11 +85,35 @@ const onDelete = () => {
   }
 
   &__sticky-wrapper {
-    padding: 16px;
+    position: fixed;
+    z-index: 10;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    padding: 16px 22px;
+
+    @at-root .theme-dark & {
+      background: linear-gradient(to bottom, transparent, $black);
+    }
+
+    @at-root .theme-light & {
+      background: linear-gradient(to bottom, transparent, $white);
+    }
+
+    @media all and (min-width: $screen-lg) {
+      position: static;
+      width: 100%;
+      padding: 0;
+
+      @at-root .theme-dark &,
+        .theme-light & {
+        background: none;
+      }
+    }
   }
 }
 
-@media all and (min-width: $screen-sm) {
+@media all and (min-width: $screen-lg) {
   .scan-page-header {
     display: flex;
     justify-content: space-between;

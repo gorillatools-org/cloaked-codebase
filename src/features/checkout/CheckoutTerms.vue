@@ -12,6 +12,7 @@ import {
     variant="body-small-medium"
     class="checkout-terms"
   >
+    <slot />
     By creating an account you agree to the
     <a
       :href="WEBSITE_TERMS_OF_SERVICE_URL"

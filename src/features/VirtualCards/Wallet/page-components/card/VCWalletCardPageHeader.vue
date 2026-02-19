@@ -119,8 +119,16 @@ const openFundingSourceModal = () => {
 .vc-wallet-card-page-header {
   width: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 20px;
+  flex-direction: column;
+
+  @container wallet-router-view (min-width: 550px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0;
+  }
 
   &__actions {
     display: flex;
@@ -175,9 +183,17 @@ const openFundingSourceModal = () => {
       font-weight: 500;
       color: $color-primary-100;
       white-space: nowrap;
-      max-width: 370px;
+      max-width: 70cqw;
       overflow: hidden;
       text-overflow: ellipsis;
+
+      @container wallet-router-view (min-width: 550px) {
+        max-width: 40cqw;
+      }
+
+      @container wallet-router-view (min-width: 715px) {
+        max-width: 370px;
+      }
 
       &-container {
         margin-left: 8px;

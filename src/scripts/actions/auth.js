@@ -8,7 +8,7 @@ import SubscriptionService from "@/api/settings/subscription-services";
 import router from "@/routes/router";
 import { extensionMessaging } from "@/scripts/messaging";
 import { EXTENSION_MESSAGE_TYPES } from "@/scripts/constants";
-import { posthogCapture } from "@/scripts/posthog";
+import { posthogCapture, getPosthog } from "@/scripts/posthog";
 
 export const auth_channel = new BroadcastChannel("auth_channel");
 export const refresh_channel = new BroadcastChannel("refresh_channel");
@@ -78,6 +78,9 @@ export const logout = async ({
   try {
     await Promise.race([
       posthogCapture("user_logout"),
+      getPosthog()?.then((posthog) => {
+        posthog?.reset();
+      }),
       new Promise((resolve) => setTimeout(resolve, 1000)),
     ]);
   } catch {

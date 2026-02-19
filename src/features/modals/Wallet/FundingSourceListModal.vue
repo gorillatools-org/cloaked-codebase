@@ -138,6 +138,8 @@ const handleRemove = (fundingSource: FundingSource) => {
           />
         </div>
       </TransitionGroup>
+    </template>
+    <template #footer>
       <div class="fs-list-modal__footer">
         <Button
           class="fs-list-modal__footer-btn-add"
@@ -205,7 +207,7 @@ $component-name: "fs-list-modal";
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
-    margin-top: 24px;
+    margin-top: 8px;
 
     &-btn-close {
       width: 79px;

@@ -43,7 +43,6 @@ const props = defineProps({
     transform: translateY(calc(-50% - 4px));
 
     @include line-clamp(1);
-    font-size: $font-size-hidden-dots;
   }
 
   &__password {

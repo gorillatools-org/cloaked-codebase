@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, markRaw, onMounted } from "vue";
+import { computed, ref, markRaw } from "vue";
 import store from "@/store";
 import { onClickOutside } from "@vueuse/core";
 import { posthogCapture } from "@/scripts/posthog.js";
@@ -15,7 +15,6 @@ import NavigationDropdownMenuItem from "@/features/Navigation/NavigationDropdown
 import AdvancedModeModal from "@/features/AdvancedMode/AdvancedModeModal.vue";
 import BasicModeModal from "@/features/AdvancedMode/BasicModeModal.vue";
 import IdentityTheftProtectionModal from "@/features/IdentityTheftProtection/IdentityTheftProtectionModal.vue";
-import ShareFeedbackModal from "@/features/feedback/ShareFeedbackModal.vue";
 import BaseAvatar from "@/library/BaseAvatar.vue";
 import BaseText from "@/library/BaseText.vue";
 
@@ -34,24 +33,6 @@ onClickOutside(dropdownRef, () => (dropdownOpen.value = false));
 const toggleDropdown = () => (dropdownOpen.value = !dropdownOpen.value);
 
 const identityTheftProtectionModal = ref(false);
-const shareFeedbackModal = ref(false);
-const isSentryAvailable = ref(false);
-
-const checkSentryAvailability = () => {
-  const isBrave =
-    !!(navigator.brave && navigator.brave.isBrave) ||
-    navigator.userAgent.includes("Brave");
-
-  if (isBrave) {
-    isSentryAvailable.value = false;
-  } else {
-    isSentryAvailable.value = true;
-  }
-};
-
-onMounted(() => {
-  checkSentryAvailability();
-});
 
 function toggleInsuranceModal() {
   identityTheftProtectionModal.value = !identityTheftProtectionModal.value;
@@ -67,31 +48,6 @@ function toggleInsuranceModal() {
         events: {
           close: () => {
             identityTheftProtectionModal.value = false;
-            store.dispatch("closeModal");
-          },
-        },
-      },
-    });
-  } else {
-    store.dispatch("closeModal");
-  }
-}
-
-function toggleShareFeedbackModal() {
-  shareFeedbackModal.value = !shareFeedbackModal.value;
-  toggleDropdown();
-
-  if (shareFeedbackModal.value) {
-    store.dispatch("openModal", {
-      customTemplate: {
-        template: markRaw(ShareFeedbackModal),
-        props: {
-          show: true,
-          isReportMode: false,
-        },
-        events: {
-          close: () => {
-            shareFeedbackModal.value = false;
             store.dispatch("closeModal");
           },
         },
@@ -267,15 +223,6 @@ async function onClickLogout() {
           icon="help"
           no-background
           no-right-icon
-        />
-        <NavigationDropdownMenuItem
-          v-if="isSentryAvailable"
-          name="Share feedback"
-          type="page-link"
-          icon="text"
-          no-background
-          no-right-icon
-          @click="toggleShareFeedbackModal"
         />
         <NavigationDropdownMenuItem
           name="Log out"

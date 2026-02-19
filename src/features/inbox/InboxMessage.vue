@@ -39,10 +39,12 @@ import { constants } from "@/scripts/constants";
 import { validation } from "@/scripts/validation";
 import { formattedText } from "@/scripts/formattedText";
 import BaseText from "@/library/BaseText.vue";
+import { fetchFeatureFlag } from "@/composables/usePostHogFeatureFlag.js";
 
 const route = useRoute();
 const toast = useToast();
 const fileAttachments = ref(null);
+let activity25Flag = ref(false);
 
 const state = reactive({
   reply: "",
@@ -182,7 +184,6 @@ function updateStateWithPollingData(newTexts) {
     return !state.thread.find((activity) => activity.id === newActivity.id);
   });
   state.thread = [...newTexts, ...state.thread];
-  state.nextUrl = `/api/v2/cloaked/activity/thread/${state.threadId}/?ordering=created_at&page=2&page_size=${state.thread.length}`;
   const latestText = newTexts.pop();
   if (latestText) {
     loadedDate = new Date(latestText.updated_at);
@@ -199,7 +200,9 @@ function updateStateWithPollingData(newTexts) {
 
 function fetchThreadPolling() {
   const updated_at__gt = loadedDate.toISOString();
-  let url = `/api/v2/cloaked/activity/thread/${state.threadId}/?ordering=-created_at&updated_at__gt=${updated_at__gt}`;
+  let url = activity25Flag.value
+    ? `/api/v2_5/cloaked/activity/?thread_id=${state.threadId}&ordering=-created_at&updated_at__gt=${updated_at__gt}`
+    : `/api/v2/cloaked/activity/thread/${state.threadId}/?ordering=-created_at&updated_at__gt=${updated_at__gt}`;
   InboxService.getThread(url).then(({ data }) => {
     if (data.count) {
       if (data.count === data.results.length) {
@@ -448,8 +451,19 @@ function setContactStatus(action) {
   }
 }
 
-function fetchInitialData() {
-  state.nextUrl = `/api/v2/cloaked/activity/thread/${state.threadId}/?ordering=-created_at&page_size=10`;
+async function fetchInitialData() {
+  let nextUrl = `/api/v2/cloaked/activity/thread/${state.threadId}/?ordering=created_at&page_size=10`;
+  try {
+    const { value } = await fetchFeatureFlag("dashboard-activity-2-5");
+    activity25Flag.value = value;
+    if (value) {
+      nextUrl = `/api/v2_5/cloaked/activity/?thread_id=${state.threadId}&ordering=created_at&page_size=10`;
+    }
+  } catch {
+    activity25Flag.value = false;
+  }
+
+  state.nextUrl = nextUrl;
 
   const promises = [
     fetchThread(state.threadId),

@@ -27,7 +27,7 @@ import { getPosthog } from "@/scripts/posthog";
 import BannerDowntime from "@/features/banners/BannerDowntime.vue";
 import { useScreen, SCREEN } from "@/composables/useScreen";
 import { useScreenRouting } from "@/composables/useScreenRouting";
-import DownloadApp from "@/features/onboarding/DownloadApp.vue";
+import DownloadApp from "@/features/DownloadApp/DownloadApp.vue";
 import UserService from "@/api/actions/user-service";
 
 const hasLoaded = ref(false);
@@ -121,6 +121,23 @@ const canEnablePay = computed(() => {
   );
 });
 
+// Identify user to PostHog once per session
+watch(
+  () => user.value,
+  (user) => {
+    const posthogIdentified = store.state.authentication?.posthogIdentified;
+    if (user?.posthog_uuid && !posthogIdentified) {
+      store.commit("authentication/setPosthogIdentified", true);
+      getPosthog()?.then((posthog) => {
+        const currentId = posthog?.get_distinct_id?.();
+        if (currentId === user.posthog_uuid) return;
+        posthog?.identify(user.posthog_uuid);
+      });
+    }
+  },
+  { immediate: true }
+);
+
 watch(
   () => subscription.value,
   (newVal, oldVal) => {
@@ -146,23 +163,7 @@ watch(
   () => authenticated.value,
   (value) => {
     if (!value) {
-      if (window.$posthog) {
-        window.$posthog?.reset();
-      }
       logout();
-    }
-  }
-);
-
-watch(
-  () => user.value,
-  (user) => {
-    // If the user doesn't have a uuid, then we leave them anonymous,
-    // otherwise we call identify so events are associated with the user.
-    if (user?.posthog_uuid && window?.$posthog) {
-      window.$posthog?.identify(
-        store?.state?.authentication?.user?.posthog_uuid
-      );
     }
   }
 );
